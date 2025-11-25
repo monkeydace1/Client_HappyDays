@@ -15,6 +15,7 @@ export const BookingPage: React.FC = () => {
         if (currentStep === 1 && departureDate && returnDate && pickupLocation) {
             goToStep(2);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const steps = [
@@ -76,10 +77,10 @@ export const BookingPage: React.FC = () => {
                                     >
                                         <div
                                             className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg transition-all duration-300 ${isActive
-                                                    ? 'bg-primary text-white ring-4 ring-primary/20 scale-110'
-                                                    : isCompleted
-                                                        ? 'bg-primary text-white hover:ring-2 hover:ring-primary/30'
-                                                        : 'bg-gray-200 text-gray-500'
+                                                ? 'bg-primary text-white ring-4 ring-primary/20 scale-110'
+                                                : isCompleted
+                                                    ? 'bg-primary text-white hover:ring-2 hover:ring-primary/30'
+                                                    : 'bg-gray-200 text-gray-500'
                                                 }`}
                                         >
                                             {isCompleted ? '✓' : step.number}

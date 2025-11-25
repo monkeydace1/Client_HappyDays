@@ -33,6 +33,7 @@ export function QuickAddModal({
   // Reset form when modal opens
   useEffect(() => {
     if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFormData({
         clientName: '',
         clientPhone: '',
@@ -205,7 +206,7 @@ export function QuickAddModal({
                         const days = Math.ceil(
                           (new Date(formData.returnDate).getTime() -
                             new Date(formData.departureDate).getTime()) /
-                            (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24)
                         ) || 1;
                         return `${days * selectedVehicle.pricePerDay}€`;
                       })()}

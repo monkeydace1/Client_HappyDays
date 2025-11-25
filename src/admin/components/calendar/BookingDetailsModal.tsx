@@ -59,6 +59,7 @@ export function BookingDetailsModal({
   // Reset edit state when booking changes
   useEffect(() => {
     if (booking) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditData({
         clientName: booking.clientName,
         clientPhone: booking.clientPhone || '',
@@ -282,7 +283,7 @@ export function BookingDetailsModal({
                         {(() => {
                           const days = Math.ceil(
                             (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
-                              (1000 * 60 * 60 * 24)
+                            (1000 * 60 * 60 * 24)
                           ) || 1;
                           const pricePerDay = booking.totalPrice / booking.rentalDays;
                           return Math.round(days * pricePerDay);
@@ -291,7 +292,7 @@ export function BookingDetailsModal({
                       <p className="text-xs text-gray-500">
                         {Math.ceil(
                           (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
-                            (1000 * 60 * 60 * 24)
+                          (1000 * 60 * 60 * 24)
                         ) || 1} jours
                       </p>
                     </>

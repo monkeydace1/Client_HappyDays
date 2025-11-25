@@ -23,28 +23,29 @@ export function AdminPinPage() {
   }, [isAuthenticated, navigate]);
 
   // Auto-verify when 4 digits entered
-  useEffect(() => {
-    if (pin.length === 4) {
-      const enteredPin = pin.join('');
-      if (enteredPin === ADMIN_PIN) {
-        setSuccess(true);
-        setTimeout(() => {
-          setPinVerified(true);
-          navigate('/admin/dashboard');
-        }, 500);
-      } else {
-        setError(true);
-        setTimeout(() => {
-          setPin([]);
-          setError(false);
-        }, 500);
-      }
-    }
-  }, [pin, navigate, setPinVerified]);
-
   const handleDigitPress = (digit: string) => {
-    if (pin.length < 4 && !success) {
-      setPin([...pin, digit]);
+    if (success) return;
+
+    const newPin = [...pin, digit];
+    if (newPin.length <= 4) {
+      setPin(newPin);
+
+      if (newPin.length === 4) {
+        const enteredPin = newPin.join('');
+        if (enteredPin === ADMIN_PIN) {
+          setSuccess(true);
+          setTimeout(() => {
+            setPinVerified(true);
+            navigate('/admin/dashboard');
+          }, 500);
+        } else {
+          setError(true);
+          setTimeout(() => {
+            setPin([]);
+            setError(false);
+          }, 500);
+        }
+      }
     }
   };
 
@@ -83,10 +84,10 @@ export function AdminPinPage() {
                 backgroundColor: error
                   ? '#EF4444'
                   : success
-                  ? '#22C55E'
-                  : pin[index]
-                  ? '#FFFFFF'
-                  : 'rgba(255,255,255,0.2)',
+                    ? '#22C55E'
+                    : pin[index]
+                      ? '#FFFFFF'
+                      : 'rgba(255,255,255,0.2)',
               }}
               transition={{ duration: 0.15 }}
               className="w-4 h-4 rounded-full"
