@@ -140,7 +140,7 @@ export const Hero = () => {
                             <select
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
-                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-sm md:text-base"
+                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-xs md:text-sm min-h-[44px]"
                             >
                                 {PICKUP_LOCATIONS.filter(loc => loc !== 'Autre (préciser)').map((loc) => (
                                     <option key={loc} value={loc}>
