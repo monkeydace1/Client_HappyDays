@@ -1,5 +1,4 @@
-import { motion } from 'framer-motion';
-import { Settings, Fuel, Users, Wrench, CheckCircle } from 'lucide-react';
+import { Wrench, CheckCircle } from 'lucide-react';
 import type { AdminVehicle } from '../../types/admin';
 
 interface VehicleGridProps {
@@ -15,115 +14,72 @@ export function VehicleGrid({ vehicles, onToggleMaintenance }: VehicleGridProps)
   };
 
   return (
-    <div className="p-4 space-y-4">
-      {/* Summary */}
-      <div className="flex gap-3">
-        <div className="flex-1 bg-green-50 rounded-xl p-3 flex items-center gap-3">
-          <CheckCircle className="w-6 h-6 text-green-600" />
-          <div>
-            <p className="text-2xl font-bold text-green-700">{statusCounts.available}</p>
-            <p className="text-xs text-green-600">Disponibles</p>
-          </div>
+    <div className="p-3 space-y-3 overflow-auto h-full">
+      {/* Summary - compact */}
+      <div className="flex gap-2 text-xs">
+        <div className="flex items-center gap-1 bg-green-50 px-2 py-1 rounded">
+          <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+          <span className="font-bold text-green-700">{statusCounts.available}</span>
+          <span className="text-green-600">dispo</span>
         </div>
-        <div className="flex-1 bg-gray-100 rounded-xl p-3 flex items-center gap-3">
-          <Wrench className="w-6 h-6 text-gray-600" />
-          <div>
-            <p className="text-2xl font-bold text-gray-700">{statusCounts.maintenance}</p>
-            <p className="text-xs text-gray-600">Maintenance</p>
-          </div>
+        <div className="flex items-center gap-1 bg-gray-100 px-2 py-1 rounded">
+          <Wrench className="w-3.5 h-3.5 text-gray-600" />
+          <span className="font-bold text-gray-700">{statusCounts.maintenance}</span>
+          <span className="text-gray-600">maint.</span>
         </div>
       </div>
 
-      {/* Vehicle Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {vehicles.map((vehicle, index) => {
+      {/* Vehicle List - Compact with ID numbers */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+        {vehicles.map((vehicle) => {
           const isInMaintenance = vehicle.status === 'maintenance';
 
           return (
-            <motion.div
+            <button
               key={vehicle.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.03 }}
-              className={`bg-white rounded-xl overflow-hidden shadow-sm border
-                ${isInMaintenance ? 'border-gray-300 opacity-75' : 'border-gray-100'}`}
+              onClick={() => onToggleMaintenance(vehicle.id)}
+              className={`relative bg-white rounded-lg overflow-hidden shadow-sm border text-left
+                transition-all touch-manipulation active:scale-95
+                ${isInMaintenance ? 'border-gray-300 opacity-60' : 'border-gray-200'}`}
             >
-              {/* Vehicle Image */}
-              <div className="relative h-32 bg-gray-100">
+              {/* Vehicle Image with ID overlay */}
+              <div className="relative h-20 bg-gray-100">
                 <img
                   src={vehicle.image}
                   alt={vehicle.name}
                   className="w-full h-full object-cover"
                 />
+                {/* Large ID number */}
+                <div className={`absolute top-1 left-1 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold
+                  ${isInMaintenance ? 'bg-gray-600 text-white' : 'bg-primary text-white'}`}>
+                  {vehicle.id}
+                </div>
                 {isInMaintenance && (
-                  <div className="absolute inset-0 bg-gray-900/50 flex items-center justify-center">
-                    <span className="bg-gray-800 text-white px-3 py-1 rounded-full text-sm font-medium flex items-center gap-1">
-                      <Wrench className="w-4 h-4" />
-                      Maintenance
-                    </span>
+                  <div className="absolute top-1 right-1 bg-gray-800 text-white px-1.5 py-0.5 rounded text-[10px] font-medium flex items-center gap-0.5">
+                    <Wrench className="w-2.5 h-2.5" />
+                    M
                   </div>
                 )}
-                <div className="absolute top-2 right-2 bg-white/90 px-2 py-1 rounded-lg text-sm font-bold text-primary">
-                  {vehicle.pricePerDay}€/j
-                </div>
               </div>
 
-              {/* Vehicle Info */}
-              <div className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{vehicle.name}</h3>
-                    <p className="text-sm text-gray-500">{vehicle.category}</p>
-                  </div>
+              {/* Vehicle Info - compact */}
+              <div className="p-2">
+                <div className="font-medium text-xs text-gray-900 truncate">
+                  {vehicle.name}
                 </div>
-
-                {/* Specs */}
-                <div className="flex items-center gap-4 text-xs text-gray-500 mb-4">
-                  <div className="flex items-center gap-1">
-                    <Settings className="w-3.5 h-3.5" />
-                    <span>{vehicle.transmission}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Fuel className="w-3.5 h-3.5" />
-                    <span>{vehicle.fuel}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" />
-                    <span>{vehicle.seats}</span>
-                  </div>
+                <div className="flex items-center justify-between mt-0.5">
+                  <span className="text-[10px] text-gray-500">{vehicle.category}</span>
+                  <span className="text-[10px] font-bold text-primary">{vehicle.pricePerDay}€</span>
                 </div>
-
-                {/* License Plate */}
-                {vehicle.licensePlate && (
-                  <div className="text-xs font-mono text-gray-400 mb-3">
-                    {vehicle.licensePlate}
-                  </div>
-                )}
-
-                {/* Toggle Maintenance Button */}
-                <button
-                  onClick={() => onToggleMaintenance(vehicle.id)}
-                  className={`w-full py-2.5 rounded-lg font-medium text-sm transition-colors touch-manipulation
-                    ${isInMaintenance
-                      ? 'bg-green-500 hover:bg-green-600 text-white'
-                      : 'bg-gray-100 hover:bg-gray-200 text-gray-700'}`}
-                >
-                  {isInMaintenance ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <CheckCircle className="w-4 h-4" />
-                      Marquer disponible
-                    </span>
-                  ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      <Wrench className="w-4 h-4" />
-                      Mettre en maintenance
-                    </span>
-                  )}
-                </button>
               </div>
-            </motion.div>
+            </button>
           );
         })}
+      </div>
+
+      {/* Legend */}
+      <div className="text-[10px] text-gray-400 text-center pt-2">
+        Tapez sur un véhicule pour basculer maintenance/disponible
       </div>
     </div>
   );
