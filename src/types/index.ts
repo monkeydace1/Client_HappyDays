@@ -89,16 +89,8 @@ export interface BookingData {
 
 // Pickup locations
 export const PICKUP_LOCATIONS = [
-    'Aéroport International Doran Ahmed Ben Bella',
-    'Wilaya Oran',
-    'Aéroport de Tunis-Carthage',
-    'Aéroport de Monastir',
-    'Aéroport de Djerba',
-    'Centre-ville Tunis',
-    'Centre-ville Sousse',
-    'Centre-ville Hammamet',
-    'Port de La Goulette',
-    'Gare Centrale Tunis',
+    'Aéroport International d\'Oran Ahmed Ben Bella',
+    'Centre-ville Oran',
     'Autre (préciser)',
 ] as const;
 

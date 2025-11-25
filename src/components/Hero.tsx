@@ -3,6 +3,7 @@ import { Calendar, Search, Clock, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../store/bookingStore';
+import { PICKUP_LOCATIONS } from '../types';
 import heroBackground from '../assets/photo-1656978310683-d415ee895c2c.jpg';
 
 export const Hero = () => {
@@ -13,7 +14,7 @@ export const Hero = () => {
     const [departureTime, setDepartureTime] = useState('10:00');
     const [returnDay, setReturnDay] = useState('');
     const [returnTime, setReturnTime] = useState('10:00');
-    const [location, setLocation] = useState('Aéroport International Doran Ahmed Ben Bella');
+    const [location, setLocation] = useState<string>(PICKUP_LOCATIONS[0]);
 
     const returnDateRef = useRef<HTMLInputElement>(null);
 
@@ -141,8 +142,11 @@ export const Hero = () => {
                                 onChange={(e) => setLocation(e.target.value)}
                                 className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-sm md:text-base"
                             >
-                                <option value="Aéroport International Doran Ahmed Ben Bella">Aéroport Oran</option>
-                                <option value="Wilaya Oran">Centre Oran</option>
+                                {PICKUP_LOCATIONS.filter(loc => loc !== 'Autre (préciser)').map((loc) => (
+                                    <option key={loc} value={loc}>
+                                        {loc}
+                                    </option>
+                                ))}
                             </select>
                             <p className="text-xs text-gray-500 mt-1">Livraison gratuite</p>
                         </div>
