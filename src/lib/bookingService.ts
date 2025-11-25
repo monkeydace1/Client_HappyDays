@@ -1,0 +1,323 @@
+import { supabase } from './supabase';
+import type { Vehicle, Supplement, ClientInfo } from '../types';
+
+// Types for booking submission
+export interface BookingSubmission {
+  // Step 1: Dates & Location
+  departureDate: string;
+  returnDate: string;
+  rentalDays: number;
+  pickupLocation: string;
+  customPickupLocation?: string;
+  returnLocation?: string;
+  differentReturnLocation: boolean;
+
+  // Step 2: Vehicle
+  selectedVehicle: Vehicle;
+
+  // Step 3: Supplements
+  supplements: Supplement[];
+  additionalDriver: boolean;
+
+  // Step 4: Client Info
+  clientInfo: ClientInfo;
+
+  // Pricing
+  vehicleTotal: number;
+  supplementsTotal: number;
+  totalPrice: number;
+}
+
+export interface BookingRecord {
+  id: string;
+  booking_reference: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  departure_date: string;
+  return_date: string;
+  rental_days: number;
+  pickup_location: string;
+  custom_pickup_location?: string;
+  return_location?: string;
+  different_return_location: boolean;
+  vehicle_id: number;
+  vehicle_name: string;
+  vehicle_brand: string;
+  vehicle_model: string;
+  vehicle_category: string;
+  vehicle_price_per_day: number;
+  supplements: Supplement[];
+  additional_driver: boolean;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  country: string;
+  city: string;
+  address: string;
+  date_of_birth: string;
+  license_number: string;
+  license_issue_date: string;
+  license_expiration_date: string;
+  license_photo_url?: string;
+  extra_information?: string;
+  notes?: string;
+  payment_method: string;
+  vehicle_total: number;
+  supplements_total: number;
+  total_price: number;
+  user_agent?: string;
+  locale?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Generate a booking reference in format: HD-YYYY-MM-XXXX
+ * Example: HD-2024-11-0001
+ */
+export async function generateBookingReference(): Promise<string> {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const prefix = `HD-${year}-${month}-`;
+
+  // Query for the latest booking reference this month
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('booking_reference')
+    .like('booking_reference', `${prefix}%`)
+    .order('booking_reference', { ascending: false })
+    .limit(1);
+
+  if (error) {
+    console.error('Error fetching last booking reference:', error);
+    // Fallback: use timestamp-based reference
+    const timestamp = Date.now().toString().slice(-6);
+    return `${prefix}${timestamp}`;
+  }
+
+  let sequenceNumber = 1;
+
+  if (data && data.length > 0) {
+    // Extract the sequence number from the last reference
+    const lastRef = data[0].booking_reference;
+    const lastSequence = parseInt(lastRef.split('-').pop() || '0', 10);
+    sequenceNumber = lastSequence + 1;
+  }
+
+  return `${prefix}${String(sequenceNumber).padStart(4, '0')}`;
+}
+
+/**
+ * Upload license photo to Supabase Storage
+ * Returns the public URL of the uploaded image
+ */
+export async function uploadLicensePhoto(
+  file: File,
+  bookingReference: string
+): Promise<string | null> {
+  try {
+    // Create a unique filename
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${bookingReference}-license.${fileExt}`;
+    const filePath = `licenses/${fileName}`;
+
+    // Upload to Supabase Storage
+    const { error: uploadError } = await supabase.storage
+      .from('license-photos')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: true,
+      });
+
+    if (uploadError) {
+      console.error('Error uploading license photo:', uploadError);
+      return null;
+    }
+
+    // Get the public URL
+    const { data: urlData } = supabase.storage
+      .from('license-photos')
+      .getPublicUrl(filePath);
+
+    return urlData.publicUrl;
+  } catch (error) {
+    console.error('Error in uploadLicensePhoto:', error);
+    return null;
+  }
+}
+
+/**
+ * Save booking to Supabase database
+ */
+export async function saveBooking(
+  submission: BookingSubmission,
+  licensePhotoUrl?: string | null
+): Promise<{ success: true; data: BookingRecord } | { success: false; error: string }> {
+  try {
+    // Generate booking reference
+    const bookingReference = await generateBookingReference();
+
+    // Prepare the booking data for database
+    const bookingData = {
+      booking_reference: bookingReference,
+      status: 'pending',
+
+      // Dates & Location
+      departure_date: submission.departureDate,
+      return_date: submission.returnDate,
+      rental_days: submission.rentalDays,
+      pickup_location: submission.pickupLocation,
+      custom_pickup_location: submission.customPickupLocation || null,
+      return_location: submission.returnLocation || null,
+      different_return_location: submission.differentReturnLocation,
+
+      // Vehicle
+      vehicle_id: submission.selectedVehicle.id,
+      vehicle_name: submission.selectedVehicle.name,
+      vehicle_brand: submission.selectedVehicle.brand,
+      vehicle_model: submission.selectedVehicle.model,
+      vehicle_category: submission.selectedVehicle.category,
+      vehicle_price_per_day: submission.selectedVehicle.pricePerDay,
+
+      // Supplements
+      supplements: submission.supplements,
+      additional_driver: submission.additionalDriver,
+
+      // Client Info
+      first_name: submission.clientInfo.firstName,
+      last_name: submission.clientInfo.lastName,
+      email: submission.clientInfo.email,
+      phone: submission.clientInfo.phone,
+      country: submission.clientInfo.country,
+      city: submission.clientInfo.city,
+      address: submission.clientInfo.address,
+      date_of_birth: submission.clientInfo.dateOfBirth,
+
+      // Driver's License
+      license_number: submission.clientInfo.driverLicense.documentNumber,
+      license_issue_date: submission.clientInfo.driverLicense.issueDate,
+      license_expiration_date: submission.clientInfo.driverLicense.expirationDate,
+      license_photo_url: licensePhotoUrl || null,
+
+      // Additional info
+      extra_information: submission.clientInfo.extraInformation || null,
+      notes: submission.clientInfo.notes || null,
+      payment_method: submission.clientInfo.paymentMethod,
+
+      // Pricing
+      vehicle_total: submission.vehicleTotal,
+      supplements_total: submission.supplementsTotal,
+      total_price: submission.totalPrice,
+
+      // Metadata
+      user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
+      locale: typeof navigator !== 'undefined' ? navigator.language : null,
+    };
+
+    // Insert into database
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([bookingData])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving booking:', error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data: data as BookingRecord };
+  } catch (error) {
+    console.error('Error in saveBooking:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error occurred',
+    };
+  }
+}
+
+/**
+ * Format WhatsApp message with booking details
+ */
+export function formatWhatsAppMessage(
+  bookingReference: string,
+  submission: BookingSubmission
+): string {
+  const { clientInfo, selectedVehicle, supplements, additionalDriver, totalPrice } = submission;
+
+  // Format dates
+  const departureDate = new Date(submission.departureDate);
+  const returnDate = new Date(submission.returnDate);
+  const dateOptions: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  };
+
+  // Build supplements list
+  let supplementsList = '';
+  if (supplements.length > 0) {
+    supplementsList = supplements
+      .map((s) => `  - ${s.name} (x${s.quantity || 1}): ${s.pricePerDay * (s.quantity || 1)}€/jour`)
+      .join('\n');
+  }
+  if (additionalDriver) {
+    supplementsList += '\n  - Conducteur additionnel: 8€/jour';
+  }
+
+  const message = `
+🚗 *NOUVELLE RÉSERVATION - ${bookingReference}*
+
+📅 *PÉRIODE DE LOCATION*
+Départ: ${departureDate.toLocaleDateString('fr-FR', dateOptions)}
+Retour: ${returnDate.toLocaleDateString('fr-FR', dateOptions)}
+Durée: ${submission.rentalDays} jour(s)
+
+📍 *LIEU*
+Prise en charge: ${submission.pickupLocation}${submission.customPickupLocation ? ` (${submission.customPickupLocation})` : ''}${submission.differentReturnLocation ? `\nRetour: ${submission.returnLocation}` : ''}
+
+🚙 *VÉHICULE*
+${selectedVehicle.name} (${selectedVehicle.category})
+${selectedVehicle.pricePerDay}€/jour
+
+${supplementsList ? `📦 *SUPPLÉMENTS*\n${supplementsList}\n` : ''}
+👤 *CLIENT*
+Nom: ${clientInfo.firstName} ${clientInfo.lastName}
+Email: ${clientInfo.email}
+Téléphone: ${clientInfo.phone}
+Pays: ${clientInfo.country}
+Ville: ${clientInfo.city}
+Adresse: ${clientInfo.address}
+Date de naissance: ${clientInfo.dateOfBirth}
+
+🪪 *PERMIS DE CONDUIRE*
+Numéro: ${clientInfo.driverLicense.documentNumber}
+Date d'émission: ${clientInfo.driverLicense.issueDate}
+Date d'expiration: ${clientInfo.driverLicense.expirationDate}
+
+💳 *PAIEMENT*
+Mode: ${clientInfo.paymentMethod === 'cash' ? 'Espèces' : clientInfo.paymentMethod === 'card' ? 'Carte' : 'Virement'}
+
+${clientInfo.extraInformation ? `ℹ️ *INFORMATIONS SUPPLÉMENTAIRES*\n${clientInfo.extraInformation}\n` : ''}
+${clientInfo.notes ? `📝 *NOTES*\n${clientInfo.notes}\n` : ''}
+💰 *TOTAL: ${totalPrice}€*
+`.trim();
+
+  return message;
+}
+
+/**
+ * Open WhatsApp with pre-filled message
+ */
+export function openWhatsApp(bookingReference: string, submission: BookingSubmission): void {
+  const message = formatWhatsAppMessage(bookingReference, submission);
+  const phoneNumber = '15144526332'; // WhatsApp number without + or spaces
+  const encodedMessage = encodeURIComponent(message);
+  const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+  window.open(whatsappUrl, '_blank');
+}
