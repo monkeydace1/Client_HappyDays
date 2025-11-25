@@ -128,6 +128,7 @@ export function GanttChart({
 
   // Cell width based on view
   const cellWidth = calendarViewDays <= 7 ? 50 : calendarViewDays <= 14 ? 44 : 40;
+  const vehicleColumnWidth = 100;
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -227,118 +228,131 @@ export function GanttChart({
         </div>
       </div>
 
-      {/* Gantt Grid - Using CSS Grid for proper sticky behavior */}
-      <div className="flex-1 overflow-auto">
-        <div
-          className="grid"
-          style={{
-            gridTemplateColumns: `120px repeat(${calendarViewDays}, ${cellWidth}px)`,
-            minWidth: `${120 + calendarViewDays * cellWidth}px`,
-          }}
+      {/* Gantt Grid - Using table layout for proper scroll behavior */}
+      <div className="flex-1 overflow-auto min-h-0">
+        <table
+          className="border-collapse"
+          style={{ minWidth: `${vehicleColumnWidth + calendarViewDays * cellWidth}px` }}
         >
-          {/* Header Row */}
-          {/* Empty corner cell */}
-          <div className="sticky left-0 top-0 z-30 bg-gray-100 border-b border-r border-gray-300 h-16" />
-
-          {/* Date headers */}
-          {dates.map((date, index) => {
-            const isToday = isSameDay(date, new Date());
-            const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-            return (
-              <div
-                key={index}
-                className={`sticky top-0 z-20 h-16 flex flex-col items-center justify-center border-b border-r border-gray-200
-                  ${isToday ? 'bg-primary text-white' : isWeekend ? 'bg-gray-200' : 'bg-gray-100'}`}
+          <thead>
+            <tr>
+              {/* Empty corner cell */}
+              <th
+                className="sticky left-0 top-0 z-30 bg-gray-100 border-b border-r border-gray-300"
+                style={{ width: vehicleColumnWidth, minWidth: vehicleColumnWidth }}
               >
-                <div className="text-xs font-medium">
-                  {format(date, 'EEE', { locale: fr })}
-                </div>
-                <div className={`text-base font-bold ${isToday ? '' : 'text-gray-900'}`}>
-                  {format(date, 'd')}
-                </div>
-                <div className="text-xs opacity-70">
-                  {format(date, 'MMM', { locale: fr })}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Vehicle Rows */}
-          {vehicles.map((vehicle) => {
-            const isInMaintenance = vehicle.status === 'maintenance';
-            const isSelecting = !!selectedUnassignedBookingId;
-
-            return (
-              <>
-                {/* Vehicle Name Cell - Sticky */}
-                <div
-                  key={`name-${vehicle.id}`}
-                  className={`sticky left-0 z-10 h-14 px-2 flex items-center border-b border-r border-gray-300
-                    ${getVehicleStatusBg(vehicle.status)}
-                    ${isSelecting ? 'cursor-pointer hover:bg-blue-50' : ''}`}
-                  onClick={() => isSelecting && handleVehicleRowClick(vehicle.id)}
-                >
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium text-xs text-gray-900 truncate leading-tight">
-                      {vehicle.name}
+                <div className="h-16" />
+              </th>
+              {/* Date headers */}
+              {dates.map((date, index) => {
+                const isToday = isSameDay(date, new Date());
+                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                return (
+                  <th
+                    key={index}
+                    className={`sticky top-0 z-20 border-b border-r border-gray-200 p-0
+                      ${isToday ? 'bg-primary text-white' : isWeekend ? 'bg-gray-200' : 'bg-gray-100'}`}
+                    style={{ width: cellWidth, minWidth: cellWidth }}
+                  >
+                    <div className="h-16 flex flex-col items-center justify-center">
+                      <div className="text-xs font-medium">
+                        {format(date, 'EEE', { locale: fr })}
+                      </div>
+                      <div className={`text-base font-bold ${isToday ? '' : 'text-gray-900'}`}>
+                        {format(date, 'd')}
+                      </div>
+                      <div className="text-xs opacity-70">
+                        {format(date, 'MMM', { locale: fr })}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      {vehicle.pricePerDay}€/j
-                    </div>
-                  </div>
-                  {isInMaintenance && (
-                    <span className="flex-shrink-0 text-[10px] bg-gray-600 text-white px-1 py-0.5 rounded ml-1">
-                      M
-                    </span>
-                  )}
-                </div>
+                  </th>
+                );
+              })}
+            </tr>
+          </thead>
+          <tbody>
+            {vehicles.map((vehicle) => {
+              const isInMaintenance = vehicle.status === 'maintenance';
+              const isSelecting = !!selectedUnassignedBookingId;
 
-                {/* Date Cells */}
-                {dates.map((date, dateIndex) => {
-                  const booking = getBookingForCell(bookings, vehicle.id, date);
-                  const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-                  const isStart = booking && isBookingStart(booking, date);
-                  const span = booking && isStart
-                    ? getBookingSpan(booking, parseISO(calendarStartDate), calendarViewDays)
-                    : 0;
-
-                  return (
-                    <div
-                      key={`cell-${vehicle.id}-${dateIndex}`}
-                      className={`relative h-14 border-b border-r border-gray-100
-                        ${isWeekend ? 'bg-gray-50' : 'bg-white'}
-                        ${isInMaintenance ? 'bg-gray-200' : ''}`}
-                    >
-                      {booking && isStart ? (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onBookingClick(booking.id);
-                          }}
-                          className={`absolute top-1 left-0.5 h-12 rounded ${getStatusColor(booking.status)}
-                            text-white text-[10px] font-medium px-1.5 overflow-hidden
-                            hover:opacity-90 transition-opacity touch-manipulation z-10
-                            flex flex-col justify-center`}
-                          style={{
-                            width: `calc(${Math.min(span, calendarViewDays - dateIndex)} * ${cellWidth}px - 4px)`,
-                          }}
-                        >
-                          <div className="truncate leading-tight">{booking.clientName}</div>
-                          <div className="truncate opacity-80 leading-tight">{format(parseISO(booking.departureDate), 'dd/MM')} - {format(parseISO(booking.returnDate), 'dd/MM')}</div>
-                        </button>
-                      ) : !booking && !isInMaintenance && !isSelecting ? (
-                        <button
-                          onClick={() => onCellClick(format(date, 'yyyy-MM-dd'), vehicle.id)}
-                          className="w-full h-full hover:bg-green-100 transition-colors touch-manipulation"
-                        />
-                      ) : null}
+              return (
+                <tr key={vehicle.id}>
+                  {/* Vehicle Name Cell - Sticky */}
+                  <td
+                    className={`sticky left-0 z-10 border-b border-r border-gray-300 p-0
+                      ${getVehicleStatusBg(vehicle.status)}
+                      ${isSelecting ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                    onClick={() => isSelecting && handleVehicleRowClick(vehicle.id)}
+                    style={{ width: vehicleColumnWidth, minWidth: vehicleColumnWidth }}
+                  >
+                    <div className="h-14 px-2 flex items-center">
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-xs text-gray-900 truncate leading-tight">
+                          {vehicle.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {vehicle.pricePerDay}€/j
+                        </div>
+                      </div>
+                      {isInMaintenance && (
+                        <span className="flex-shrink-0 text-[10px] bg-gray-600 text-white px-1 py-0.5 rounded ml-1">
+                          M
+                        </span>
+                      )}
                     </div>
-                  );
-                })}
-              </>
-            );
-          })}
-        </div>
+                  </td>
+
+                  {/* Date Cells */}
+                  {dates.map((date, dateIndex) => {
+                    const booking = getBookingForCell(bookings, vehicle.id, date);
+                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                    const isStart = booking && isBookingStart(booking, date);
+                    const span = booking && isStart
+                      ? getBookingSpan(booking, parseISO(calendarStartDate), calendarViewDays)
+                      : 0;
+
+                    return (
+                      <td
+                        key={dateIndex}
+                        className={`relative border-b border-r border-gray-100 p-0
+                          ${isWeekend ? 'bg-gray-50' : 'bg-white'}
+                          ${isInMaintenance ? 'bg-gray-200' : ''}`}
+                        style={{ width: cellWidth, minWidth: cellWidth }}
+                      >
+                        <div className="h-14 relative overflow-visible">
+                          {booking && isStart ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onBookingClick(booking.id);
+                              }}
+                              className={`absolute top-1 left-0.5 h-12 rounded ${getStatusColor(booking.status)}
+                                text-white text-[10px] font-medium px-1.5 overflow-hidden
+                                hover:opacity-90 transition-opacity touch-manipulation
+                                flex flex-col justify-center`}
+                              style={{
+                                width: `${Math.min(span, calendarViewDays - dateIndex) * cellWidth - 4}px`,
+                                zIndex: 5,
+                              }}
+                            >
+                              <div className="truncate leading-tight">{booking.clientName}</div>
+                              <div className="truncate opacity-80 leading-tight">{format(parseISO(booking.departureDate), 'dd/MM')} - {format(parseISO(booking.returnDate), 'dd/MM')}</div>
+                            </button>
+                          ) : !booking && !isInMaintenance && !isSelecting ? (
+                            <button
+                              onClick={() => onCellClick(format(date, 'yyyy-MM-dd'), vehicle.id)}
+                              className="w-full h-full hover:bg-green-100 transition-colors touch-manipulation"
+                            />
+                          ) : null}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );

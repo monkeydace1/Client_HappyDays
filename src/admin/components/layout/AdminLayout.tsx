@@ -37,9 +37,9 @@ export function AdminLayout({ children, kpis, onRefresh, isRefreshing }: AdminLa
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 pb-16 md:pb-0">
+    <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
       {/* Top Bar */}
-      <header className="bg-primary text-white sticky top-0 z-40">
+      <header className="bg-primary text-white flex-shrink-0 z-40">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-2">
             <Car className="w-6 h-6" />
@@ -74,13 +74,13 @@ export function AdminLayout({ children, kpis, onRefresh, isRefreshing }: AdminLa
       {/* Tabs */}
       <AdminTabs activeTab={activeTab} onTabChange={setActiveTab} />
 
-      {/* Main Content */}
+      {/* Main Content - Takes remaining space */}
       <motion.main
         key={activeTab}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2 }}
-        className="flex-1"
+        className="flex-1 min-h-0 pb-16 md:pb-0 overflow-hidden"
       >
         {children}
       </motion.main>

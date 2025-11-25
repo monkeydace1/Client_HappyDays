@@ -19,7 +19,9 @@
       "Bash(sort:*)",
       "Bash(xargs ls:*)",
       "Bash(ren \"algeria-2793897 (1).jpg\" \"algeria-desert.jpg\")",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(cat:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
