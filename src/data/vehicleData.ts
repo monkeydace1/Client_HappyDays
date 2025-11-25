@@ -1,5 +1,8 @@
 import type { Vehicle } from '../types';
 
+// Sample car placeholder image for all vehicles
+const SAMPLE_CAR_IMAGE = 'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80';
+
 export const vehicles: Vehicle[] = [
     {
         id: 1,
@@ -7,7 +10,7 @@ export const vehicles: Vehicle[] = [
         brand: 'Renault',
         model: 'Clio 5',
         category: 'Citadine',
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        image: SAMPLE_CAR_IMAGE,
         transmission: 'Manuelle',
         fuel: 'Essence',
         seats: 5,
@@ -20,7 +23,7 @@ export const vehicles: Vehicle[] = [
         brand: 'Dacia',
         model: 'Sandero Stepway',
         category: 'Citadine',
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        image: SAMPLE_CAR_IMAGE,
         transmission: 'Manuelle',
         fuel: 'Essence',
         seats: 5,
@@ -33,7 +36,7 @@ export const vehicles: Vehicle[] = [
         brand: 'Peugeot',
         model: '208',
         category: 'Citadine',
-        image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        image: SAMPLE_CAR_IMAGE,
         transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
@@ -46,7 +49,7 @@ export const vehicles: Vehicle[] = [
         brand: 'Hyundai',
         model: 'Tucson',
         category: 'SUV',
-        image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        image: SAMPLE_CAR_IMAGE,
         transmission: 'Automatique',
         fuel: 'Diesel',
         seats: 5,
@@ -59,7 +62,7 @@ export const vehicles: Vehicle[] = [
         brand: 'Volkswagen',
         model: 'Golf',
         category: 'Compacte',
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        image: SAMPLE_CAR_IMAGE,
         transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
@@ -72,7 +75,7 @@ export const vehicles: Vehicle[] = [
         brand: 'Toyota',
         model: 'Corolla',
         category: 'Berline',
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80',
+        image: SAMPLE_CAR_IMAGE,
         transmission: 'Automatique',
         fuel: 'Hybride',
         seats: 5,

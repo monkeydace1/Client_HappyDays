@@ -1,68 +1,25 @@
-import { Fuel, Gauge, Settings, Users } from 'lucide-react';
+import { Fuel, Gauge, Settings, Users, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
-
-const vehicles = [
-    {
-        id: 1,
-        name: 'Renault Clio 5',
-        category: 'Citadine',
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Placeholder
-        transmission: 'Manuelle',
-        fuel: 'Essence',
-        seats: 5,
-        price: 35,
-        featured: true
-    },
-    {
-        id: 2,
-        name: 'Dacia Sandero Stepway',
-        category: 'Citadine',
-        image: 'https://images.unsplash.com/photo-1621007947382-bb3c3968e3bb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Placeholder
-        transmission: 'Manuelle',
-        fuel: 'Essence',
-        seats: 5,
-        price: 40,
-        featured: true
-    },
-    {
-        id: 3,
-        name: 'Peugeot 208',
-        category: 'Citadine',
-        image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Placeholder
-        transmission: 'Automatique',
-        fuel: 'Essence',
-        seats: 5,
-        price: 45,
-        featured: true
-    },
-    {
-        id: 4,
-        name: 'Hyundai Tucson',
-        category: 'SUV',
-        image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', // Placeholder
-        transmission: 'Automatique',
-        fuel: 'Diesel',
-        seats: 5,
-        price: 80,
-        featured: true
-    }
-];
+import { Link } from 'react-router-dom';
+import { getFeaturedVehicles } from '../data/vehicleData';
 
 export const Fleet = () => {
+    const featuredVehicles = getFeaturedVehicles();
+
     return (
-        <section id="fleet" className="py-20 bg-gray-50">
+        <section id="fleet" className="py-12 md:py-20 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="text-center mb-16">
-                    <h2 className="text-3xl md:text-4xl font-bold text-secondary mb-4">
+                <div className="text-center mb-10 md:mb-16">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-secondary mb-3 md:mb-4">
                         Nos Véhicules
                     </h2>
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
                         Une flotte récente et entretenue pour tous vos besoins, de la citadine économique au SUV familial.
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {vehicles.map((car, index) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                    {featuredVehicles.map((car, index) => (
                         <motion.div
                             key={car.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -71,62 +28,61 @@ export const Fleet = () => {
                             viewport={{ once: true }}
                             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group"
                         >
-                            <div className="relative h-48 overflow-hidden">
+                            <div className="relative h-40 sm:h-48 overflow-hidden">
                                 <img
                                     src={car.image}
                                     alt={car.name}
                                     className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                                 />
-                                <div className="absolute top-4 right-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-sm font-bold text-primary">
-                                    {car.price}€ / jour
+                                <div className="absolute top-3 right-3 bg-accent text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                                    {car.pricePerDay}€ / jour
                                 </div>
                             </div>
 
-                            <div className="p-6">
-                                <h3 className="text-xl font-bold text-secondary mb-2">{car.name}</h3>
-                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-                                    <span className="bg-gray-100 px-2 py-1 rounded">{car.category}</span>
+                            <div className="p-4 md:p-5">
+                                <h3 className="text-lg md:text-xl font-bold text-secondary mb-2">{car.name}</h3>
+                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
+                                    <span className="bg-primary-light text-primary px-2 py-0.5 rounded text-xs font-medium">{car.category}</span>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4 mb-6">
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Settings size={16} className="text-primary" />
+                                <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4">
+                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
+                                        <Settings size={14} className="text-accent" />
                                         <span>{car.transmission}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Fuel size={16} className="text-primary" />
+                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
+                                        <Fuel size={14} className="text-accent" />
                                         <span>{car.fuel}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Users size={16} className="text-primary" />
+                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
+                                        <Users size={14} className="text-accent" />
                                         <span>{car.seats} places</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Gauge size={16} className="text-primary" />
+                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
+                                        <Gauge size={14} className="text-accent" />
                                         <span>Illimité</span>
                                     </div>
                                 </div>
 
-                                <a
-                                    href={`https://wa.me/1234567890?text=Bonjour, je souhaite réserver le véhicule ${car.name}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="w-full bg-secondary hover:bg-secondary-dark text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2 group-hover:bg-primary group-hover:text-white"
+                                <Link
+                                    to="/booking"
+                                    className="w-full bg-gradient-to-r from-accent to-orange-500 hover:from-orange-500 hover:to-accent text-white font-bold py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-base shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transform hover:scale-[1.02]"
                                 >
                                     Réserver
-                                </a>
+                                </Link>
                             </div>
                         </motion.div>
                     ))}
                 </div>
 
-                <div className="text-center mt-12">
-                    <button className="text-primary hover:text-primary-hover font-semibold text-lg flex items-center justify-center gap-2 mx-auto">
+                <div className="text-center mt-8 md:mt-12">
+                    <Link
+                        to="/fleet"
+                        className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-semibold text-base md:text-lg transition-colors group"
+                    >
                         Voir toute la flotte
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                    </button>
+                        <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                    </Link>
                 </div>
             </div>
         </section>

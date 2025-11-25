@@ -3,10 +3,17 @@
 @theme {
   --font-sans: "Inter", sans-serif;
 
-  --color-primary: #F59E0B;
-  --color-primary-hover: #D97706;
-  --color-primary-light: #FEF3C7;
+  /* Primary - Deep Blue from logo */
+  --color-primary: #1E3A5F;
+  --color-primary-hover: #152C4A;
+  --color-primary-light: #E8F0F8;
 
+  /* Accent - Orange/Yellow from logo sun */
+  --color-accent: #F59E0B;
+  --color-accent-hover: #D97706;
+  --color-accent-light: #FEF3C7;
+
+  /* Secondary - Text colors */
   --color-secondary: #334155;
   --color-secondary-dark: #1E293B;
   --color-secondary-light: #94A3B8;

@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import { Calendar, Search, Clock } from 'lucide-react';
+import { Calendar, Search, Clock, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../store/bookingStore';
+import heroBackground from '../assets/photo-1656978310683-d415ee895c2c.jpg';
 
 export const Hero = () => {
     const navigate = useNavigate();
@@ -32,33 +33,32 @@ export const Hero = () => {
     };
 
     return (
-        <div className="relative h-screen min-h-[600px] flex items-center justify-center">
-            {/* Background Image */}
+        <div className="relative min-h-[70vh] md:min-h-[75vh] flex items-center justify-center pt-16 md:pt-20">
+            {/* Background Image - Oran */}
             <div
                 className="absolute inset-0 z-0"
                 style={{
-                    backgroundImage: 'url("https://images.unsplash.com/photo-1473186505569-9c61870c11f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80")',
+                    backgroundImage: `url(${heroBackground})`,
                     backgroundSize: 'cover',
                     backgroundPosition: 'center',
                 }}
             >
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/20" />
+                <div className="absolute inset-0 bg-black/40" />
             </div>
 
             {/* Content */}
-            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20">
+            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
-                    className="text-center mb-12"
+                    className="text-center mb-6 md:mb-10"
                 >
-                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-6 drop-shadow-lg">
-                        Explorez en toute liberté
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 leading-tight drop-shadow-2xl">
+                        Location de voitures à Oran
                     </h1>
-                    <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto drop-shadow-md">
-                        Votre partenaire de confiance pour la location de voitures.
-                        Profitez de nos tarifs exceptionnels et d'un service premium.
+                    <p className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-2xl mx-auto px-4 drop-shadow-lg">
+                        Louez votre voiture en toute simplicité - Tarifs exceptionnels et service premium
                     </p>
                 </motion.div>
 
@@ -67,13 +67,13 @@ export const Hero = () => {
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    className="bg-white rounded-2xl shadow-2xl p-6 md:p-8 max-w-6xl mx-auto"
+                    className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 max-w-5xl mx-auto"
                 >
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                         {/* Departure Date & Time */}
-                        <div className="space-y-3">
-                            <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                                <Calendar size={16} className="text-primary" />
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-secondary flex items-center gap-2">
+                                <Calendar size={16} className="text-accent" />
                                 Date de départ
                             </label>
                             <input
@@ -81,23 +81,23 @@ export const Hero = () => {
                                 value={departureDay}
                                 onChange={(e) => setDepartureDay(e.target.value)}
                                 min={new Date().toISOString().split('T')[0]}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base"
                             />
                             <div className="flex items-center gap-2">
-                                <Clock size={16} className="text-primary" />
+                                <Clock size={14} className="text-accent flex-shrink-0" />
                                 <input
                                     type="time"
                                     value={departureTime}
                                     onChange={(e) => setDepartureTime(e.target.value)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                                 />
                             </div>
                         </div>
 
                         {/* Return Date & Time */}
-                        <div className="space-y-3">
-                            <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                                <Calendar size={16} className="text-primary" />
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-secondary flex items-center gap-2">
+                                <Calendar size={16} className="text-accent" />
                                 Date de retour
                             </label>
                             <input
@@ -105,43 +105,45 @@ export const Hero = () => {
                                 value={returnDay}
                                 onChange={(e) => setReturnDay(e.target.value)}
                                 min={departureDay || new Date().toISOString().split('T')[0]}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base"
                             />
                             <div className="flex items-center gap-2">
-                                <Clock size={16} className="text-primary" />
+                                <Clock size={14} className="text-accent flex-shrink-0" />
                                 <input
                                     type="time"
                                     value={returnTime}
                                     onChange={(e) => setReturnTime(e.target.value)}
-                                    className="flex-1 px-4 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
                                 />
                             </div>
                         </div>
 
                         {/* Pickup Location */}
-                        <div className="space-y-3">
-                            <label className="block text-sm font-medium text-gray-700">
-                                Lieu de ramassage
+                        <div className="space-y-2">
+                            <label className="block text-sm font-medium text-secondary flex items-center gap-2">
+                                <MapPin size={16} className="text-accent" />
+                                Lieu de prise en charge
                             </label>
                             <select
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
-                                className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white h-[52px]"
+                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-sm md:text-base"
                             >
                                 <option value="Aéroport International Doran Ahmed Ben Bella">Aéroport Oran</option>
-                                <option value="Wilaya Oran">Wilaya Oran</option>
+                                <option value="Wilaya Oran">Centre Oran</option>
                             </select>
+                            <p className="text-xs text-gray-500 mt-1">Livraison gratuite</p>
                         </div>
 
                         {/* Search Button */}
-                        <div className="flex items-end">
+                        <div className="flex items-end sm:col-span-2 lg:col-span-1">
                             <button
                                 onClick={handleSearch}
                                 disabled={!departureDay || !returnDay}
-                                className="w-full bg-primary hover:bg-primary-hover disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-3.5 px-6 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/30 flex items-center justify-center gap-2 h-[52px]"
+                                className="w-full bg-gradient-to-r from-accent to-orange-500 hover:from-orange-500 hover:to-accent disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-3.5 md:py-4 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 active:scale-[0.98] shadow-xl shadow-accent/40 hover:shadow-2xl hover:shadow-accent/50 flex items-center justify-center gap-2 text-base md:text-lg animate-pulse hover:animate-none"
                             >
                                 <Search size={20} />
-                                Voir les disponibilités
+                                Rechercher
                             </button>
                         </div>
                     </div>

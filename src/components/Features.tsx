@@ -26,9 +26,20 @@ const features = [
 
 export const Features = () => {
     return (
-        <section id="services" className="py-20 bg-white">
+        <section id="services" className="py-12 md:py-20 bg-white">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                {/* Section Title */}
+                <div className="text-center mb-10 md:mb-14">
+                    <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-secondary mb-3 md:mb-4">
+                        Pourquoi Nous Choisir
+                    </h2>
+                    <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
+                        Des services de qualité pour une expérience de location sans souci
+                    </p>
+                </div>
+
+                {/* Features Grid */}
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
                     {features.map((feature, index) => (
                         <motion.div
                             key={index}
@@ -36,13 +47,13 @@ export const Features = () => {
                             whileInView={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.5, delay: index * 0.1 }}
                             viewport={{ once: true }}
-                            className="text-center p-6 rounded-xl hover:bg-amber-50 transition-colors"
+                            className="text-center p-4 md:p-6 rounded-xl hover:bg-primary-light transition-colors"
                         >
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary mb-6">
-                                <feature.icon size={32} />
+                            <div className="inline-flex items-center justify-center w-12 h-12 md:w-16 md:h-16 rounded-full bg-accent/10 text-accent mb-4 md:mb-6">
+                                <feature.icon size={24} className="md:w-8 md:h-8" />
                             </div>
-                            <h3 className="text-xl font-bold text-secondary mb-3">{feature.title}</h3>
-                            <p className="text-gray-600 leading-relaxed">
+                            <h3 className="text-base md:text-xl font-bold text-secondary mb-2 md:mb-3">{feature.title}</h3>
+                            <p className="text-sm md:text-base text-gray-600 leading-relaxed">
                                 {feature.description}
                             </p>
                         </motion.div>
