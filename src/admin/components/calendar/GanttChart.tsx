@@ -1,10 +1,24 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 import { format, addDays, isSameDay, isWithinInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAdminStore } from '../../store/adminStore';
 import type { AdminVehicle, AdminBooking, CalendarViewDays } from '../../types/admin';
+
+// Hook to detect mobile screen
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+}
 
 interface GanttChartProps {
   vehicles: AdminVehicle[];
@@ -126,9 +140,12 @@ export function GanttChart({
     }
   };
 
-  // Cell width based on view
-  const cellWidth = calendarViewDays <= 7 ? 48 : calendarViewDays <= 14 ? 42 : 36;
-  const vehicleColumnWidth = 40; // Compact - just show vehicle number
+  // Responsive sizing
+  const isMobile = useIsMobile();
+  const cellWidth = isMobile
+    ? (calendarViewDays <= 7 ? 48 : calendarViewDays <= 14 ? 42 : 36)
+    : (calendarViewDays <= 7 ? 90 : calendarViewDays <= 14 ? 70 : 55);
+  const vehicleColumnWidth = isMobile ? 40 : 160;
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -274,7 +291,7 @@ export function GanttChart({
 
               return (
                 <tr key={vehicle.id}>
-                  {/* Vehicle Number Cell - Sticky */}
+                  {/* Vehicle Cell - Sticky */}
                   <td
                     className={`sticky left-0 z-10 border-b border-r border-gray-300 p-0
                       ${getVehicleStatusBg(vehicle.status)}
@@ -282,10 +299,19 @@ export function GanttChart({
                     onClick={() => isSelecting && handleVehicleRowClick(vehicle.id)}
                     style={{ width: vehicleColumnWidth, minWidth: vehicleColumnWidth }}
                   >
-                    <div className="h-12 flex items-center justify-center">
-                      <span className={`text-sm font-bold ${isInMaintenance ? 'text-gray-400' : 'text-gray-700'}`}>
+                    <div className="h-12 flex items-center px-2 gap-2">
+                      <span className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
+                        ${isInMaintenance ? 'bg-gray-400 text-white' : 'bg-primary text-white'}`}>
                         {vehicle.id}
                       </span>
+                      {!isMobile && (
+                        <div className="min-w-0 flex-1">
+                          <div className={`text-xs font-medium truncate ${isInMaintenance ? 'text-gray-400' : 'text-gray-900'}`}>
+                            {vehicle.name}
+                          </div>
+                          <div className="text-[10px] text-gray-500">{vehicle.pricePerDay}€/j</div>
+                        </div>
+                      )}
                     </div>
                   </td>
 
@@ -314,15 +340,21 @@ export function GanttChart({
                                 onBookingClick(booking.id);
                               }}
                               className={`absolute top-0.5 left-0.5 h-11 rounded ${getStatusColor(booking.status)}
-                                text-white text-[9px] font-medium px-1 overflow-hidden
+                                text-white font-medium px-1.5 overflow-hidden
                                 hover:opacity-90 transition-opacity touch-manipulation
-                                flex items-center`}
+                                flex flex-col justify-center`}
                               style={{
                                 width: `${Math.min(span, calendarViewDays - dateIndex) * cellWidth - 4}px`,
                                 zIndex: 5,
+                                fontSize: isMobile ? '9px' : '11px',
                               }}
                             >
-                              <div className="truncate leading-tight">{booking.clientName.split(' ')[0]}</div>
+                              <div className="truncate leading-tight">{isMobile ? booking.clientName.split(' ')[0] : booking.clientName}</div>
+                              {!isMobile && (
+                                <div className="truncate opacity-80 text-[9px] leading-tight">
+                                  {format(parseISO(booking.departureDate), 'dd/MM')} - {format(parseISO(booking.returnDate), 'dd/MM')}
+                                </div>
+                              )}
                             </button>
                           ) : !booking && !isInMaintenance && !isSelecting ? (
                             <button
