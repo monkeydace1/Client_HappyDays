@@ -127,8 +127,8 @@ export function GanttChart({
   };
 
   // Cell width based on view
-  const cellWidth = calendarViewDays <= 7 ? 50 : calendarViewDays <= 14 ? 44 : 40;
-  const vehicleColumnWidth = 100;
+  const cellWidth = calendarViewDays <= 7 ? 48 : calendarViewDays <= 14 ? 42 : 36;
+  const vehicleColumnWidth = 40; // Compact - just show vehicle number
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -190,34 +190,34 @@ export function GanttChart({
       )}
 
       {/* Calendar Controls */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between flex-shrink-0">
-        <div className="flex items-center gap-2">
+      <div className="bg-white border-b border-gray-200 px-2 py-1.5 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-1">
           <button
             onClick={() => navigateCalendar('prev')}
-            className="p-2 hover:bg-gray-100 rounded-lg touch-manipulation"
+            className="p-1.5 hover:bg-gray-100 rounded touch-manipulation"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             onClick={goToToday}
-            className="px-3 py-1.5 text-sm font-medium bg-primary text-white rounded-lg hover:bg-primary-hover touch-manipulation"
+            className="px-2 py-1 text-xs font-medium bg-primary text-white rounded hover:bg-primary-hover touch-manipulation"
           >
-            Aujourd'hui
+            Auj.
           </button>
           <button
             onClick={() => navigateCalendar('next')}
-            className="p-2 hover:bg-gray-100 rounded-lg touch-manipulation"
+            className="p-1.5 hover:bg-gray-100 rounded touch-manipulation"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+        <div className="flex items-center gap-0.5 bg-gray-100 rounded p-0.5">
           {viewOptions.map((option) => (
             <button
               key={option.value}
               onClick={() => setCalendarViewDays(option.value)}
-              className={`px-3 py-1.5 text-sm font-medium rounded-md transition-all touch-manipulation
+              className={`px-2 py-1 text-xs font-medium rounded transition-all touch-manipulation
                 ${calendarViewDays === option.value
                   ? 'bg-white shadow text-primary'
                   : 'text-gray-600 hover:text-gray-900'}`}
@@ -241,7 +241,7 @@ export function GanttChart({
                 className="sticky left-0 top-0 z-30 bg-gray-100 border-b border-r border-gray-300"
                 style={{ width: vehicleColumnWidth, minWidth: vehicleColumnWidth }}
               >
-                <div className="h-16" />
+                <div className="h-10" />
               </th>
               {/* Date headers */}
               {dates.map((date, index) => {
@@ -254,15 +254,12 @@ export function GanttChart({
                       ${isToday ? 'bg-primary text-white' : isWeekend ? 'bg-gray-200' : 'bg-gray-100'}`}
                     style={{ width: cellWidth, minWidth: cellWidth }}
                   >
-                    <div className="h-16 flex flex-col items-center justify-center">
-                      <div className="text-xs font-medium">
-                        {format(date, 'EEE', { locale: fr })}
+                    <div className="h-10 flex flex-col items-center justify-center">
+                      <div className="text-[10px] font-medium leading-none">
+                        {format(date, 'EEE', { locale: fr }).slice(0, 2)}
                       </div>
-                      <div className={`text-base font-bold ${isToday ? '' : 'text-gray-900'}`}>
+                      <div className={`text-sm font-bold leading-none ${isToday ? '' : 'text-gray-900'}`}>
                         {format(date, 'd')}
-                      </div>
-                      <div className="text-xs opacity-70">
-                        {format(date, 'MMM', { locale: fr })}
                       </div>
                     </div>
                   </th>
@@ -277,7 +274,7 @@ export function GanttChart({
 
               return (
                 <tr key={vehicle.id}>
-                  {/* Vehicle Name Cell - Sticky */}
+                  {/* Vehicle Number Cell - Sticky */}
                   <td
                     className={`sticky left-0 z-10 border-b border-r border-gray-300 p-0
                       ${getVehicleStatusBg(vehicle.status)}
@@ -285,20 +282,10 @@ export function GanttChart({
                     onClick={() => isSelecting && handleVehicleRowClick(vehicle.id)}
                     style={{ width: vehicleColumnWidth, minWidth: vehicleColumnWidth }}
                   >
-                    <div className="h-14 px-2 flex items-center">
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-xs text-gray-900 truncate leading-tight">
-                          {vehicle.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {vehicle.pricePerDay}€/j
-                        </div>
-                      </div>
-                      {isInMaintenance && (
-                        <span className="flex-shrink-0 text-[10px] bg-gray-600 text-white px-1 py-0.5 rounded ml-1">
-                          M
-                        </span>
-                      )}
+                    <div className="h-12 flex items-center justify-center">
+                      <span className={`text-sm font-bold ${isInMaintenance ? 'text-gray-400' : 'text-gray-700'}`}>
+                        {vehicle.id}
+                      </span>
                     </div>
                   </td>
 
@@ -319,24 +306,23 @@ export function GanttChart({
                           ${isInMaintenance ? 'bg-gray-200' : ''}`}
                         style={{ width: cellWidth, minWidth: cellWidth }}
                       >
-                        <div className="h-14 relative overflow-visible">
+                        <div className="h-12 relative overflow-visible">
                           {booking && isStart ? (
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 onBookingClick(booking.id);
                               }}
-                              className={`absolute top-1 left-0.5 h-12 rounded ${getStatusColor(booking.status)}
-                                text-white text-[10px] font-medium px-1.5 overflow-hidden
+                              className={`absolute top-0.5 left-0.5 h-11 rounded ${getStatusColor(booking.status)}
+                                text-white text-[9px] font-medium px-1 overflow-hidden
                                 hover:opacity-90 transition-opacity touch-manipulation
-                                flex flex-col justify-center`}
+                                flex items-center`}
                               style={{
                                 width: `${Math.min(span, calendarViewDays - dateIndex) * cellWidth - 4}px`,
                                 zIndex: 5,
                               }}
                             >
-                              <div className="truncate leading-tight">{booking.clientName}</div>
-                              <div className="truncate opacity-80 leading-tight">{format(parseISO(booking.departureDate), 'dd/MM')} - {format(parseISO(booking.returnDate), 'dd/MM')}</div>
+                              <div className="truncate leading-tight">{booking.clientName.split(' ')[0]}</div>
                             </button>
                           ) : !booking && !isInMaintenance && !isSelecting ? (
                             <button
