@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Menu, X, Phone, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link, useLocation } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 export const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const location = useLocation();
 
     const navLinks = [
         { name: 'Accueil', href: '/' },

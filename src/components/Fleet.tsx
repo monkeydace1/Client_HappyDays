@@ -1,4 +1,3 @@
-import React from 'react';
 import { Fuel, Gauge, Settings, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 

@@ -1,4 +1,3 @@
-import React from 'react';
 import { ShieldCheck, Truck, Clock, Gauge } from 'lucide-react';
 import { motion } from 'framer-motion';
 
