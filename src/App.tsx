@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
@@ -10,6 +10,11 @@ import { Footer } from './components/Footer';
 import { BookingPage } from './pages/BookingPage';
 import { FleetPage } from './pages/FleetPage';
 import { ConditionsPage } from './pages/ConditionsPage';
+
+// Admin imports
+import { AdminLoginPage } from './admin/pages/AdminLoginPage';
+import { AdminPinPage } from './admin/pages/AdminPinPage';
+import { AdminDashboardPage } from './admin/pages/AdminDashboardPage';
 
 function HomePage() {
   return (
@@ -24,19 +29,55 @@ function HomePage() {
   );
 }
 
+// Layout wrapper that conditionally shows Navbar and Footer
+function PublicLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      {children}
+      <Footer />
+    </div>
+  );
+}
+
+// Admin routes don't have the public navbar/footer
+function AdminLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>;
+}
+
+function AppRoutes() {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
+  if (isAdminRoute) {
+    return (
+      <AdminLayout>
+        <Routes>
+          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route path="/admin/pin" element={<AdminPinPage />} />
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+        </Routes>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <PublicLayout>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/booking" element={<BookingPage />} />
+        <Route path="/fleet" element={<FleetPage />} />
+        <Route path="/conditions" element={<ConditionsPage />} />
+      </Routes>
+    </PublicLayout>
+  );
+}
+
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/booking" element={<BookingPage />} />
-          <Route path="/fleet" element={<FleetPage />} />
-          <Route path="/conditions" element={<ConditionsPage />} />
-        </Routes>
-        <Footer />
-      </div>
+      <AppRoutes />
     </Router>
   );
 }

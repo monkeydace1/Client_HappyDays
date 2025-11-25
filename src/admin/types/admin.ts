@@ -1,0 +1,81 @@
+import type { Vehicle } from '../../types';
+
+// Admin Vehicle extends base Vehicle with admin-specific fields
+export interface AdminVehicle extends Vehicle {
+  status: 'available' | 'maintenance' | 'retired';
+  licensePlate?: string;
+  notes?: string;
+}
+
+// Booking status for admin dashboard
+export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+
+// Booking source
+export type BookingSource = 'web' | 'walk_in' | 'phone';
+
+// Admin booking record
+export interface AdminBooking {
+  id: string;
+  bookingReference: string;
+  status: BookingStatus;
+  source: BookingSource;
+
+  // Dates
+  departureDate: string;
+  returnDate: string;
+  rentalDays: number;
+
+  // Location
+  pickupLocation: string;
+  customPickupLocation?: string;
+  returnLocation?: string;
+
+  // Vehicle
+  vehicleId: number;
+  vehicleName: string;
+  assignedVehicleId?: number; // For assigning to specific car
+
+  // Client (simplified for admin view)
+  clientName: string;
+  clientPhone: string;
+  clientEmail?: string;
+
+  // Pricing
+  totalPrice: number;
+
+  // Meta
+  createdAt: string;
+  updatedAt: string;
+}
+
+// QuickAdd form data (simplified for walk-ins)
+export interface QuickAddData {
+  clientName: string;
+  clientPhone?: string;
+  vehicleId: number;
+  departureDate: string;
+  returnDate: string;
+  notes?: string;
+}
+
+// KPI data
+export interface DashboardKPIs {
+  totalCars: number;
+  availableCars: number;
+  activeReservations: number;
+  pendingReservations: number;
+}
+
+// Calendar view options
+export type CalendarViewDays = 7 | 14 | 30;
+
+// Admin tab types
+export type AdminTab = 'calendar' | 'reservations' | 'vehicles';
+
+// Reservation filters
+export interface ReservationFilters {
+  search: string;
+  status: BookingStatus | 'all';
+  dateFrom?: string;
+  dateTo?: string;
+}
