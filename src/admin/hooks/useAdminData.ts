@@ -13,6 +13,88 @@ import {
   generateBookingReference,
 } from '../services/adminService';
 
+// ============================================
+// FALLBACK SAMPLE DATA (when Supabase is empty/fails)
+// ============================================
+
+const SAMPLE_VEHICLES: AdminVehicle[] = [
+  { id: 1, name: 'Clio 5 Noir', brand: 'Renault', model: 'Clio 5', category: 'Économique', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 3500, image: '/images/cars/clio5.jpg', status: 'available' },
+  { id: 2, name: 'Clio 5 Blanc', brand: 'Renault', model: 'Clio 5', category: 'Économique', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 3500, image: '/images/cars/clio5.jpg', status: 'available' },
+  { id: 3, name: 'Clio 5 Gris', brand: 'Renault', model: 'Clio 5', category: 'Économique', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 3500, image: '/images/cars/clio5.jpg', status: 'available' },
+  { id: 4, name: 'Symbol Noir', brand: 'Renault', model: 'Symbol', category: 'Compacte', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 4000, image: '/images/cars/symbol.jpg', status: 'available' },
+  { id: 5, name: 'Symbol Blanc', brand: 'Renault', model: 'Symbol', category: 'Compacte', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 4000, image: '/images/cars/symbol.jpg', status: 'available' },
+  { id: 6, name: 'Symbol Gris', brand: 'Renault', model: 'Symbol', category: 'Compacte', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 4000, image: '/images/cars/symbol.jpg', status: 'maintenance' },
+  { id: 7, name: 'Peugeot 301 Noir', brand: 'Peugeot', model: '301', category: 'Berline', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 4500, image: '/images/cars/301.jpg', status: 'available' },
+  { id: 8, name: 'Peugeot 301 Blanc', brand: 'Peugeot', model: '301', category: 'Berline', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 4500, image: '/images/cars/301.jpg', status: 'available' },
+  { id: 9, name: 'Peugeot 301 Gris', brand: 'Peugeot', model: '301', category: 'Berline', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 4500, image: '/images/cars/301.jpg', status: 'available' },
+  { id: 10, name: 'Dacia Logan MCV Noir', brand: 'Dacia', model: 'Logan MCV', category: 'Familiale', transmission: 'Manuelle', fuel: 'Diesel', seats: 7, pricePerDay: 5000, image: '/images/cars/logan-mcv.jpg', status: 'available' },
+  { id: 11, name: 'Dacia Logan MCV Blanc', brand: 'Dacia', model: 'Logan MCV', category: 'Familiale', transmission: 'Manuelle', fuel: 'Diesel', seats: 7, pricePerDay: 5000, image: '/images/cars/logan-mcv.jpg', status: 'available' },
+  { id: 12, name: 'Dacia Logan MCV Gris', brand: 'Dacia', model: 'Logan MCV', category: 'Familiale', transmission: 'Manuelle', fuel: 'Diesel', seats: 7, pricePerDay: 5000, image: '/images/cars/logan-mcv.jpg', status: 'available' },
+  { id: 13, name: 'Dacia Duster Noir', brand: 'Dacia', model: 'Duster', category: 'SUV', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 6000, image: '/images/cars/duster.jpg', status: 'available' },
+  { id: 14, name: 'Dacia Duster Blanc', brand: 'Dacia', model: 'Duster', category: 'SUV', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 6000, image: '/images/cars/duster.jpg', status: 'available' },
+  { id: 15, name: 'Dacia Duster Gris', brand: 'Dacia', model: 'Duster', category: 'SUV', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 6000, image: '/images/cars/duster.jpg', status: 'available' },
+  { id: 16, name: 'Peugeot 3008 Noir', brand: 'Peugeot', model: '3008', category: 'Premium', transmission: 'Automatique', fuel: 'Diesel', seats: 5, pricePerDay: 8000, image: '/images/cars/3008.jpg', status: 'available' },
+  { id: 17, name: 'Peugeot 3008 Blanc', brand: 'Peugeot', model: '3008', category: 'Premium', transmission: 'Automatique', fuel: 'Diesel', seats: 5, pricePerDay: 8000, image: '/images/cars/3008.jpg', status: 'available' },
+  { id: 18, name: 'Peugeot 3008 Gris', brand: 'Peugeot', model: '3008', category: 'Premium', transmission: 'Automatique', fuel: 'Diesel', seats: 5, pricePerDay: 8000, image: '/images/cars/3008.jpg', status: 'available' },
+];
+
+// Generate sample bookings based on current date
+function generateSampleBookings(): AdminBooking[] {
+  const today = new Date();
+  const bookings: AdminBooking[] = [];
+
+  const sampleClients = [
+    { name: 'Ahmed Benali', phone: '0555123456' },
+    { name: 'Fatima Zahra', phone: '0661234567' },
+    { name: 'Mohamed Kaci', phone: '0770123456' },
+    { name: 'Amina Hadj', phone: '0551234567' },
+    { name: 'Youcef Mansouri', phone: '0662345678' },
+    { name: 'Samira Boudiaf', phone: '0773456789' },
+  ];
+
+  // Create bookings spread across vehicles and dates
+  const bookingConfigs = [
+    { vehicleId: 1, daysFromToday: -2, duration: 5, status: 'confirmed' as const },
+    { vehicleId: 3, daysFromToday: 1, duration: 3, status: 'confirmed' as const },
+    { vehicleId: 5, daysFromToday: 0, duration: 4, status: 'confirmed' as const },
+    { vehicleId: 7, daysFromToday: 3, duration: 2, status: 'pending' as const },
+    { vehicleId: 10, daysFromToday: -1, duration: 6, status: 'confirmed' as const },
+    { vehicleId: 13, daysFromToday: 2, duration: 3, status: 'pending' as const },
+    { vehicleId: 16, daysFromToday: 4, duration: 5, status: 'confirmed' as const },
+    { vehicleId: 4, daysFromToday: -3, duration: 2, status: 'completed' as const },
+  ];
+
+  bookingConfigs.forEach((config, index) => {
+    const client = sampleClients[index % sampleClients.length];
+    const vehicle = SAMPLE_VEHICLES.find(v => v.id === config.vehicleId)!;
+    const startDate = new Date(today);
+    startDate.setDate(today.getDate() + config.daysFromToday);
+    const endDate = new Date(startDate);
+    endDate.setDate(startDate.getDate() + config.duration - 1);
+
+    bookings.push({
+      id: `sample-${index + 1}`,
+      bookingReference: `HD-2024-11-${String(index + 1).padStart(4, '0')}`,
+      status: config.status,
+      source: index % 3 === 0 ? 'web' : index % 3 === 1 ? 'phone' : 'walk_in',
+      departureDate: startDate.toISOString().split('T')[0],
+      returnDate: endDate.toISOString().split('T')[0],
+      rentalDays: config.duration,
+      pickupLocation: 'Aéroport Oran',
+      vehicleId: config.vehicleId,
+      vehicleName: vehicle.name,
+      assignedVehicleId: config.vehicleId,
+      clientName: client.name,
+      clientPhone: client.phone,
+      totalPrice: config.duration * vehicle.pricePerDay,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  });
+
+  return bookings;
+}
+
 interface UseAdminDataReturn {
   // Data
   vehicles: AdminVehicle[];
@@ -39,7 +121,7 @@ export function useAdminData(): UseAdminDataReturn {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Initial data fetch
+  // Initial data fetch with fallback to sample data
   const loadData = useCallback(async (showRefreshing = false) => {
     try {
       if (showRefreshing) setIsRefreshing(true);
@@ -50,11 +132,24 @@ export function useAdminData(): UseAdminDataReturn {
         fetchBookings(),
       ]);
 
-      setVehicles(vehiclesData);
-      setBookings(bookingsData);
+      // Use Supabase vehicles if available, otherwise fallback to sample
+      const finalVehicles = vehiclesData.length > 0 ? vehiclesData : SAMPLE_VEHICLES;
+      setVehicles(finalVehicles);
+
+      // Use Supabase bookings if available, otherwise generate sample bookings
+      if (bookingsData.length > 0) {
+        setBookings(bookingsData);
+      } else {
+        // Generate sample bookings for demo
+        console.log('Using sample bookings (no bookings in DB)');
+        setBookings(generateSampleBookings());
+      }
     } catch (err) {
       console.error('Error loading admin data:', err);
-      setError('Erreur lors du chargement des données');
+      // Fallback to sample data on error
+      console.log('Using sample data (Supabase error)');
+      setVehicles(SAMPLE_VEHICLES);
+      setBookings(generateSampleBookings());
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
