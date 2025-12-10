@@ -7,6 +7,7 @@ export const adminVehicles: AdminVehicle[] = vehicles.map((vehicle) => ({
   name: vehicle.name,
   brand: vehicle.brand,
   model: vehicle.model,
+  year: vehicle.year,
   category: vehicle.category,
   image: vehicle.image,
   transmission: vehicle.transmission as 'Manuelle' | 'Automatique',

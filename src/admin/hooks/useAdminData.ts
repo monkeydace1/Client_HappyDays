@@ -19,29 +19,29 @@ import {
 
 const SAMPLE_VEHICLES: AdminVehicle[] = [
   // Premium / SUV
-  { id: 1, name: 'Fiat 500X 2024', brand: 'Fiat', model: '500X', category: 'SUV', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 45, image: '/vehicles/fiat-500x/main.jpg', status: 'available' },
+  { id: 1, name: 'Fiat 500X 2024', brand: 'Fiat', model: '500X', year: 2024, category: 'SUV', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 45, image: '/vehicles/fiat-500x/main.jpg', status: 'available' },
   // Citadines récentes
-  { id: 2, name: 'Renault Clio 5 2022', brand: 'Renault', model: 'Clio 5', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/renault-clio5/main.jpg', status: 'available' },
-  { id: 3, name: 'Peugeot 208 2022', brand: 'Peugeot', model: '208', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/peugeot-208/main.jpg', status: 'available' },
-  { id: 4, name: 'Seat Ibiza 2019 Auto', brand: 'Seat', model: 'Ibiza', category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/seat-ibiza-2019-auto/main.jpg', status: 'available' },
-  { id: 5, name: 'Seat Ibiza FR 2019', brand: 'Seat', model: 'Ibiza FR', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/seat-ibiza-fr/main.jpg', status: 'available' },
-  { id: 6, name: 'Suzuki Swift 2022', brand: 'Suzuki', model: 'Swift', category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 30, image: '/vehicles/suzuki-swift/main.jpg', status: 'available' },
+  { id: 2, name: 'Renault Clio 5 2022', brand: 'Renault', model: 'Clio 5', year: 2022, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/renault-clio5/main.jpg', status: 'available' },
+  { id: 3, name: 'Peugeot 208 2022', brand: 'Peugeot', model: '208', year: 2022, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/peugeot-208/main.jpg', status: 'available' },
+  { id: 4, name: 'Seat Ibiza 2019 Auto', brand: 'Seat', model: 'Ibiza', year: 2019, category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/seat-ibiza-2019-auto/main.jpg', status: 'available' },
+  { id: 5, name: 'Seat Ibiza FR 2019', brand: 'Seat', model: 'Ibiza FR', year: 2019, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/seat-ibiza-fr/main.jpg', status: 'available' },
+  { id: 6, name: 'Suzuki Swift 2022', brand: 'Suzuki', model: 'Swift', year: 2022, category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 30, image: '/vehicles/suzuki-swift/main.jpg', status: 'available' },
   // Compactes
-  { id: 7, name: 'VW Polo Star Plus 2019', brand: 'Volkswagen', model: 'Polo Star Plus', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 32, image: '/vehicles/vw-polo-2019/main.jpg', status: 'available' },
-  { id: 8, name: 'Clio 4 Limited 2019', brand: 'Renault', model: 'Clio 4 Limited', category: 'Citadine', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 32, image: '/vehicles/renault-clio4-limited/main.jpg', status: 'available' },
-  { id: 9, name: 'Seat Ibiza Style 2018', brand: 'Seat', model: 'Ibiza Style', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 30, image: '/vehicles/seat-ibiza-style/main.jpg', status: 'available' },
-  { id: 10, name: 'Fiat 500 Dolce Vita 2025', brand: 'Fiat', model: '500 Dolce Vita', category: 'Citadine', transmission: 'Manuelle', fuel: 'Hybride', seats: 4, pricePerDay: 30, image: '/vehicles/fiat-500-dolcevita/main.jpg', status: 'available' },
-  { id: 11, name: 'Toyota Yaris Auto', brand: 'Toyota', model: 'Yaris', category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 28, image: '/vehicles/toyota-yaris/main.jpg', status: 'available' },
+  { id: 7, name: 'VW Polo Star Plus 2019', brand: 'Volkswagen', model: 'Polo Star Plus', year: 2019, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 32, image: '/vehicles/vw-polo-2019/main.jpg', status: 'available' },
+  { id: 8, name: 'Clio 4 Limited 2019', brand: 'Renault', model: 'Clio 4 Limited', year: 2019, category: 'Citadine', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 32, image: '/vehicles/renault-clio4-limited/main.jpg', status: 'available' },
+  { id: 9, name: 'Seat Ibiza Style 2018', brand: 'Seat', model: 'Ibiza Style', year: 2018, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 30, image: '/vehicles/seat-ibiza-style/main.jpg', status: 'available' },
+  { id: 10, name: 'Fiat 500 Dolce Vita 2025', brand: 'Fiat', model: '500 Dolce Vita', year: 2025, category: 'Citadine', transmission: 'Manuelle', fuel: 'Hybride', seats: 4, pricePerDay: 30, image: '/vehicles/fiat-500-dolcevita/main.jpg', status: 'available' },
+  { id: 11, name: 'Toyota Yaris Auto', brand: 'Toyota', model: 'Yaris', year: 2020, category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 28, image: '/vehicles/toyota-yaris/main.jpg', status: 'available' },
   // Économiques
-  { id: 12, name: 'Renault Symbol 2018', brand: 'Renault', model: 'Symbol', category: 'Berline', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 26, image: '/vehicles/renault-symbol/main.jpg', status: 'available' },
-  { id: 13, name: 'Seat Ibiza Sol 2017', brand: 'Seat', model: 'Ibiza Sol', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 27, image: '/vehicles/seat-ibiza-sol/main.jpg', status: 'available' },
-  { id: 14, name: 'Kia Picanto 2019', brand: 'Kia', model: 'Picanto', category: 'Mini', transmission: 'Manuelle', fuel: 'Essence', seats: 4, pricePerDay: 25, image: '/vehicles/kia-picanto/main.jpg', status: 'available' },
-  { id: 15, name: 'VW Polo Carat 2016', brand: 'Volkswagen', model: 'Polo Carat', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 28, image: '/vehicles/vw-polo-carat/main.jpg', status: 'available' },
-  { id: 16, name: 'Renault Clio 4 2016', brand: 'Renault', model: 'Clio 4', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016/main.jpg', status: 'available' },
-  { id: 17, name: 'Renault Clio 4 2013', brand: 'Renault', model: 'Clio 4', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 22, image: '/vehicles/renault-clio4-2013/main.jpg', status: 'maintenance' },
+  { id: 12, name: 'Renault Symbol 2018', brand: 'Renault', model: 'Symbol', year: 2018, category: 'Berline', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 26, image: '/vehicles/renault-symbol/main.jpg', status: 'available' },
+  { id: 13, name: 'Seat Ibiza Sol 2017', brand: 'Seat', model: 'Ibiza Sol', year: 2017, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 27, image: '/vehicles/seat-ibiza-sol/main.jpg', status: 'available' },
+  { id: 14, name: 'Kia Picanto 2019', brand: 'Kia', model: 'Picanto', year: 2019, category: 'Mini', transmission: 'Manuelle', fuel: 'Essence', seats: 4, pricePerDay: 25, image: '/vehicles/kia-picanto/main.jpg', status: 'available' },
+  { id: 15, name: 'VW Polo Carat 2016', brand: 'Volkswagen', model: 'Polo Carat', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 28, image: '/vehicles/vw-polo-carat/main.jpg', status: 'available' },
+  { id: 16, name: 'Renault Clio 4 2016', brand: 'Renault', model: 'Clio 4', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016/main.jpg', status: 'available' },
+  { id: 17, name: 'Renault Clio 4 2013', brand: 'Renault', model: 'Clio 4', year: 2013, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 22, image: '/vehicles/renault-clio4-2013/main.jpg', status: 'maintenance' },
   // Budget
-  { id: 18, name: 'Nissan Micra 2015', brand: 'Nissan', model: 'Micra', category: 'Mini', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/nissan-micra/main.jpg', status: 'available' },
-  { id: 19, name: 'Ford Fiesta 2014', brand: 'Ford', model: 'Fiesta', category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/ford-fiesta/main.jpg', status: 'available' },
+  { id: 18, name: 'Nissan Micra 2015', brand: 'Nissan', model: 'Micra', year: 2015, category: 'Mini', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/nissan-micra/main.jpg', status: 'available' },
+  { id: 19, name: 'Ford Fiesta 2014', brand: 'Ford', model: 'Fiesta', year: 2014, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/ford-fiesta/main.jpg', status: 'available' },
 ];
 
 // Generate sample bookings based on current date

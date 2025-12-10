@@ -223,6 +223,7 @@ function mapVehicleFromDb(row: Record<string, unknown>): AdminVehicle {
     name: row.name as string,
     brand: row.brand as string,
     model: row.model as string,
+    year: (row.year as number) || 2020,
     category: row.category as string,
     transmission: row.transmission as 'Manuelle' | 'Automatique',
     fuel: row.fuel as 'Essence' | 'Diesel' | 'Électrique' | 'Hybride',
