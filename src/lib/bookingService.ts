@@ -191,13 +191,13 @@ export async function saveBooking(
       phone: submission.clientInfo.phone,
       country: submission.clientInfo.country,
       city: submission.clientInfo.city,
-      address: submission.clientInfo.address,
-      date_of_birth: submission.clientInfo.dateOfBirth,
+      address: submission.clientInfo.address || '',
+      date_of_birth: submission.clientInfo.dateOfBirth || null,
 
       // Driver's License
       license_number: submission.clientInfo.driverLicense.documentNumber,
-      license_issue_date: submission.clientInfo.driverLicense.issueDate,
-      license_expiration_date: submission.clientInfo.driverLicense.expirationDate,
+      license_issue_date: submission.clientInfo.driverLicense.issueDate || null,
+      license_expiration_date: submission.clientInfo.driverLicense.expirationDate || null,
       license_photo_url: licensePhotoUrl || null,
 
       // Additional info
@@ -227,6 +227,9 @@ export async function saveBooking(
       return { success: false, error: error.message };
     }
 
+    // Also sync to admin_bookings table so it appears in admin calendar
+    await syncToAdminBookings(bookingReference, submission);
+
     return { success: true, data: data as BookingRecord };
   } catch (error) {
     console.error('Error in saveBooking:', error);
@@ -234,6 +237,45 @@ export async function saveBooking(
       success: false,
       error: error instanceof Error ? error.message : 'Unknown error occurred',
     };
+  }
+}
+
+/**
+ * Sync booking to admin_bookings table
+ * This ensures web bookings appear in the admin calendar immediately
+ */
+async function syncToAdminBookings(
+  bookingReference: string,
+  submission: BookingSubmission
+): Promise<void> {
+  try {
+    const adminBookingData = {
+      booking_reference: bookingReference,
+      status: 'pending',
+      source: 'web',
+      departure_date: submission.departureDate,
+      return_date: submission.returnDate,
+      rental_days: submission.rentalDays,
+      pickup_location: submission.pickupLocation,
+      vehicle_id: submission.selectedVehicle.id,
+      vehicle_name: submission.selectedVehicle.name,
+      assigned_vehicle_id: submission.selectedVehicle.id, // Auto-assign the selected vehicle
+      client_name: `${submission.clientInfo.firstName} ${submission.clientInfo.lastName}`,
+      client_phone: submission.clientInfo.phone,
+      client_email: submission.clientInfo.email,
+      total_price: submission.totalPrice,
+    };
+
+    const { error } = await supabase
+      .from('admin_bookings')
+      .insert([adminBookingData]);
+
+    if (error) {
+      // Log but don't fail the main booking
+      console.error('Error syncing to admin_bookings:', error);
+    }
+  } catch (error) {
+    console.error('Error in syncToAdminBookings:', error);
   }
 }
 
@@ -315,7 +357,7 @@ ${clientInfo.notes ? `📝 *NOTES*\n${clientInfo.notes}\n` : ''}
  */
 export function openWhatsApp(bookingReference: string, submission: BookingSubmission): void {
   const message = formatWhatsAppMessage(bookingReference, submission);
-  const phoneNumber = '15144526332'; // WhatsApp number without + or spaces
+  const phoneNumber = '213542199272'; // WhatsApp number without + or spaces
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 

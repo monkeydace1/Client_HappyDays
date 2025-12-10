@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, User, Phone, MapPin, MessageSquare, Send, Check, AlertCircle, Calendar, Upload, CreditCard, Globe, Copy } from 'lucide-react';
+import { ArrowLeft, Mail, User, Phone, MapPin, MessageSquare, Send, Check, AlertCircle, Upload, CreditCard, Globe, Copy, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
 import type { ClientInfo } from '../../types';
@@ -52,6 +52,7 @@ export const ClientInformation: React.FC = () => {
     const [bookingReference, setBookingReference] = useState<string>('');
     const [submitError, setSubmitError] = useState<string>('');
     const [photoPreview, setPhotoPreview] = useState<string>(clientInfo?.driverLicense?.photoUrl || '');
+    const [savedBookingData, setSavedBookingData] = useState<BookingSubmission | null>(null);
 
     const validateForm = (): boolean => {
         const newErrors: { [key: string]: string } = {};
@@ -74,18 +75,6 @@ export const ClientInformation: React.FC = () => {
 
         if (!formData.country.trim()) newErrors.country = 'Le pays est requis';
         if (!formData.city.trim()) newErrors.city = 'La ville est requise';
-        if (!formData.address.trim()) newErrors.address = 'L\'adresse est requise';
-
-        if (!formData.dateOfBirth) {
-            newErrors.dateOfBirth = 'La date de naissance est requise';
-        } else {
-            const birthDate = new Date(formData.dateOfBirth);
-            const today = new Date();
-            const age = today.getFullYear() - birthDate.getFullYear();
-            if (age < 21) {
-                newErrors.dateOfBirth = 'Vous devez avoir au moins 21 ans';
-            }
-        }
 
         // Driver's license validation
         if (!formData.driverLicense.documentNumber.trim()) {
@@ -213,13 +202,11 @@ export const ClientInformation: React.FC = () => {
             // Save client info to store
             setClientInfo(formData);
 
+            // Save booking data for WhatsApp button
+            setSavedBookingData(bookingData);
+
             // Mark as submitted
             setIsSubmitted(true);
-
-            // Open WhatsApp with booking details
-            setTimeout(() => {
-                openWhatsApp(reference, bookingData);
-            }, 1500);
 
         } catch (error) {
             console.error('Error submitting booking:', error);
@@ -281,17 +268,28 @@ export const ClientInformation: React.FC = () => {
                         Nous allons vous contacter très prochainement pour confirmer votre réservation.
                     </p>
                     <p className="text-sm text-gray-600">
-                        Un message WhatsApp préparé va s'ouvrir dans quelques instants pour finaliser votre réservation.
+                        Cliquez sur le bouton ci-dessous pour nous envoyer les détails de votre réservation via WhatsApp.
                     </p>
                 </div>
 
-                <div className="space-y-3">
-                    <p className="text-sm text-gray-600">
+                <div className="space-y-4">
+                    {savedBookingData && (
+                        <button
+                            onClick={() => openWhatsApp(bookingReference, savedBookingData)}
+                            className="w-full inline-flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transition-all text-lg"
+                        >
+                            <MessageCircle size={24} />
+                            Envoyer via WhatsApp
+                        </button>
+                    )}
+
+                    <p className="text-sm text-gray-600 text-center">
                         Un récapitulatif sera envoyé à <strong>{formData.email}</strong>
                     </p>
+
                     <button
                         onClick={() => window.location.reload()}
-                        className="bg-primary hover:bg-primary-hover text-white font-bold py-3 px-8 rounded-lg transition-all"
+                        className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-8 rounded-lg transition-all"
                     >
                         Nouvelle réservation
                     </button>
@@ -450,48 +448,6 @@ export const ClientInformation: React.FC = () => {
                             )}
                         </div>
                     </div>
-
-                    {/* Address */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <MapPin size={16} className="text-primary" />
-                            Adresse *
-                        </label>
-                        <input
-                            type="text"
-                            value={formData.address}
-                            onChange={(e) => handleInputChange('address', e.target.value)}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.address ? 'border-red-500' : 'border-gray-200'} focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`}
-                            placeholder="123 Rue de la République"
-                        />
-                        {errors.address && (
-                            <div className="flex items-center gap-2 text-red-500 text-sm">
-                                <AlertCircle size={16} />
-                                <span>{errors.address}</span>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Date of Birth */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <Calendar size={16} className="text-primary" />
-                            Date de naissance *
-                        </label>
-                        <input
-                            type="date"
-                            value={formData.dateOfBirth}
-                            onChange={(e) => handleInputChange('dateOfBirth', e.target.value)}
-                            max={new Date(new Date().setFullYear(new Date().getFullYear() - 21)).toISOString().split('T')[0]}
-                            className={`w-full px-4 py-3 rounded-lg border ${errors.dateOfBirth ? 'border-red-500' : 'border-gray-200'} focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`}
-                        />
-                        {errors.dateOfBirth && (
-                            <div className="flex items-center gap-2 text-red-500 text-sm">
-                                <AlertCircle size={16} />
-                                <span>{errors.dateOfBirth}</span>
-                            </div>
-                        )}
-                    </div>
                 </div>
 
                 {/* Driver's License Information */}
@@ -605,29 +561,14 @@ export const ClientInformation: React.FC = () => {
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
                             <MessageSquare size={16} className="text-primary" />
-                            Informations supplémentaires
+                            Informations autres que l'on devrait connaître
                         </label>
                         <textarea
                             value={formData.extraInformation}
                             onChange={(e) => handleInputChange('extraInformation', e.target.value)}
                             rows={3}
                             className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-                            placeholder="Toute information supplémentaire que nous devrions connaître..."
-                        />
-                    </div>
-
-                    {/* Remarks */}
-                    <div className="space-y-2">
-                        <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                            <MessageSquare size={16} className="text-primary" />
-                            Remarques / Commentaires
-                        </label>
-                        <textarea
-                            value={formData.notes}
-                            onChange={(e) => handleInputChange('notes', e.target.value)}
-                            rows={3}
-                            className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-                            placeholder="Vos remarques ou demandes spéciales..."
+                            placeholder="Toute information que nous devrions connaître..."
                         />
                     </div>
                 </div>
@@ -677,6 +618,21 @@ export const ClientInformation: React.FC = () => {
                             <span>{errors.acceptedTerms}</span>
                         </div>
                     )}
+                </div>
+
+                {/* WhatsApp Communication Notice */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                        <input
+                            type="checkbox"
+                            checked={true}
+                            readOnly
+                            className="mt-1 w-5 h-5 text-green-600 rounded focus:ring-green-500"
+                        />
+                        <span className="text-sm text-gray-700">
+                            Je comprends que l'on communiquera avec vous via WhatsApp dans les plus brefs délais.
+                        </span>
+                    </label>
                 </div>
 
                 {/* Error Message */}

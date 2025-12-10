@@ -16,6 +16,7 @@ export const Hero = () => {
     const [returnTime, setReturnTime] = useState('10:00');
     const [location, setLocation] = useState<string>(PICKUP_LOCATIONS[0]);
 
+    const departureDateRef = useRef<HTMLInputElement>(null);
     const returnDateRef = useRef<HTMLInputElement>(null);
 
     const handleDepartureDateChange = (value: string) => {
@@ -89,11 +90,13 @@ export const Hero = () => {
                                 Date de départ
                             </label>
                             <input
+                                ref={departureDateRef}
                                 type="date"
                                 value={departureDay}
                                 onChange={(e) => handleDepartureDateChange(e.target.value)}
+                                onClick={(e) => e.currentTarget.showPicker?.()}
                                 min={today}
-                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base"
+                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base cursor-pointer"
                             />
                             <div className="flex items-center gap-2">
                                 <Clock size={14} className="text-accent flex-shrink-0" />
@@ -117,8 +120,9 @@ export const Hero = () => {
                                 type="date"
                                 value={returnDay}
                                 onChange={(e) => setReturnDay(e.target.value)}
+                                onClick={(e) => e.currentTarget.showPicker?.()}
                                 min={departureDay || today}
-                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base"
+                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base cursor-pointer"
                             />
                             <div className="flex items-center gap-2">
                                 <Clock size={14} className="text-accent flex-shrink-0" />

@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { Calendar, MapPin, ArrowRight, AlertCircle } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Calendar, MapPin, ArrowRight, AlertCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
 import { PICKUP_LOCATIONS } from '../../types';
@@ -22,17 +22,38 @@ export const DateSelection: React.FC = () => {
         nextStep
     } = useBookingStore();
 
+    // Split date and time for better control
+    const [departureDay, setDepartureDay] = useState('');
+    const [departureTime, setDepartureTime] = useState('10:00');
+    const [returnDay, setReturnDay] = useState('');
+    const [returnTime, setReturnTime] = useState('10:00');
+
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const departureDateRef = useRef<HTMLInputElement>(null);
     const returnDateRef = useRef<HTMLInputElement>(null);
+
+    // Initialize from store values if they exist
+    useEffect(() => {
+        if (departureDate && departureDate.includes('T')) {
+            const [day, time] = departureDate.split('T');
+            setDepartureDay(day);
+            setDepartureTime(time || '10:00');
+        }
+        if (returnDate && returnDate.includes('T')) {
+            const [day, time] = returnDate.split('T');
+            setReturnDay(day);
+            setReturnTime(time || '10:00');
+        }
+    }, []);
 
     const validateDates = (): boolean => {
         const newErrors: { [key: string]: string } = {};
 
-        if (!departureDate) {
+        if (!departureDay) {
             newErrors.departureDate = 'Veuillez sélectionner une date de départ';
         }
 
-        if (!returnDate) {
+        if (!returnDay) {
             newErrors.returnDate = 'Veuillez sélectionner une date de retour';
         }
 
@@ -48,9 +69,11 @@ export const DateSelection: React.FC = () => {
             newErrors.returnLocation = 'Veuillez préciser le lieu de retour';
         }
 
-        if (departureDate && returnDate) {
-            const departure = new Date(departureDate);
-            const returnD = new Date(returnDate);
+        if (departureDay && returnDay) {
+            const fullDeparture = `${departureDay}T${departureTime}`;
+            const fullReturn = `${returnDay}T${returnTime}`;
+            const departure = new Date(fullDeparture);
+            const returnD = new Date(fullReturn);
 
             if (returnD <= departure) {
                 newErrors.returnDate = 'La date de retour doit être après la date de départ';
@@ -69,40 +92,52 @@ export const DateSelection: React.FC = () => {
     };
 
     const handleContinue = () => {
+        // Update store with combined date+time before validation
+        if (departureDay) {
+            setDepartureDate(`${departureDay}T${departureTime}`);
+        }
+        if (returnDay) {
+            setReturnDate(`${returnDay}T${returnTime}`);
+        }
+
         if (validateDates()) {
             nextStep();
         }
     };
 
-    const getDefaultTime = () => '10:00';
-
-    const handleDepartureDateChange = (value: string) => {
-        // If only date is selected (no time), add default time of 10:00
-        let finalValue = value;
-        if (value && !value.includes('T')) {
-            finalValue = `${value}T${getDefaultTime()}`;
-        } else if (value && value.includes('T') && value.split('T')[1] === '') {
-            finalValue = `${value.split('T')[0]}T${getDefaultTime()}`;
-        }
-        setDepartureDate(finalValue);
-        // Auto-focus return date after departure is selected
-        if (finalValue && returnDateRef.current) {
-            setTimeout(() => {
-                returnDateRef.current?.focus();
-                returnDateRef.current?.showPicker?.();
-            }, 100);
+    const handleDepartureDayChange = (value: string) => {
+        setDepartureDay(value);
+        if (value) {
+            setDepartureDate(`${value}T${departureTime}`);
+            // Auto-focus return date after departure is selected
+            if (returnDateRef.current) {
+                setTimeout(() => {
+                    returnDateRef.current?.focus();
+                    returnDateRef.current?.showPicker?.();
+                }, 100);
+            }
         }
     };
 
-    const handleReturnDateChange = (value: string) => {
-        // If only date is selected (no time), add default time of 10:00
-        let finalValue = value;
-        if (value && !value.includes('T')) {
-            finalValue = `${value}T${getDefaultTime()}`;
-        } else if (value && value.includes('T') && value.split('T')[1] === '') {
-            finalValue = `${value.split('T')[0]}T${getDefaultTime()}`;
+    const handleDepartureTimeChange = (value: string) => {
+        setDepartureTime(value);
+        if (departureDay) {
+            setDepartureDate(`${departureDay}T${value}`);
         }
-        setReturnDate(finalValue);
+    };
+
+    const handleReturnDayChange = (value: string) => {
+        setReturnDay(value);
+        if (value) {
+            setReturnDate(`${value}T${returnTime}`);
+        }
+    };
+
+    const handleReturnTimeChange = (value: string) => {
+        setReturnTime(value);
+        if (returnDay) {
+            setReturnDate(`${returnDay}T${value}`);
+        }
     };
 
     const formatDate = (dateString: string) => {
@@ -135,31 +170,40 @@ export const DateSelection: React.FC = () => {
             </div>
 
             <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
-                {/* Departure Date */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <Calendar size={18} className="text-primary" />
+                {/* Departure Date & Time */}
+                <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
                         Date et heure de départ
                     </label>
-                    <div className="relative">
-                        <input
-                            type="datetime-local"
-                            value={departureDate}
-                            onChange={(e) => handleDepartureDateChange(e.target.value)}
-                            onClick={(e) => e.currentTarget.showPicker?.()}
-                            className={`w-full px-4 py-3 pr-12 rounded-lg border ${errors.departureDate ? 'border-red-500' : 'border-gray-200'
-                                } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-lg cursor-pointer`}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => {
-                                const input = document.querySelector('input[type="datetime-local"]') as HTMLInputElement;
-                                input?.showPicker?.();
-                            }}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary-hover transition-colors"
+                    <div className="grid grid-cols-2 gap-3">
+                        <div
+                            className="relative cursor-pointer"
+                            onClick={() => departureDateRef.current?.showPicker?.()}
                         >
-                            <Calendar size={20} />
-                        </button>
+                            <Calendar
+                                size={18}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
+                            />
+                            <input
+                                ref={departureDateRef}
+                                type="date"
+                                value={departureDay}
+                                onChange={(e) => handleDepartureDayChange(e.target.value)}
+                                onClick={(e) => e.currentTarget.showPicker?.()}
+                                min={new Date().toISOString().split('T')[0]}
+                                className={`w-full pl-10 pr-4 py-3 rounded-lg border ${errors.departureDate ? 'border-red-500' : 'border-gray-200'
+                                    } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base cursor-pointer`}
+                            />
+                        </div>
+                        <div className="relative flex items-center gap-2">
+                            <Clock size={18} className="text-primary flex-shrink-0" />
+                            <input
+                                type="time"
+                                value={departureTime}
+                                onChange={(e) => handleDepartureTimeChange(e.target.value)}
+                                className="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base"
+                            />
+                        </div>
                     </div>
                     {errors.departureDate && (
                         <div className="flex items-center gap-2 text-red-500 text-sm">
@@ -169,29 +213,40 @@ export const DateSelection: React.FC = () => {
                     )}
                 </div>
 
-                {/* Return Date */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                        <Calendar size={18} className="text-primary" />
+                {/* Return Date & Time */}
+                <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
                         Date et heure de retour
                     </label>
-                    <div className="relative">
-                        <input
-                            ref={returnDateRef}
-                            type="datetime-local"
-                            value={returnDate}
-                            onChange={(e) => handleReturnDateChange(e.target.value)}
-                            onClick={(e) => e.currentTarget.showPicker?.()}
-                            className={`w-full px-4 py-3 pr-12 rounded-lg border ${errors.returnDate ? 'border-red-500' : 'border-gray-200'
-                                } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-lg cursor-pointer`}
-                        />
-                        <button
-                            type="button"
+                    <div className="grid grid-cols-2 gap-3">
+                        <div
+                            className="relative cursor-pointer"
                             onClick={() => returnDateRef.current?.showPicker?.()}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary-hover transition-colors"
                         >
-                            <Calendar size={20} />
-                        </button>
+                            <Calendar
+                                size={18}
+                                className="absolute left-3 top-1/2 -translate-y-1/2 text-primary pointer-events-none"
+                            />
+                            <input
+                                ref={returnDateRef}
+                                type="date"
+                                value={returnDay}
+                                onChange={(e) => handleReturnDayChange(e.target.value)}
+                                onClick={(e) => e.currentTarget.showPicker?.()}
+                                min={departureDay || new Date().toISOString().split('T')[0]}
+                                className={`w-full pl-10 pr-4 py-3 rounded-lg border ${errors.returnDate ? 'border-red-500' : 'border-gray-200'
+                                    } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base cursor-pointer`}
+                            />
+                        </div>
+                        <div className="relative flex items-center gap-2">
+                            <Clock size={18} className="text-primary flex-shrink-0" />
+                            <input
+                                type="time"
+                                value={returnTime}
+                                onChange={(e) => handleReturnTimeChange(e.target.value)}
+                                className="flex-1 px-4 py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-base"
+                            />
+                        </div>
                     </div>
                     {errors.returnDate && (
                         <div className="flex items-center gap-2 text-red-500 text-sm">
@@ -213,7 +268,6 @@ export const DateSelection: React.FC = () => {
                         className={`w-full px-4 py-3 rounded-lg border ${errors.pickupLocation ? 'border-red-500' : 'border-gray-200'
                             } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-lg bg-white`}
                     >
-                        <option value="">Sélectionnez un lieu</option>
                         {PICKUP_LOCATIONS.map((location) => (
                             <option key={location} value={location}>
                                 {location}

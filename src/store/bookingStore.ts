@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { Vehicle, Supplement, ClientInfo } from '../types';
+import { PICKUP_LOCATIONS } from '../types';
 
 interface BookingState {
     // Step 1: Dates & Location
@@ -62,7 +63,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     // Initial state
     departureDate: '',
     returnDate: '',
-    pickupLocation: '',
+    pickupLocation: PICKUP_LOCATIONS[0], // Default to Airport
     customPickupLocation: '',
     returnLocation: '',
     differentReturnLocation: false,
@@ -174,7 +175,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     resetBooking: () => set({
         departureDate: '',
         returnDate: '',
-        pickupLocation: '',
+        pickupLocation: PICKUP_LOCATIONS[0], // Default to Airport
         customPickupLocation: '',
         returnLocation: '',
         differentReturnLocation: false,

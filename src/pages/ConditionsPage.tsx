@@ -2,82 +2,64 @@ import { motion } from 'framer-motion';
 
 const sections = [
     {
-        title: "Réservation",
+        title: "Règles d'utilisation",
         content: [
-            "La réservation peut être effectuée en ligne via notre site web ou par téléphone.",
-            "Une confirmation de réservation vous sera envoyée par email ou WhatsApp.",
-            "La réservation devient définitive après réception de l'acompte ou validation de la caution."
+            "En prendre soin comme si c'était le sien",
+            "Interdit de fumer dans la voiture",
+            "Interdit de le sous-louer, de le prêter ou de s'en servir à titre professionnel",
+            "Le rendre dans le même état que vous l'avez trouvé"
         ]
     },
     {
-        title: "Caution",
+        title: "Carburant et Propreté",
         content: [
-            "Une caution est demandée à la prise en charge du véhicule.",
-            "Le montant de la caution varie selon la catégorie du véhicule (à partir de 20 000 DA).",
-            "La caution est restituée intégralement à la restitution du véhicule, sous réserve d'absence de dommages."
+            "Rendre le véhicule avec le même niveau d'essence et de propreté qu'à la prise du véhicule",
+            "Sinon 2000 dinars pour le lavage et 1000 dinars en plus pour l'essence à remplir",
+            "Le plein du véhicule est à 2500 dinars"
         ]
     },
     {
-        title: "Documents Requis",
+        title: "État du Véhicule",
         content: [
-            "Pièce d'identité valide (passeport ou carte d'identité nationale)",
-            "Permis de conduire valide depuis au moins 2 ans",
-            "Justificatif de domicile (pour les résidents algériens)"
-        ]
-    },
-    {
-        title: "Âge Minimum et Permis",
-        content: [
-            "L'âge minimum requis est de 21 ans.",
-            "Le permis de conduire doit être valide depuis au moins 2 ans.",
-            "Pour certaines catégories de véhicules (SUV, véhicules premium), l'âge minimum peut être porté à 25 ans."
-        ]
-    },
-    {
-        title: "Paiement",
-        content: [
-            "Nous acceptons les paiements en espèces (DA), par carte bancaire et par virement.",
-            "Le paiement total est dû à la prise en charge du véhicule.",
-            "Un acompte peut être demandé pour confirmer la réservation."
+            "En cas d'impact sur la carrosserie, rayures, dégradation de la voiture, etc… la totalité des réparations sera à votre charge"
         ]
     },
     {
         title: "Kilométrage",
         content: [
-            "Tous nos véhicules sont proposés avec un kilométrage illimité.",
-            "Aucun frais supplémentaire ne sera facturé pour les kilomètres parcourus."
+            "250 km par jour inclus",
+            "Au-delà : 25 dinars par kilomètre dépassé"
         ]
     },
     {
-        title: "Assurance",
+        title: "Documents Requis",
         content: [
-            "Une assurance tous risques de base est incluse dans le tarif de location.",
-            "Des options d'assurance complémentaires sont disponibles (franchise réduite, protection personnelle).",
-            "En cas d'accident, le client doit remplir un constat amiable et contacter immédiatement l'agence."
+            "Le passeport sera demandé"
         ]
     },
     {
-        title: "Carburant",
+        title: "Âge Minimum",
         content: [
-            "Le véhicule est remis avec le plein de carburant.",
-            "Le véhicule doit être restitué avec le même niveau de carburant.",
-            "En cas de restitution avec un niveau de carburant inférieur, des frais de remplissage seront facturés."
+            "Le locataire doit être âgé de plus de 28 ans"
         ]
     },
     {
-        title: "Restitution",
+        title: "Caution",
         content: [
-            "Le véhicule doit être restitué à la date et à l'heure convenues.",
-            "Tout retard de restitution sera facturé selon le tarif journalier en vigueur.",
-            "Le véhicule doit être restitué dans le même état qu'à la prise en charge (propre et sans dommages)."
+            "Une caution à partir de 60 000 dinars ou 300€ selon le type de véhicule sera demandée",
+            "La caution est restituée directement après la location"
         ]
     },
     {
-        title: "Assistance et Dépannage",
+        title: "Paiement",
         content: [
-            "Une assistance 24h/24 et 7j/7 est incluse.",
-            "En cas de panne ou d'accident, contactez-nous immédiatement au +1 514 452 6332.",
-            "Le remorquage est pris en charge en cas de panne mécanique (hors négligence du conducteur)."
+            "La totalité du paiement se fera le 1er jour de la remise des clés"
+        ]
+    },
+    {
+        title: "Livraison",
+        content: [
+            "Possibilité de livraison et restitution depuis l'aéroport d'Oran"
         ]
     }
 ];
@@ -143,7 +125,7 @@ export const ConditionsPage = () => {
                         Notre équipe est à votre disposition pour répondre à toutes vos questions.
                     </p>
                     <a
-                        href="https://wa.me/15144526332"
+                        href="https://wa.me/213542199272"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -151,6 +133,16 @@ export const ConditionsPage = () => {
                         Nous contacter
                     </a>
                 </motion.div>
+
+                {/* Footer message */}
+                <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    className="text-center mt-8 text-gray-500 italic text-sm"
+                >
+                    Qu'Allah nous préserve et nous facilite
+                </motion.p>
             </div>
         </div>
     );

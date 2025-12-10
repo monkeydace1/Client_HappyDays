@@ -2,6 +2,7 @@ import { Fuel, Gauge, Settings, Users, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { getFeaturedVehicles } from '../data/vehicleData';
+import { ImageCarousel } from './ImageCarousel';
 
 export const Fleet = () => {
     const featuredVehicles = getFeaturedVehicles();
@@ -29,12 +30,11 @@ export const Fleet = () => {
                             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group"
                         >
                             <div className="relative h-40 sm:h-48 overflow-hidden">
-                                <img
-                                    src={car.image}
+                                <ImageCarousel
+                                    images={car.images || [car.image]}
                                     alt={car.name}
-                                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                                 />
-                                <div className="absolute top-3 right-3 bg-accent text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg">
+                                <div className="absolute top-3 right-3 bg-accent text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg z-20">
                                     {car.pricePerDay}€ / jour
                                 </div>
                             </div>

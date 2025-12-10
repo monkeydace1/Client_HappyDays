@@ -4,13 +4,16 @@ export interface Vehicle {
     name: string;
     brand: string;
     model: string;
+    year: number;
     category: string;
     image: string;
+    images?: string[]; // Multiple images for gallery
     transmission: 'Manuelle' | 'Automatique';
     fuel: 'Essence' | 'Diesel' | 'Électrique' | 'Hybride';
     seats: number;
     pricePerDay: number;
     featured?: boolean;
+    features?: string[]; // CarPlay, LED, etc.
 }
 
 // Supplement types

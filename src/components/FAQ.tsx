@@ -5,15 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 const faqs = [
     {
         question: "Quels documents sont nécessaires pour louer une voiture ?",
-        answer: "Pour louer une voiture chez Happy Days, vous aurez besoin d'une pièce d'identité valide (passeport ou carte d'identité), d'un permis de conduire valide depuis au moins 2 ans, et d'une carte bancaire pour la caution."
+        answer: "Pour louer une voiture chez Happy Days, vous aurez besoin de : votre passeport, votre permis de conduire valide, et votre billet d'avion si vous arrivez de l'étranger."
     },
     {
         question: "Quel est l'âge minimum pour louer un véhicule ?",
-        answer: "L'âge minimum requis est de 21 ans avec un permis de conduire valide depuis au moins 2 ans. Pour certaines catégories de véhicules (SUV, voitures de luxe), l'âge minimum peut être de 25 ans."
+        answer: "L'âge minimum requis pour louer un véhicule chez Happy Days est de 25 ans."
     },
     {
-        question: "Le kilométrage est-il vraiment illimité ?",
-        answer: "Oui, tous nos véhicules sont proposés avec un kilométrage illimité. Vous pouvez explorer l'Algérie sans vous soucier des kilomètres parcourus."
+        question: "Le kilométrage est-il limité ?",
+        answer: "Le kilométrage est plafonné à 250 km/jour. À partir de 7 jours de location, le kilométrage devient illimité."
     },
     {
         question: "Proposez-vous la livraison à l'aéroport ?",
@@ -21,11 +21,11 @@ const faqs = [
     },
     {
         question: "Quels modes de paiement acceptez-vous ?",
-        answer: "Nous acceptons les paiements en espèces, par carte bancaire et par virement. Une caution est demandée au moment de la prise en charge du véhicule."
+        answer: "Nous acceptons les paiements en espèces et par virement instantané."
     },
     {
         question: "Que faire en cas de panne ou d'accident ?",
-        answer: "Notre assistance est disponible 24h/24 et 7j/7. En cas de panne ou d'accident, contactez-nous immédiatement et nous interviendrons dans les plus brefs délais. Tous nos véhicules sont couverts par une assurance complète."
+        answer: "En cas de panne ou d'accident, immobilisez totalement le véhicule et contactez immédiatement Happy Days pour une prise en charge rapide et adaptée."
     }
 ];
 

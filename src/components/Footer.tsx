@@ -58,8 +58,8 @@ export const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3 text-gray-400">
                                 <Phone size={18} className="text-accent flex-shrink-0" />
-                                <a href="tel:+15144526332" className="text-sm md:text-base hover:text-accent transition-colors">
-                                    +1 514 452 6332
+                                <a href="tel:+213542199272" className="text-sm md:text-base hover:text-accent transition-colors">
+                                    +213 542 19 92 72
                                 </a>
                             </li>
                             <li className="flex items-center gap-3 text-gray-400">
@@ -76,7 +76,7 @@ export const Footer = () => {
                             Notre équipe est disponible pour répondre à vos questions.
                         </p>
                         <a
-                            href="https://wa.me/15144526332"
+                            href="https://wa.me/213542199272"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors text-sm md:text-base"
