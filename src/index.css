@@ -56,6 +56,23 @@
   color: white !important;
 }
 
+/* Hero Date Picker Green Theme */
+.hero-date-picker .rdp-day_selected,
+.hero-date-picker .rdp-day_range_start,
+.hero-date-picker .rdp-day_range_end {
+  background-color: #22c55e !important;
+  color: white !important;
+}
+
+.hero-date-picker .rdp-day_range_middle {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.hero-date-picker .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: #dcfce7;
+}
+
 /* Mobile touch improvements */
 @media (max-width: 768px) {
   .rdp-button {

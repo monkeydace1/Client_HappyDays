@@ -1,9 +1,11 @@
-import { useState, useRef } from 'react';
-import { Calendar, Search, Clock, MapPin } from 'lucide-react';
+import { useState } from 'react';
+import { Search, Clock, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../store/bookingStore';
 import { PICKUP_LOCATIONS } from '../types';
+import { HeroDatePicker } from './HeroDatePicker';
+import { format } from 'date-fns';
 import heroBackground from '../assets/photo-1656978310683-d415ee895c2c.jpg';
 
 export const Hero = () => {
@@ -16,18 +18,9 @@ export const Hero = () => {
     const [returnTime, setReturnTime] = useState('10:00');
     const [location, setLocation] = useState<string>(PICKUP_LOCATIONS[0]);
 
-    const departureDateRef = useRef<HTMLInputElement>(null);
-    const returnDateRef = useRef<HTMLInputElement>(null);
-
-    const handleDepartureDateChange = (value: string) => {
-        setDepartureDay(value);
-        // Auto-focus return date input after selecting departure
-        if (value && returnDateRef.current) {
-            setTimeout(() => {
-                returnDateRef.current?.focus();
-                returnDateRef.current?.showPicker?.();
-            }, 100);
-        }
+    const handleDateConfirm = (from: Date, to: Date) => {
+        setDepartureDay(format(from, 'yyyy-MM-dd'));
+        setReturnDay(format(to, 'yyyy-MM-dd'));
     };
 
     const handleSearch = () => {
@@ -43,10 +36,8 @@ export const Hero = () => {
         navigate('/booking');
     };
 
-    const today = new Date().toISOString().split('T')[0];
-
     return (
-        <div className="relative min-h-[70vh] md:min-h-[75vh] flex items-center justify-center pt-16 md:pt-20">
+        <div className="relative min-h-[70vh] md:min-h-[75vh] flex items-center justify-center pt-24 md:pt-28">
             {/* Background Image - Oran */}
             <div
                 className="absolute inset-0 z-0"
@@ -68,7 +59,7 @@ export const Hero = () => {
                     className="text-center mb-6 md:mb-10"
                 >
                     <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 md:mb-4 leading-tight drop-shadow-2xl">
-                        Location de voitures à Oran
+                        HappyDays Car - Location de voitures à Oran
                     </h1>
                     <p className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-2xl mx-auto px-4 drop-shadow-lg">
                         Louez votre voiture en toute simplicité - Tarifs exceptionnels et service premium
@@ -82,91 +73,82 @@ export const Hero = () => {
                     transition={{ duration: 0.8, delay: 0.2 }}
                     className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 max-w-5xl mx-auto"
                 >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                        {/* Departure Date & Time */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-secondary flex items-center gap-2">
-                                <Calendar size={16} className="text-accent" />
-                                Date de départ
-                            </label>
-                            <input
-                                ref={departureDateRef}
-                                type="date"
-                                value={departureDay}
-                                onChange={(e) => handleDepartureDateChange(e.target.value)}
-                                onClick={(e) => e.currentTarget.showPicker?.()}
-                                min={today}
-                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base cursor-pointer"
-                            />
-                            <div className="flex items-center gap-2">
-                                <Clock size={14} className="text-accent flex-shrink-0" />
+                    <div className="space-y-4 md:space-y-6">
+                        {/* Row 1: Date Picker (wide) */}
+                        <HeroDatePicker
+                            onConfirm={handleDateConfirm}
+                            initialFrom={departureDay}
+                            initialTo={returnDay}
+                        />
+
+                        {/* Row 2: Time pickers, Location, and Search */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                            {/* Departure Time */}
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-secondary flex items-center gap-2">
+                                    <Clock size={14} className="text-accent" />
+                                    Heure départ
+                                </label>
                                 <input
                                     type="time"
                                     value={departureTime}
                                     onChange={(e) => setDepartureTime(e.target.value)}
-                                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                                    className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base"
                                 />
                             </div>
-                        </div>
 
-                        {/* Return Date & Time */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-secondary flex items-center gap-2">
-                                <Calendar size={16} className="text-accent" />
-                                Date de retour
-                            </label>
-                            <input
-                                ref={returnDateRef}
-                                type="date"
-                                value={returnDay}
-                                onChange={(e) => setReturnDay(e.target.value)}
-                                onClick={(e) => e.currentTarget.showPicker?.()}
-                                min={departureDay || today}
-                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base cursor-pointer"
-                            />
-                            <div className="flex items-center gap-2">
-                                <Clock size={14} className="text-accent flex-shrink-0" />
+                            {/* Return Time */}
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-secondary flex items-center gap-2">
+                                    <Clock size={14} className="text-accent" />
+                                    Heure retour
+                                </label>
                                 <input
                                     type="time"
                                     value={returnTime}
                                     onChange={(e) => setReturnTime(e.target.value)}
-                                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm"
+                                    className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm md:text-base"
                                 />
+                            </div>
+
+                            {/* Pickup Location */}
+                            <div className="space-y-1.5">
+                                <label className="block text-sm font-medium text-secondary flex items-center gap-2">
+                                    <MapPin size={14} className="text-accent" />
+                                    Lieu de prise en charge
+                                </label>
+                                <select
+                                    value={location}
+                                    onChange={(e) => setLocation(e.target.value)}
+                                    className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-xs md:text-sm"
+                                >
+                                    {PICKUP_LOCATIONS.filter(loc => loc !== 'Autre (préciser)').map((loc) => (
+                                        <option key={loc} value={loc}>
+                                            {loc}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Search Button */}
+                            <div className="flex items-end">
+                                <button
+                                    type="button"
+                                    onClick={handleSearch}
+                                    disabled={!departureDay || !returnDay}
+                                    className="w-full bg-gradient-to-r from-accent to-orange-500 hover:from-orange-500 hover:to-accent disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-2.5 md:py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-accent/30 flex items-center justify-center gap-2 text-sm md:text-base"
+                                >
+                                    <Search size={18} />
+                                    <span className="hidden sm:inline">Voir véhicules</span>
+                                    <span className="sm:hidden">Rechercher</span>
+                                </button>
                             </div>
                         </div>
 
-                        {/* Pickup Location */}
-                        <div className="space-y-2">
-                            <label className="block text-sm font-medium text-secondary flex items-center gap-2">
-                                <MapPin size={16} className="text-accent" />
-                                Lieu de prise en charge
-                            </label>
-                            <select
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                                className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-xs md:text-sm min-h-[44px]"
-                            >
-                                {PICKUP_LOCATIONS.filter(loc => loc !== 'Autre (préciser)').map((loc) => (
-                                    <option key={loc} value={loc}>
-                                        {loc}
-                                    </option>
-                                ))}
-                            </select>
-                            <p className="text-xs text-gray-500 mt-1">Livraison gratuite</p>
-                        </div>
-
-                        {/* Search Button */}
-                        <div className="flex items-end sm:col-span-2 lg:col-span-1">
-                            <button
-                                type="button"
-                                onClick={handleSearch}
-                                disabled={!departureDay || !returnDay}
-                                className="w-full bg-gradient-to-r from-accent to-orange-500 hover:from-orange-500 hover:to-accent disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed text-white font-bold py-3 md:py-3.5 px-6 rounded-lg transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-accent/30 flex items-center justify-center gap-2 text-sm md:text-base"
-                            >
-                                <Search size={18} />
-                                Rechercher
-                            </button>
-                        </div>
+                        {/* Info text */}
+                        <p className="text-xs text-gray-500 text-center">
+                            Livraison gratuite à l'aéroport et dans tout Oran
+                        </p>
                     </div>
                 </motion.div>
             </div>

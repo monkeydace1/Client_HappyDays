@@ -10,6 +10,8 @@ import { Footer } from './components/Footer';
 import { BookingPage } from './pages/BookingPage';
 import { FleetPage } from './pages/FleetPage';
 import { ConditionsPage } from './pages/ConditionsPage';
+import { WhatsAppButton } from './components/WhatsAppButton';
+import { TopBanner } from './components/TopBanner';
 
 // Admin imports
 import { AdminLoginPage } from './admin/pages/AdminLoginPage';
@@ -33,9 +35,11 @@ function HomePage() {
 function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-gray-50">
+      <TopBanner />
       <Navbar />
       {children}
       <Footer />
+      <WhatsAppButton />
     </div>
   );
 }

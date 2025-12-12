@@ -118,10 +118,10 @@ export const VehicleSelection: React.FC = () => {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-bold text-secondary mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-secondary mb-2">
                     Choisissez votre véhicule
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                     Sélectionnez le véhicule qui correspond à vos besoins
                     {rentalDays > 0 && ` pour ${rentalDays} jour${rentalDays > 1 ? 's' : ''}`}
                 </p>
@@ -171,7 +171,7 @@ export const VehicleSelection: React.FC = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {vehicles
                     .filter(v => transmissionFilter === 'all' || v.transmission === transmissionFilter)
                     .sort((a, b) => a.pricePerDay - b.pricePerDay)
@@ -192,39 +192,39 @@ export const VehicleSelection: React.FC = () => {
                             }`}
                         >
                             {/* Image Carousel */}
-                            <div className="relative h-48 overflow-hidden bg-gray-100">
+                            <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
                                 <ImageCarousel
                                     images={vehicle.images || [vehicle.image]}
                                     alt={vehicle.name}
                                 />
-                                <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur px-3 py-1.5 rounded-full z-20">
-                                    <span className="text-sm font-medium text-gray-700">
+                                <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-white/95 backdrop-blur px-2 py-1 sm:px-3 sm:py-1.5 rounded-full z-20">
+                                    <span className="text-xs sm:text-sm font-medium text-gray-700">
                                         {vehicle.pricePerDay}€/jour
                                     </span>
                                 </div>
 
                                 {/* Availability Badge */}
                                 {departureDate && returnDate && (
-                                    <div className={`absolute top-4 left-4 px-3 py-1.5 rounded-full border flex items-center gap-1.5 text-xs font-medium z-20 ${getAvailabilityBadgeColor(status)}`}>
+                                    <div className={`absolute top-2 left-2 sm:top-4 sm:left-4 px-2 py-1 sm:px-3 sm:py-1.5 rounded-full border flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-xs font-medium z-20 ${getAvailabilityBadgeColor(status)}`}>
                                         {getAvailabilityIcon(status)}
-                                        <span>{getAvailabilityBadgeText(status)}</span>
+                                        <span className="hidden sm:inline">{getAvailabilityBadgeText(status)}</span>
                                     </div>
                                 )}
                             </div>
 
                             {/* Content */}
-                            <div className="p-6">
-                                <div className="mb-4">
-                                    <h3 className="text-xl font-bold text-secondary mb-1">
+                            <div className="p-3 sm:p-4 md:p-6">
+                                <div className="mb-3 sm:mb-4">
+                                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-secondary mb-1 truncate">
                                         {vehicle.name}
                                     </h3>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="inline-block bg-gray-100 px-3 py-1 rounded-full text-sm text-gray-600">
+                                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                                        <span className="inline-block bg-gray-100 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs sm:text-sm text-gray-600">
                                             {vehicle.category}
                                         </span>
                                         {/* Show conflict dates if any */}
                                         {hasConflict && availability?.conflicts && availability.conflicts.length > 0 && (
-                                            <span className="inline-block bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs">
+                                            <span className="inline-block bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full text-[10px] sm:text-xs">
                                                 Réservé: {formatConflictDates(availability.conflicts)}
                                             </span>
                                         )}
@@ -232,36 +232,36 @@ export const VehicleSelection: React.FC = () => {
                                 </div>
 
                                 {/* Specifications */}
-                                <div className="grid grid-cols-2 gap-3 mb-4">
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Settings size={16} className="text-primary flex-shrink-0" />
-                                        <span>{vehicle.transmission}</span>
+                                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-3 mb-3 sm:mb-4">
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Settings size={14} className="text-primary flex-shrink-0" />
+                                        <span className="truncate">{vehicle.transmission}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Fuel size={16} className="text-primary flex-shrink-0" />
-                                        <span>{vehicle.fuel}</span>
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Fuel size={14} className="text-primary flex-shrink-0" />
+                                        <span className="truncate">{vehicle.fuel}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Users size={16} className="text-primary flex-shrink-0" />
-                                        <span>{vehicle.seats} places</span>
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Users size={14} className="text-primary flex-shrink-0" />
+                                        <span>{vehicle.seats} pl.</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Gauge size={16} className="text-primary flex-shrink-0" />
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Gauge size={14} className="text-primary flex-shrink-0" />
                                         <span>Illimité</span>
                                     </div>
                                 </div>
 
                                 {/* Price */}
                                 {rentalDays > 0 && (
-                                    <div className="pt-4 border-t border-gray-100 mb-4">
+                                    <div className="pt-3 sm:pt-4 border-t border-gray-100 mb-3 sm:mb-4">
                                         <div className="flex justify-between items-center">
-                                            <span className="text-gray-600 text-sm">Prix total:</span>
-                                            <span className="text-2xl font-bold text-primary">
+                                            <span className="text-gray-600 text-xs sm:text-sm">Total:</span>
+                                            <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary">
                                                 {totalPrice}€
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-1 text-right">
-                                            {vehicle.pricePerDay}€ × {rentalDays} jour{rentalDays > 1 ? 's' : ''}
+                                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1 text-right">
+                                            {vehicle.pricePerDay}€ × {rentalDays} j.
                                         </p>
                                     </div>
                                 )}
@@ -270,26 +270,26 @@ export const VehicleSelection: React.FC = () => {
                                 {status === 'available' ? (
                                     <button
                                         onClick={() => handleVehicleBook(vehicle, availability)}
-                                        className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
+                                        className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-2.5 sm:py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-primary/30 flex items-center justify-center gap-2 text-sm sm:text-base"
                                     >
-                                        <Calendar size={18} />
-                                        Réserver ce véhicule
+                                        <Calendar size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                        Réserver
                                     </button>
                                 ) : status === 'maintenance' ? (
                                     <button
                                         disabled
-                                        className="w-full bg-gray-300 text-gray-500 font-bold py-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-2"
+                                        className="w-full bg-gray-300 text-gray-500 font-bold py-2.5 sm:py-3 rounded-lg cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                                     >
-                                        <Wrench size={18} />
+                                        <Wrench size={16} className="sm:w-[18px] sm:h-[18px]" />
                                         Indisponible
                                     </button>
                                 ) : (
                                     <button
                                         onClick={() => handleVehicleBook(vehicle, availability)}
-                                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2"
+                                        className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 sm:py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-amber-500/30 flex items-center justify-center gap-2 text-sm sm:text-base"
                                     >
-                                        <MessageCircle size={18} />
-                                        Nous contacter
+                                        <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                        Contacter
                                     </button>
                                 )}
                             </div>

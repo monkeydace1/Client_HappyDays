@@ -19,7 +19,7 @@ export const Fleet = () => {
                     </p>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
                     {featuredVehicles.map((car, index) => (
                         <motion.div
                             key={car.id}
@@ -29,44 +29,44 @@ export const Fleet = () => {
                             viewport={{ once: true }}
                             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group"
                         >
-                            <div className="relative h-40 sm:h-48 overflow-hidden">
+                            <div className="relative aspect-[4/3] overflow-hidden">
                                 <ImageCarousel
                                     images={car.images || [car.image]}
                                     alt={car.name}
                                 />
-                                <div className="absolute top-3 right-3 bg-accent text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg z-20">
-                                    {car.pricePerDay}€ / jour
+                                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-accent text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold shadow-lg z-20">
+                                    {car.pricePerDay}€/jour
                                 </div>
                             </div>
 
-                            <div className="p-4 md:p-5">
-                                <h3 className="text-lg md:text-xl font-bold text-secondary mb-2">{car.name}</h3>
-                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-3">
-                                    <span className="bg-primary-light text-primary px-2 py-0.5 rounded text-xs font-medium">{car.category}</span>
+                            <div className="p-3 sm:p-4 md:p-5">
+                                <h3 className="text-sm sm:text-lg md:text-xl font-bold text-secondary mb-1 sm:mb-2 truncate">{car.name}</h3>
+                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-2 sm:mb-3">
+                                    <span className="bg-primary-light text-primary px-1.5 sm:px-2 py-0.5 rounded text-[10px] sm:text-xs font-medium">{car.category}</span>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2 md:gap-3 mb-4">
-                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
-                                        <Settings size={14} className="text-accent" />
-                                        <span>{car.transmission}</span>
+                                <div className="grid grid-cols-2 gap-1 sm:gap-2 md:gap-3 mb-3 sm:mb-4">
+                                    <div className="flex items-center gap-1 text-gray-600 text-[10px] sm:text-xs md:text-sm">
+                                        <Settings size={12} className="text-accent flex-shrink-0 sm:w-[14px] sm:h-[14px]" />
+                                        <span className="truncate">{car.transmission}</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
-                                        <Fuel size={14} className="text-accent" />
-                                        <span>{car.fuel}</span>
+                                    <div className="flex items-center gap-1 text-gray-600 text-[10px] sm:text-xs md:text-sm">
+                                        <Fuel size={12} className="text-accent flex-shrink-0 sm:w-[14px] sm:h-[14px]" />
+                                        <span className="truncate">{car.fuel}</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
-                                        <Users size={14} className="text-accent" />
-                                        <span>{car.seats} places</span>
+                                    <div className="flex items-center gap-1 text-gray-600 text-[10px] sm:text-xs md:text-sm">
+                                        <Users size={12} className="text-accent flex-shrink-0 sm:w-[14px] sm:h-[14px]" />
+                                        <span>{car.seats} pl.</span>
                                     </div>
-                                    <div className="flex items-center gap-1.5 text-gray-600 text-xs md:text-sm">
-                                        <Gauge size={14} className="text-accent" />
+                                    <div className="flex items-center gap-1 text-gray-600 text-[10px] sm:text-xs md:text-sm">
+                                        <Gauge size={12} className="text-accent flex-shrink-0 sm:w-[14px] sm:h-[14px]" />
                                         <span>Illimité</span>
                                     </div>
                                 </div>
 
                                 <Link
                                     to="/booking"
-                                    className="w-full bg-gradient-to-r from-accent to-orange-500 hover:from-orange-500 hover:to-accent text-white font-bold py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm md:text-base shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transform hover:scale-[1.02]"
+                                    className="w-full bg-gradient-to-r from-accent to-orange-500 hover:from-orange-500 hover:to-accent text-white font-bold py-2 sm:py-2.5 md:py-3 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-xs sm:text-sm md:text-base shadow-lg shadow-accent/30 hover:shadow-xl hover:shadow-accent/40 transform hover:scale-[1.02]"
                                 >
                                     Réserver
                                 </Link>

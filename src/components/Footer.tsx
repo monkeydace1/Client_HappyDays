@@ -2,7 +2,17 @@ import { Facebook, Instagram, Phone, Mail, MapPin, MessageCircle } from 'lucide-
 import { Link } from 'react-router-dom';
 import logo from '../assets/123.png';
 
+// Client contact information
+const PHONE_NUMBER = '+213 05 59 59 99 55';
+const PHONE_NUMBER_WHATSAPP = '213055959955';
+const EMAIL = 'contact@happydays-dz.com'; // Update with client email
+const FACEBOOK_URL = 'https://facebook.com/happydayscar'; // Update with client Facebook
+const INSTAGRAM_URL = 'https://instagram.com/happydayscar'; // Update with client Instagram
+
 export const Footer = () => {
+    const whatsappMessage = encodeURIComponent('Bonjour, je vous contacte depuis votre site web pour une question.');
+    const whatsappUrl = `https://wa.me/${PHONE_NUMBER_WHATSAPP}?text=${whatsappMessage}`;
+
     return (
         <footer id="contact" className="bg-secondary-dark text-white pt-12 md:pt-16 pb-6 md:pb-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -20,11 +30,14 @@ export const Footer = () => {
                             Votre partenaire de confiance pour la location de voitures à Oran. Qualité, service et prix transparents.
                         </p>
                         <div className="flex space-x-4">
-                            <a href="#" className="text-gray-400 hover:text-accent transition-colors" aria-label="Facebook">
+                            <a href={FACEBOOK_URL} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-accent transition-colors" aria-label="Facebook">
                                 <Facebook size={22} />
                             </a>
-                            <a href="#" className="text-gray-400 hover:text-accent transition-colors" aria-label="Instagram">
+                            <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-accent transition-colors" aria-label="Instagram">
                                 <Instagram size={22} />
+                            </a>
+                            <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-green-500 transition-colors" aria-label="WhatsApp">
+                                <MessageCircle size={22} />
                             </a>
                         </div>
                     </div>
@@ -58,13 +71,15 @@ export const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3 text-gray-400">
                                 <Phone size={18} className="text-accent flex-shrink-0" />
-                                <a href="tel:+213542199272" className="text-sm md:text-base hover:text-accent transition-colors">
-                                    +213 542 19 92 72
+                                <a href={`tel:${PHONE_NUMBER.replace(/\s/g, '')}`} className="text-sm md:text-base hover:text-accent transition-colors">
+                                    {PHONE_NUMBER}
                                 </a>
                             </li>
                             <li className="flex items-center gap-3 text-gray-400">
                                 <Mail size={18} className="text-accent flex-shrink-0" />
-                                <span className="text-sm md:text-base">contact@happydays-dz.com</span>
+                                <a href={`mailto:${EMAIL}`} className="text-sm md:text-base hover:text-accent transition-colors">
+                                    {EMAIL}
+                                </a>
                             </li>
                         </ul>
                     </div>
@@ -76,7 +91,7 @@ export const Footer = () => {
                             Notre équipe est disponible pour répondre à vos questions.
                         </p>
                         <a
-                            href="https://wa.me/213542199272"
+                            href={whatsappUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-lg font-medium transition-colors text-sm md:text-base"

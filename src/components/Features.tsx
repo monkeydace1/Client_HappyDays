@@ -1,7 +1,12 @@
-import { ShieldCheck, Truck, Clock, Gauge } from 'lucide-react';
+import { ShieldCheck, Truck, Clock, Gauge, Award, ParkingCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const features = [
+    {
+        icon: Award,
+        title: "+3 Ans d'Expérience",
+        description: "Plus de 3 ans d'expertise au service de votre satisfaction."
+    },
     {
         icon: ShieldCheck,
         title: "Assurance Complète",
@@ -11,6 +16,11 @@ const features = [
         icon: Truck,
         title: "Livraison Gratuite",
         description: "Nous vous livrons le véhicule à l'aéroport ou à votre hôtel."
+    },
+    {
+        icon: ParkingCircle,
+        title: "Ticket Parking Aéroport",
+        description: "Parking aéroport inclus pour faciliter votre voyage."
     },
     {
         icon: Clock,
@@ -31,7 +41,7 @@ export const Features = () => {
                 {/* Section Title */}
                 <div className="text-center mb-10 md:mb-14">
                     <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-secondary mb-3 md:mb-4">
-                        Pourquoi Nous Choisir
+                        Pourquoi Choisir HappyDays Car
                     </h2>
                     <p className="text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4">
                         Des services de qualité pour une expérience de location sans souci
@@ -39,7 +49,7 @@ export const Features = () => {
                 </div>
 
                 {/* Features Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-8">
                     {features.map((feature, index) => (
                         <motion.div
                             key={index}

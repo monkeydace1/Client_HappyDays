@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 export const AirportService = () => {
     const benefits = [
         'Livraison gratuite à l\'aéroport',
+        'Ticket de parking aéroport inclus',
         'Disponible 24h/24, 7j/7',
         'Véhicule prêt à votre arrivée',
         'Retour flexible selon votre vol',
@@ -87,8 +88,8 @@ export const AirportService = () => {
                             <div className="text-white/80 text-sm">Disponibilité</div>
                         </div>
                         <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 text-center">
-                            <div className="text-4xl font-bold text-accent mb-2">100%</div>
-                            <div className="text-white/80 text-sm">Clients satisfaits</div>
+                            <div className="text-4xl font-bold text-accent mb-2">+3 ans</div>
+                            <div className="text-white/80 text-sm">D'expérience</div>
                         </div>
                     </motion.div>
                 </div>

@@ -161,15 +161,15 @@ export const DateSelection: React.FC = () => {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-bold text-secondary mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-secondary mb-2">
                     Choisissez vos dates
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                     Sélectionnez vos dates de location et le lieu de ramassage
                 </p>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-lg p-8 space-y-6">
+            <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 md:p-8 space-y-5 sm:space-y-6">
                 {/* Departure Date & Time */}
                 <div className="space-y-3">
                     <label className="block text-sm font-medium text-gray-700">
@@ -265,8 +265,8 @@ export const DateSelection: React.FC = () => {
                     <select
                         value={pickupLocation}
                         onChange={(e) => setPickupLocation(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-lg border ${errors.pickupLocation ? 'border-red-500' : 'border-gray-200'
-                            } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-lg bg-white`}
+                        className={`w-full px-3 sm:px-4 py-3 rounded-lg border ${errors.pickupLocation ? 'border-red-500' : 'border-gray-200'
+                            } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm sm:text-base bg-white`}
                     >
                         {PICKUP_LOCATIONS.map((location) => (
                             <option key={location} value={location}>

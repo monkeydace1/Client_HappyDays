@@ -80,10 +80,10 @@ export const Supplements: React.FC = () => {
             className="space-y-8"
         >
             <div>
-                <h2 className="text-3xl font-bold text-secondary mb-2">
+                <h2 className="text-2xl sm:text-3xl font-bold text-secondary mb-2">
                     Options et suppléments
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                     Personnalisez votre location avec nos options
                 </p>
             </div>
@@ -93,7 +93,7 @@ export const Supplements: React.FC = () => {
                 <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    className="bg-white rounded-xl shadow-lg p-6"
+                    className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
                 >
                     <div className="flex items-start gap-4">
                         <div className="bg-primary/10 p-3 rounded-lg">
@@ -136,7 +136,7 @@ export const Supplements: React.FC = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="bg-white rounded-xl shadow-lg p-6"
+                    className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
                 >
                     <div className="flex items-center gap-3 mb-4">
                         <div className="bg-primary/10 p-3 rounded-lg">
@@ -188,7 +188,7 @@ export const Supplements: React.FC = () => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="bg-white rounded-xl shadow-lg p-6"
+                    className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
                 >
                     <div className="flex items-center gap-3 mb-4">
                         <div className="bg-primary/10 p-3 rounded-lg">

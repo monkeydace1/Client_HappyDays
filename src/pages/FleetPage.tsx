@@ -14,7 +14,7 @@ export const FleetPage = () => {
         : vehicles.filter(v => v.transmission === filter);
 
     return (
-        <div className="min-h-screen pt-20 md:pt-24 pb-12 bg-gray-50">
+        <div className="min-h-screen pt-28 md:pt-32 pb-12 bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="text-center mb-8 md:mb-12">
@@ -72,22 +72,22 @@ export const FleetPage = () => {
                             transition={{ duration: 0.4, delay: index * 0.05 }}
                             className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow group"
                         >
-                            <div className="relative h-44 sm:h-52 overflow-hidden">
+                            <div className="relative aspect-[4/3] overflow-hidden">
                                 <img
                                     src={car.image}
                                     alt={car.name}
                                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                                 />
-                                <div className="absolute top-3 right-3 bg-accent text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
-                                    {car.pricePerDay}€ / jour
+                                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-accent text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-lg">
+                                    {car.pricePerDay}€/jour
                                 </div>
                             </div>
 
-                            <div className="p-4 md:p-5">
+                            <div className="p-3 sm:p-4 md:p-5">
                                 <div className="flex items-start justify-between mb-2">
-                                    <h3 className="text-lg md:text-xl font-bold text-secondary">{car.name}</h3>
+                                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-secondary truncate">{car.name}</h3>
                                 </div>
-                                <div className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+                                <div className="flex items-center gap-1.5 sm:gap-2 text-sm text-gray-500 mb-3 sm:mb-4">
                                     <span className="bg-primary-light text-primary px-2 py-0.5 rounded text-xs font-medium">
                                         {car.category}
                                     </span>
@@ -96,30 +96,30 @@ export const FleetPage = () => {
                                     </span>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-3 mb-5">
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Settings size={16} className="text-accent" />
-                                        <span>{car.transmission}</span>
+                                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 md:gap-3 mb-4 sm:mb-5">
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Settings size={14} className="text-accent flex-shrink-0" />
+                                        <span className="truncate">{car.transmission}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Fuel size={16} className="text-accent" />
-                                        <span>{car.fuel}</span>
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Fuel size={14} className="text-accent flex-shrink-0" />
+                                        <span className="truncate">{car.fuel}</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Users size={16} className="text-accent" />
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Users size={14} className="text-accent flex-shrink-0" />
                                         <span>{car.seats} places</span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-gray-600 text-sm">
-                                        <Gauge size={16} className="text-accent" />
+                                    <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
+                                        <Gauge size={14} className="text-accent flex-shrink-0" />
                                         <span>Km illimité</span>
                                     </div>
                                 </div>
 
                                 <Link
                                     to="/booking"
-                                    className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                                    className="w-full bg-primary hover:bg-primary-hover text-white font-medium py-2.5 sm:py-3 rounded-lg transition-all flex items-center justify-center gap-2 text-sm sm:text-base"
                                 >
-                                    Réserver ce véhicule
+                                    Réserver
                                 </Link>
                             </div>
                         </motion.div>

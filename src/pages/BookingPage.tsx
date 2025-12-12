@@ -26,7 +26,7 @@ export const BookingPage: React.FC = () => {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-24 pb-12">
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pt-32 md:pt-36 pb-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Page Header */}
                 <motion.div
@@ -140,7 +140,7 @@ export const BookingPage: React.FC = () => {
                 >
                     <p className="text-gray-600 mb-2">Besoin d'aide ?</p>
                     <a
-                        href="https://wa.me/1234567890"
+                        href="https://wa.me/213055959955?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20votre%20site%20web%20pour%20une%20question."
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-medium transition-colors"

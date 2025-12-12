@@ -117,9 +117,18 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     setClientInfo: (info) => set({ clientInfo: info }),
 
     // Navigation
-    nextStep: () => set((state) => ({ currentStep: Math.min(state.currentStep + 1, 4) })),
-    previousStep: () => set((state) => ({ currentStep: Math.max(state.currentStep - 1, 1) })),
-    goToStep: (step) => set({ currentStep: Math.max(1, Math.min(step, 4)) }),
+    nextStep: () => {
+        set((state) => ({ currentStep: Math.min(state.currentStep + 1, 4) }));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    previousStep: () => {
+        set((state) => ({ currentStep: Math.max(state.currentStep - 1, 1) }));
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+    goToStep: (step) => {
+        set({ currentStep: Math.max(1, Math.min(step, 4)) });
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
 
     // Utilities
     calculateRentalDays: () => {
