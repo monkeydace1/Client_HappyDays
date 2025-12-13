@@ -117,6 +117,7 @@ export function GanttChart({
     { value: 7, label: '7j' },
     { value: 14, label: '14j' },
     { value: 30, label: '30j' },
+    { value: 60, label: '60j' },
   ];
 
   const handleVehicleRowClick = (vehicleId: number) => {
@@ -127,7 +128,7 @@ export function GanttChart({
   };
 
   // Compact cell sizing (V1 design - mobile-first, works on all screens)
-  const cellWidth = calendarViewDays <= 7 ? 48 : calendarViewDays <= 14 ? 42 : 36;
+  const cellWidth = calendarViewDays <= 7 ? 48 : calendarViewDays <= 14 ? 42 : calendarViewDays <= 30 ? 36 : 28;
   const vehicleColumnWidth = 40;
 
   return (
