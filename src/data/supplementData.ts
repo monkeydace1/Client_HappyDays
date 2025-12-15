@@ -2,29 +2,11 @@ import type { Supplement, ChildSeat, Insurance } from '../types';
 
 export const childSeats: ChildSeat[] = [
     {
-        id: 'child_seat_baby',
+        id: 'child_seat_all',
         type: 'child_seat',
         seatType: 'baby',
-        name: 'Siège bébé (0-1 an)',
-        description: 'Pour les enfants de 0 à 13 kg',
-        pricePerDay: 5,
-        quantity: 0
-    },
-    {
-        id: 'child_seat_toddler',
-        type: 'child_seat',
-        seatType: 'toddler',
-        name: 'Siège enfant (1-4 ans)',
-        description: 'Pour les enfants de 9 à 18 kg',
-        pricePerDay: 5,
-        quantity: 0
-    },
-    {
-        id: 'child_seat_booster',
-        type: 'child_seat',
-        seatType: 'booster',
-        name: 'Rehausseur (4-12 ans)',
-        description: 'Pour les enfants de 15 à 36 kg',
+        name: 'Siège bébé enfants et rehausseur',
+        description: 'Pour tous les enfants (0-12 ans)',
         pricePerDay: 3,
         quantity: 0
     }
