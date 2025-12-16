@@ -202,7 +202,8 @@ export const ClientInformation: React.FC = () => {
             const reference = result.data.booking_reference;
 
             // Navigate to thank you page with booking details
-            navigate('/merci', {
+            // Using both URL params (for reliability) and state (for data)
+            navigate(`/merci?ref=${reference}`, {
                 state: {
                     bookingReference: reference,
                     clientName: `${formData.firstName} ${formData.lastName}`,
