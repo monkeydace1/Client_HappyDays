@@ -184,7 +184,7 @@ export const ThankYouPage = () => {
               <h3 className="font-bold text-gray-900">Besoin d'aide ?</h3>
               <div className="flex flex-col sm:flex-row gap-3">
                 <a
-                  href="https://wa.me/213542199272"
+                  href="https://wa.me/213055959955"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-6 rounded-lg transition-all"
@@ -193,7 +193,7 @@ export const ThankYouPage = () => {
                   WhatsApp
                 </a>
                 <a
-                  href="tel:+213542199272"
+                  href="tel:+213055959955"
                   className="flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white font-medium py-3 px-6 rounded-lg transition-all"
                 >
                   <Phone className="w-5 h-5" />
