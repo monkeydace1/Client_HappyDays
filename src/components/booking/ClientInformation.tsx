@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Mail, User, Phone, MapPin, MessageSquare, Send, Check, AlertCircle, Upload, CreditCard, Globe, Copy, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Mail, User, Phone, MapPin, MessageSquare, Send, AlertCircle, Upload, CreditCard, Globe } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../../store/bookingStore';
 import type { ClientInfo } from '../../types';
-import { saveBooking, uploadLicensePhoto, openWhatsApp, type BookingSubmission } from '../../lib/bookingService';
+import { saveBooking, uploadLicensePhoto, type BookingSubmission } from '../../lib/bookingService';
 
 export const ClientInformation: React.FC = () => {
     const {
@@ -222,84 +222,6 @@ export const ClientInformation: React.FC = () => {
             setIsSubmitting(false);
         }
     };
-
-    const copyBookingReference = () => {
-        navigator.clipboard.writeText(bookingReference);
-    };
-
-    if (isSubmitted) {
-        return (
-            <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="bg-white rounded-2xl shadow-2xl p-12 text-center"
-            >
-                <div className="mb-6">
-                    <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
-                        <Check size={40} className="text-green-600" />
-                    </div>
-                    <h2 className="text-3xl font-bold text-secondary mb-2">
-                        Réservation confirmée !
-                    </h2>
-                    <p className="text-lg text-gray-600">
-                        Merci {formData.firstName} ! Votre demande de réservation a été envoyée avec succès.
-                    </p>
-                </div>
-
-                {/* Booking Reference */}
-                <div className="bg-gradient-to-r from-primary/10 to-primary/5 border-2 border-primary/30 rounded-xl p-6 mb-6">
-                    <p className="text-sm text-gray-600 mb-2">Votre référence de réservation</p>
-                    <div className="flex items-center justify-center gap-3">
-                        <span className="text-2xl font-bold text-primary tracking-wider">
-                            {bookingReference}
-                        </span>
-                        <button
-                            onClick={copyBookingReference}
-                            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-                            title="Copier la référence"
-                        >
-                            <Copy size={20} className="text-primary" />
-                        </button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                        Conservez cette référence pour le suivi de votre réservation
-                    </p>
-                </div>
-
-                <div className="bg-primary/5 border border-primary/20 rounded-lg p-6 mb-6">
-                    <p className="text-gray-700 mb-2">
-                        Nous allons vous contacter très prochainement pour confirmer votre réservation.
-                    </p>
-                    <p className="text-sm text-gray-600">
-                        Cliquez sur le bouton ci-dessous pour nous envoyer les détails de votre réservation via WhatsApp.
-                    </p>
-                </div>
-
-                <div className="space-y-4">
-                    {savedBookingData && (
-                        <button
-                            onClick={() => openWhatsApp(bookingReference, savedBookingData)}
-                            className="w-full inline-flex items-center justify-center gap-3 bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transition-all text-lg"
-                        >
-                            <MessageCircle size={24} />
-                            Envoyer via WhatsApp
-                        </button>
-                    )}
-
-                    <p className="text-sm text-gray-600 text-center">
-                        Un récapitulatif sera envoyé à <strong>{formData.email}</strong>
-                    </p>
-
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-8 rounded-lg transition-all"
-                    >
-                        Nouvelle réservation
-                    </button>
-                </div>
-            </motion.div>
-        );
-    }
 
     return (
         <motion.div
