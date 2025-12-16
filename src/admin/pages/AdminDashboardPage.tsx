@@ -176,8 +176,10 @@ export function AdminDashboardPage() {
         isOpen={bookingDetailsModalOpen}
         onClose={closeBookingDetails}
         booking={selectedBooking}
+        vehicles={vehicles}
         onStatusChange={handleStatusChange}
         onBookingUpdate={handleBookingUpdate}
+        onAssignVehicle={handleAssignVehicle}
       />
 
       {/* Floating Action Button - New Reservation */}

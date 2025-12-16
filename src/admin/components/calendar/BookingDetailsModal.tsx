@@ -3,14 +3,16 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, User, Phone, Calendar, Car, MapPin, MessageCircle, Check, Clock, XCircle, Edit3, Save } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import type { AdminBooking, BookingStatus } from '../../types/admin';
+import type { AdminBooking, BookingStatus, AdminVehicle } from '../../types/admin';
 
 interface BookingDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   booking: AdminBooking | null;
+  vehicles: AdminVehicle[];
   onStatusChange: (bookingId: string, newStatus: BookingStatus) => void;
   onBookingUpdate: (bookingId: string, updates: Partial<AdminBooking>) => void;
+  onAssignVehicle: (bookingId: string, vehicleId: number) => void;
 }
 
 // Status config
@@ -45,8 +47,10 @@ export function BookingDetailsModal({
   isOpen,
   onClose,
   booking,
+  vehicles,
   onStatusChange,
   onBookingUpdate,
+  onAssignVehicle,
 }: BookingDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
@@ -55,6 +59,7 @@ export function BookingDetailsModal({
     departureDate: '',
     returnDate: '',
   });
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
 
   // Reset edit state when booking changes
   useEffect(() => {
@@ -66,6 +71,7 @@ export function BookingDetailsModal({
         departureDate: booking.departureDate,
         returnDate: booking.returnDate,
       });
+      setSelectedVehicleId(booking.assignedVehicleId || booking.vehicleId);
       setIsEditing(false);
     }
   }, [booking]);
@@ -96,6 +102,12 @@ export function BookingDetailsModal({
       rentalDays: days,
       totalPrice: Math.round(days * pricePerDay),
     });
+
+    // Update assigned vehicle if changed
+    if (selectedVehicleId && selectedVehicleId !== (booking.assignedVehicleId || booking.vehicleId)) {
+      onAssignVehicle(booking.id, selectedVehicleId);
+    }
+
     setIsEditing(false);
   };
 
@@ -236,9 +248,32 @@ export function BookingDetailsModal({
               <div className="bg-gray-50 rounded-xl p-4">
                 <h3 className="font-semibold text-gray-900 mb-3">Réservation</h3>
                 <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Car className="w-5 h-5 text-gray-400" />
-                    <span className="text-gray-900">{booking.vehicleName}</span>
+                  <div className="flex items-start gap-3">
+                    <Car className="w-5 h-5 text-gray-400 flex-shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="text-gray-900 mb-1">{booking.vehicleName}</div>
+                      {isEditing && (
+                        <select
+                          value={selectedVehicleId || ''}
+                          onChange={(e) => setSelectedVehicleId(Number(e.target.value))}
+                          className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                        >
+                          <option value="">Sélectionner un véhicule</option>
+                          {vehicles
+                            .filter(v => v.status === 'available')
+                            .map(v => (
+                              <option key={v.id} value={v.id}>
+                                #{v.id} - {v.name} ({v.pricePerDay}€/j)
+                              </option>
+                            ))}
+                        </select>
+                      )}
+                      {!isEditing && booking.assignedVehicleId && booking.assignedVehicleId !== booking.vehicleId && (
+                        <div className="text-xs text-primary mt-1">
+                          Assigné: #{booking.assignedVehicleId}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
