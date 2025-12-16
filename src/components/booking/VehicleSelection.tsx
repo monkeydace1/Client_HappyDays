@@ -18,6 +18,17 @@ export const VehicleSelection: React.FC = () => {
 
     const handleVehicleBook = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
+
+        // Track Meta Pixel InitiateCheckout event
+        if (typeof window !== 'undefined' && (window as any).fbq) {
+            (window as any).fbq('track', 'InitiateCheckout', {
+                content_name: vehicle.name,
+                content_category: vehicle.category,
+                currency: 'EUR',
+                value: calculateTotalPrice(vehicle.pricePerDay),
+            });
+        }
+
         // Go to next step immediately
         setTimeout(() => {
             nextStep();

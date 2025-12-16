@@ -230,6 +230,16 @@ export async function saveBooking(
     // Also sync to admin_bookings table so it appears in admin calendar
     await syncToAdminBookings(bookingReference, submission);
 
+    // Track Meta Pixel Lead event
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'Lead', {
+        content_name: submission.selectedVehicle.name,
+        content_category: submission.selectedVehicle.category,
+        currency: 'EUR',
+        value: submission.totalPrice,
+      });
+    }
+
     return { success: true, data: data as BookingRecord };
   } catch (error) {
     console.error('Error in saveBooking:', error);
