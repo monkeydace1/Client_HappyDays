@@ -9,7 +9,6 @@ import { saveBooking, uploadLicensePhoto, openWhatsApp, type BookingSubmission }
 export const ClientInformation: React.FC = () => {
     const {
         clientInfo,
-        setClientInfo,
         previousStep,
         getTotalPrice,
         getSupplementsTotal,
@@ -51,11 +50,8 @@ export const ClientInformation: React.FC = () => {
 
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isSubmitted, setIsSubmitted] = useState(false);
-    const [bookingReference, setBookingReference] = useState<string>('');
     const [submitError, setSubmitError] = useState<string>('');
     const [photoPreview, setPhotoPreview] = useState<string>(clientInfo?.driverLicense?.photoUrl || '');
-    const [savedBookingData, setSavedBookingData] = useState<BookingSubmission | null>(null);
 
     const validateForm = (): boolean => {
         const newErrors: { [key: string]: string } = {};

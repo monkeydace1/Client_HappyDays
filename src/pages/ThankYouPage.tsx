@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, Calendar, Car, Phone, Mail, ArrowRight } from 'lucide-react';
+import { CheckCircle, Calendar, Car, Phone, ArrowRight } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
 
