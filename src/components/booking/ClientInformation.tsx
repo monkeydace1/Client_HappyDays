@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft, Mail, User, Phone, MapPin, MessageSquare, Send, Check, AlertCircle, Upload, CreditCard, Globe, Copy, MessageCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../../store/bookingStore';
 import type { ClientInfo } from '../../types';
 import { saveBooking, uploadLicensePhoto, openWhatsApp, type BookingSubmission } from '../../lib/bookingService';
@@ -23,6 +24,8 @@ export const ClientInformation: React.FC = () => {
         supplements,
         additionalDriver
     } = useBookingStore();
+
+    const navigate = useNavigate();
 
     const [formData, setFormData] = useState<ClientInfo>({
         firstName: clientInfo?.firstName || '',
@@ -197,16 +200,19 @@ export const ClientInformation: React.FC = () => {
 
             // Store the booking reference
             const reference = result.data.booking_reference;
-            setBookingReference(reference);
 
-            // Save client info to store
-            setClientInfo(formData);
-
-            // Save booking data for WhatsApp button
-            setSavedBookingData(bookingData);
-
-            // Mark as submitted
-            setIsSubmitted(true);
+            // Navigate to thank you page with booking details
+            navigate('/merci', {
+                state: {
+                    bookingReference: reference,
+                    clientName: `${formData.firstName} ${formData.lastName}`,
+                    vehicleName: selectedVehicle?.name,
+                    departureDate,
+                    returnDate,
+                    totalPrice: getTotalPrice(),
+                },
+                replace: true
+            });
 
         } catch (error) {
             console.error('Error submitting booking:', error);

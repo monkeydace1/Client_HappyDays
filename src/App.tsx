@@ -10,6 +10,7 @@ import { Footer } from './components/Footer';
 import { BookingPage } from './pages/BookingPage';
 import { FleetPage } from './pages/FleetPage';
 import { ConditionsPage } from './pages/ConditionsPage';
+import { ThankYouPage } from './pages/ThankYouPage';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { TopBanner } from './components/TopBanner';
 
@@ -73,6 +74,7 @@ function AppRoutes() {
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/fleet" element={<FleetPage />} />
         <Route path="/conditions" element={<ConditionsPage />} />
+        <Route path="/merci" element={<ThankYouPage />} />
       </Routes>
     </PublicLayout>
   );
