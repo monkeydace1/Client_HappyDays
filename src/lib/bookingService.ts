@@ -1,5 +1,6 @@
 import { supabase } from './supabase';
 import type { Vehicle, Supplement, ClientInfo } from '../types';
+import { generateCustomerEmailHTML, generateAdminEmailHTML } from './emailTemplates';
 
 // Types for booking submission
 export interface BookingSubmission {
@@ -262,6 +263,12 @@ export async function saveBooking(
       });
     }
 
+    // Send confirmation emails (don't wait for it, send async)
+    sendBookingConfirmationEmails(bookingReference, submission).catch(err => {
+      console.error('Failed to send confirmation emails:', err);
+      // Don't fail the booking if email fails
+    });
+
     return { success: true, data: data as BookingRecord };
   } catch (error) {
     console.error('Error in saveBooking:', error);
@@ -394,4 +401,51 @@ export function openWhatsApp(bookingReference: string, submission: BookingSubmis
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
   window.open(whatsappUrl, '_blank');
+}
+
+/**
+ * Send booking confirmation emails via Supabase Edge Function
+ */
+async function sendBookingConfirmationEmails(
+  bookingReference: string,
+  submission: BookingSubmission
+): Promise<void> {
+  try {
+    // Generate email HTML templates
+    const customerEmailHTML = generateCustomerEmailHTML(bookingReference, submission);
+    const adminEmailHTML = generateAdminEmailHTML(bookingReference, submission);
+
+    // Get Supabase URL
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    if (!supabaseUrl) {
+      throw new Error('Supabase URL not configured');
+    }
+
+    // Call Supabase Edge Function to send emails
+    const response = await fetch(`${supabaseUrl}/functions/v1/send-booking-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        bookingReference,
+        customerEmail: submission.clientInfo.email,
+        customerName: `${submission.clientInfo.firstName} ${submission.clientInfo.lastName}`,
+        customerEmailHTML,
+        adminEmailHTML,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Failed to send emails');
+    }
+
+    const result = await response.json();
+    console.log('Confirmation emails sent successfully:', result);
+  } catch (error) {
+    console.error('Error sending confirmation emails:', error);
+    throw error;
+  }
 }
