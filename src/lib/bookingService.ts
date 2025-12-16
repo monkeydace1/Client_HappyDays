@@ -240,6 +240,28 @@ export async function saveBooking(
       });
     }
 
+    // Track Google Analytics generate_lead event
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'generate_lead', {
+        currency: 'EUR',
+        value: submission.totalPrice,
+      });
+
+      // Also track as conversion/purchase for better reporting
+      (window as any).gtag('event', 'purchase', {
+        transaction_id: bookingReference,
+        value: submission.totalPrice,
+        currency: 'EUR',
+        items: [{
+          item_id: submission.selectedVehicle.id,
+          item_name: submission.selectedVehicle.name,
+          item_category: submission.selectedVehicle.category,
+          price: submission.selectedVehicle.pricePerDay,
+          quantity: submission.rentalDays
+        }]
+      });
+    }
+
     return { success: true, data: data as BookingRecord };
   } catch (error) {
     console.error('Error in saveBooking:', error);

@@ -18,6 +18,7 @@ export const VehicleSelection: React.FC = () => {
 
     const handleVehicleBook = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
+        const totalPrice = calculateTotalPrice(vehicle.pricePerDay);
 
         // Track Meta Pixel InitiateCheckout event
         if (typeof window !== 'undefined' && (window as any).fbq) {
@@ -25,7 +26,22 @@ export const VehicleSelection: React.FC = () => {
                 content_name: vehicle.name,
                 content_category: vehicle.category,
                 currency: 'EUR',
-                value: calculateTotalPrice(vehicle.pricePerDay),
+                value: totalPrice,
+            });
+        }
+
+        // Track Google Analytics begin_checkout event
+        if (typeof window !== 'undefined' && (window as any).gtag) {
+            (window as any).gtag('event', 'begin_checkout', {
+                currency: 'EUR',
+                value: totalPrice,
+                items: [{
+                    item_id: vehicle.id,
+                    item_name: vehicle.name,
+                    item_category: vehicle.category,
+                    price: vehicle.pricePerDay,
+                    quantity: rentalDays || 1
+                }]
             });
         }
 
