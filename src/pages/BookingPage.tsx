@@ -140,7 +140,7 @@ export const BookingPage: React.FC = () => {
                 >
                     <p className="text-gray-600 mb-2">Besoin d'aide ?</p>
                     <a
-                        href="https://wa.me/213055959955?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20votre%20site%20web%20pour%20une%20question."
+                        href="https://wa.me/213559599955?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20votre%20site%20web%20pour%20une%20question."
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-primary hover:text-primary-hover font-medium transition-colors"
