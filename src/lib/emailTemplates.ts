@@ -110,10 +110,10 @@ export function generateCustomerEmailHTML(
                 <tr>
                   <td style="padding: 20px 0; text-align: center; border-top: 1px solid #e2e8f0;">
                     <p style="margin: 0 0 15px 0; font-size: 14px; color: #666666;">Besoin d'aide ?</p>
-                    <a href="https://wa.me/213055959955" style="display: inline-block; background-color: #22c55e; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">
+                    <a href="https://wa.me/213559599955" style="display: inline-block; background-color: #22c55e; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; margin-right: 10px;">
                       💬 WhatsApp
                     </a>
-                    <a href="tel:+213055959955" style="display: inline-block; background-color: #0ea5e9; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+                    <a href="tel:+213559599955" style="display: inline-block; background-color: #0ea5e9; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold;">
                       📞 Appeler
                     </a>
                   </td>
@@ -129,7 +129,7 @@ export function generateCustomerEmailHTML(
               <p style="margin: 0 0 10px 0; font-size: 16px; font-weight: bold; color: #333333;">Happy Days Location</p>
               <p style="margin: 0 0 5px 0; font-size: 14px; color: #666666;">Location de voitures - Oran, Algérie</p>
               <p style="margin: 0 0 15px 0; font-size: 14px; color: #666666;">
-                <a href="tel:+213055959955" style="color: #0ea5e9; text-decoration: none;">+213 055 959 955</a>
+                <a href="tel:+213559599955" style="color: #0ea5e9; text-decoration: none;">+213 559 599 955</a>
               </p>
               <p style="margin: 0; font-size: 12px; color: #999999;">
                 Cet email a été envoyé automatiquement. Merci de ne pas y répondre.

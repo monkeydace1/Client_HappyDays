@@ -49,7 +49,7 @@ serve(async (req) => {
     // Email to admin/business owner
     const adminEmailResult = await resend.emails.send({
       from: 'Happy Days Location <reservations@happydayslocation.com>',
-      to: ['contact@happydayslocation.com'], // Replace with your actual business email
+      to: ['contact@happydayslocation.com', 'anesmluffy@gmail.com'],
       subject: `🚨 Nouvelle réservation ${bookingReference} - ${customerName}`,
       html: adminEmailHTML,
     })
