@@ -21,7 +21,22 @@
       "Bash(ren \"algeria-2793897 (1).jpg\" \"algeria-desert.jpg\")",
       "Bash(npm install:*)",
       "Bash(cat:*)",
-      "Bash(tree:*)"
+      "Bash(tree:*)",
+      "Bash(npx vite:*)",
+      "Bash(git -C /c/Users/Anes_/Documents/Client_HappyDays log --oneline -20)",
+      "Bash(git -C /c/Users/Anes_/Documents/Client_HappyDays log -1 --format=\"%H %s %ai\" -- src/lib/bookingService.ts)",
+      "Bash(npx supabase functions logs:*)",
+      "Bash(npx supabase functions deploy:*)",
+      "Bash(npx supabase:*)",
+      "Bash(node -e \"\nconst key = \\\\`-----BEGIN PRIVATE KEY-----\nMIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCXsF3zEbIEIR9d\nDKVfnZY0ZZlIDirn2KGmRNvhgpZpfuiC55IbSG6Wbbvh9MM7lW9pGScb+RDhF4ce\npqqQYQBM21Hg/2lnhKSWDjQYrtTZVfS6eczgZMyTkqIw9+al1zDhBrt4QXwX063g\nCMaAueprzK0MHdkF0q2sK0TWxdibNp+wl1S8+DgYs6hz0no5m7SBU1T1mlYcl0Cg\nfDjHT4wJOK8vP5EQ6ocXTUxO5JzoTsJTToL99IPTdCPkjglV5UC+45EUqWGMTGHu\nxzAt3HNB6n5YHs9/OfZCdJNcD8vhT71YFI7vAIaErFdpQk64HYUULGJUPDBWgscV\nvNVfMBPNAgMBAAECggEABMSab2WC/vY7kiUvnY3KhuMaqlUnrBn3Gs7XSoNcTvya\nOmMlCI6CS2Avo66Z5GmSEu+jdxGhIjInISOEAP3LkJ7kN/pPSd21frH7mTsFnb9B\n7gqeEf+ZHpphVsC0E0psUuZvRhxo1iblNEGSW8F8SN8qIVNe2vwAUYUaqNWXNWm5\nuZj6vClubPJs5Jr3XYzKRx1ZewgGUwvWSI+dIIC3AWLmAiSoBA3ReopGM88tZ6Ck\npEdmMtsHDYZz32NI9IfWbHRkqwPp2DeNLSrrYkjqpHQ0H0EmuY3aruSngMzZCeUF\nv55phZz1Mg8Fi9vo0L9Rto9TABAbOhxjlBGQ3w7igQKBgQDR1WEvJk+xZSCQSooY\ndjLTFGV513nZslRKtG2m+GvJr573Qmmw9ZsY249AFEttXBff778dRj3MMEz49xoa\n6gWlVoOZr9UL3niDKvmehww7mb3U77rdsPR5fkJVr1suP1lckWRwPqrNaBhkt5b2\n1DXLcD+bLmvuL21Q29rqhDoIWQKBgQC5EBBTrQGuLELVrAjCIlWD/CL4ZgR7Cg4a\nqDeeOIpYNZLVnvVrszDq9S/J23u06mgQAaD8Dg33sWGmeT01hx1gN86tZr7aYpgL\n6RKYdg+6t7pCk/nRp+x6r2aiZxHW9DkINwJ+n59wqLrFGeBypr8nwp2MEgqBgRq4\nSCfj0Yv4lQKBgCFQdGaM+Zgbiyj9fKFXmsgic939VO44PuPBc6tPw6U4yc9N7wPW\narJuoXa2AiexuGSoZrpaHZOek4nviWh+gTj33Fr5LKT+xDlnCEyf+lQ4G4iEKzHp\nV1c2sYdzGNHl4uUsfDrJ6EpGXaEX+NLlbEkJYD/eBerCAuQUk9Qp/CC5AoGAdrh6\ncOOtD0pvudm6aKhUCe7nlEkGGNSzhaBixcrp3XrI7ugh82yqNiEC/lEihEZYaeRR\nnUF67mrKBV0DymIak05Z9V3TlA/qEMH93vbmUldpUyrQ+hHrIC2D/y12AVr9d2qq\n3AaU51YnMyjNl1+ng99S6LfuK3RiatRHWtxkGh0CgYAFFc26xbp+XKjCLKumBA2d\n8pXucI+HeyNeDdTFZ0R5w9cipZJZz4hpthTN662gfo0Po21hYvKWuwEJMoJyZ6jy\nqJH71/ETQx65iu6ejffOY9Znp4l13/tSaDfALeHmBfyaBk2+jCvRHI20TaaNamTo\n1uBIMiBjlbb5EHWEWnPPLQ==\n-----END PRIVATE KEY-----\\\\`;\nconsole.log\\(Buffer.from\\(key\\).toString\\(''base64''\\)\\);\n\")",
+      "Bash(git -C \"c:\\\\Users\\\\Anes_\\\\Documents\\\\Client_HappyDays\" diff --name-only)",
+      "Bash(git -C \"c:\\\\Users\\\\Anes_\\\\Documents\\\\Client_HappyDays\" log --oneline -3)",
+      "Bash(git -C \"c:\\\\Users\\\\Anes_\\\\Documents\\\\Client_HappyDays\" add src/pages/BookingPage.tsx)",
+      "Bash(git -C \"c:\\\\Users\\\\Anes_\\\\Documents\\\\Client_HappyDays\" commit -m \"$\\(cat <<''EOF''\nFix WhatsApp placeholder number to correct +213 559 599 955\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"c:\\\\Users\\\\Anes_\\\\Documents\\\\Client_HappyDays\" push)",
+      "Bash(git -C \"c:\\\\Users\\\\Anes_\\\\Documents\\\\Client_HappyDays\" pull --rebase)",
+      "Bash(git -C:*)",
+      "Bash(git -C \"c:\\\\Users\\\\Anes_\\\\Documents\\\\Client_HappyDays\" stash pop)"
     ],
     "deny": [],
     "ask": []

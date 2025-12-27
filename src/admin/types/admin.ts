@@ -79,3 +79,50 @@ export interface ReservationFilters {
   dateFrom?: string;
   dateTo?: string;
 }
+
+// Full booking details (from bookings table - web bookings only)
+export interface FullBookingDetails {
+  // Personal info
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  country: string;
+  city: string;
+  address: string;
+  dateOfBirth: string;
+
+  // Driver's license
+  licenseNumber: string;
+  licenseIssueDate: string;
+  licenseExpirationDate: string;
+  licensePhotoUrl?: string;
+
+  // Vehicle details
+  vehicleBrand: string;
+  vehicleModel: string;
+  vehicleCategory: string;
+  vehiclePricePerDay: number;
+
+  // Supplements
+  supplements: Array<{
+    id: string;
+    name: string;
+    pricePerDay: number;
+    quantity?: number;
+  }>;
+  additionalDriver: boolean;
+
+  // Pricing breakdown
+  vehicleTotal: number;
+  supplementsTotal: number;
+  totalPrice: number;
+
+  // Payment & notes
+  paymentMethod: 'cash' | 'card' | 'transfer';
+  extraInformation?: string;
+  notes?: string;
+
+  // Meta
+  createdAt: string;
+}

@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import logo from '../assets/123.png';
 
 // Client contact information
-const PHONE_NUMBER = '+213 05 59 59 99 55';
-const PHONE_NUMBER_WHATSAPP = '213055959955';
+const PHONE_NUMBER = '+213 559 599 955';
+const PHONE_NUMBER_WHATSAPP = '213559599955';
 const EMAIL = 'contact@happydays-dz.com'; // Update with client email
 const FACEBOOK_URL = 'https://facebook.com/happydayscar'; // Update with client Facebook
 const INSTAGRAM_URL = 'https://instagram.com/happydayscar'; // Update with client Instagram
@@ -71,7 +71,7 @@ export const Footer = () => {
                             </li>
                             <li className="flex items-center gap-3 text-gray-400">
                                 <Phone size={18} className="text-accent flex-shrink-0" />
-                                <a href={`tel:${PHONE_NUMBER.replace(/\s/g, '')}`} className="text-sm md:text-base hover:text-accent transition-colors">
+<a href={`tel:${PHONE_NUMBER.replace(/\s/g, '')}`} className="text-sm md:text-base hover:text-accent transition-colors">
                                     {PHONE_NUMBER}
                                 </a>
                             </li>

@@ -56,7 +56,14 @@ export const VehicleSelection: React.FC = () => {
         return pricePerDay * days;
     };
 
-    
+// WhatsApp contact for unavailable vehicles
+    const handleWhatsAppContact = (vehicle: Vehicle, conflicts: string) => {
+        const message = encodeURIComponent(
+            `Bonjour Happy Days! Je suis intéressé par le ${vehicle.name} pour la période du ${new Date(departureDate).toLocaleDateString('fr-FR')} au ${new Date(returnDate).toLocaleDateString('fr-FR')}. J'ai vu que ce véhicule est réservé (${conflicts}). Serait-il possible de discuter d'alternatives ou d'ajuster les dates?`
+        );
+        window.open(`https://wa.me/213559599955?text=${message}`, '_blank');
+        setContactModal({ open: false, vehicle: null, conflicts: '' });
+    };
 
     return (
         <motion.div
@@ -196,6 +203,65 @@ export const VehicleSelection: React.FC = () => {
                     );
                 })}
             </div>
+
+{/* Contact Modal for unavailable vehicles */}
+            <AnimatePresence>
+                {contactModal.open && contactModal.vehicle && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+                        onClick={() => setContactModal({ open: false, vehicle: null, conflicts: '' })}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="text-center mb-6">
+                                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AlertCircle size={32} className="text-amber-600" />
+                                </div>
+                                <h3 className="text-xl font-bold text-secondary mb-2">
+                                    Véhicule partiellement réservé
+                                </h3>
+                                <p className="text-gray-600">
+                                    Le <strong>{contactModal.vehicle.name}</strong> est réservé pour la période du <strong>{contactModal.conflicts}</strong>.
+                                </p>
+                                <p className="text-gray-600 mt-2">
+                                    Contactez-nous pour discuter d'alternatives ou ajuster vos dates!
+                                </p>
+                            </div>
+
+                            <div className="space-y-3">
+                                <button
+                                    onClick={() => handleWhatsAppContact(contactModal.vehicle!, contactModal.conflicts)}
+                                    className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                                >
+                                    <MessageCircle size={20} />
+                                    Contacter via WhatsApp
+                                </button>
+                                <a
+                                    href="tel:+213559599955"
+                                    className="w-full bg-primary hover:bg-primary-hover text-white font-bold py-3 rounded-lg transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Phone size={20} />
+                                    Appeler directement
+                                </a>
+                                <button
+                                    onClick={() => setContactModal({ open: false, vehicle: null, conflicts: '' })}
+                                    className="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all"
+                                >
+                                    Fermer
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* Back Button */}
             <div className="flex justify-start">

@@ -1,5 +1,5 @@
 import { supabase } from '../../lib/supabase';
-import type { AdminVehicle, AdminBooking, BookingStatus } from '../types/admin';
+import type { AdminVehicle, AdminBooking, BookingStatus, FullBookingDetails } from '../types/admin';
 
 // ============================================
 // VEHICLE OPERATIONS
@@ -152,6 +152,72 @@ export async function deleteBooking(bookingId: string): Promise<void> {
     console.error('Error deleting booking:', error);
     throw error;
   }
+}
+
+/**
+ * Fetch full booking details from the bookings table (web bookings only)
+ * Returns null if booking is not found (e.g., walk-in/phone bookings)
+ */
+export async function fetchFullBookingDetails(
+  bookingReference: string
+): Promise<FullBookingDetails | null> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('booking_reference', bookingReference)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows returned - booking not found in full bookings table
+      return null;
+    }
+    console.error('Error fetching full booking details:', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return {
+    // Personal info
+    firstName: data.first_name,
+    lastName: data.last_name,
+    email: data.email,
+    phone: data.phone,
+    country: data.country,
+    city: data.city,
+    address: data.address || '',
+    dateOfBirth: data.date_of_birth || '',
+
+    // Driver's license
+    licenseNumber: data.license_number || '',
+    licenseIssueDate: data.license_issue_date || '',
+    licenseExpirationDate: data.license_expiration_date || '',
+    licensePhotoUrl: data.license_photo_url || undefined,
+
+    // Vehicle details
+    vehicleBrand: data.vehicle_brand,
+    vehicleModel: data.vehicle_model,
+    vehicleCategory: data.vehicle_category,
+    vehiclePricePerDay: data.vehicle_price_per_day,
+
+    // Supplements
+    supplements: data.supplements || [],
+    additionalDriver: data.additional_driver || false,
+
+    // Pricing breakdown
+    vehicleTotal: data.vehicle_total,
+    supplementsTotal: data.supplements_total,
+    totalPrice: data.total_price,
+
+    // Payment & notes
+    paymentMethod: data.payment_method || 'cash',
+    extraInformation: data.extra_information || undefined,
+    notes: data.notes || undefined,
+
+    // Meta
+    createdAt: data.created_at,
+  };
 }
 
 // ============================================

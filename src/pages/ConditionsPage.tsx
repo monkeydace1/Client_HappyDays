@@ -125,7 +125,7 @@ export const ConditionsPage = () => {
                         Notre équipe est à votre disposition pour répondre à toutes vos questions.
                     </p>
                     <a
-                        href="https://wa.me/213055959955?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20votre%20site%20web%20pour%20une%20question."
+                        href="https://wa.me/213559599955?text=Bonjour%2C%20je%20vous%20contacte%20depuis%20votre%20site%20web%20pour%20une%20question."
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 bg-primary hover:bg-primary-hover text-white px-6 py-3 rounded-lg font-medium transition-colors"

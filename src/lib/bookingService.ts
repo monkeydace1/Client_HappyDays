@@ -396,7 +396,7 @@ ${clientInfo.notes ? `📝 *NOTES*\n${clientInfo.notes}\n` : ''}
  */
 export function openWhatsApp(bookingReference: string, submission: BookingSubmission): void {
   const message = formatWhatsAppMessage(bookingReference, submission);
-  const phoneNumber = '213055959955'; // WhatsApp number without + or spaces
+  const phoneNumber = '213559599955'; // WhatsApp number without + or spaces
   const encodedMessage = encodeURIComponent(message);
   const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
 
