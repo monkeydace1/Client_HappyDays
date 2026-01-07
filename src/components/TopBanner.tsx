@@ -2,7 +2,7 @@ import { Calendar, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export const TopBanner = () => {
-    const phoneNumber = '213055959955';
+    const phoneNumber = '213559599955';
     const message = encodeURIComponent('Bonjour, je vous contacte depuis votre site web pour une question.');
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${message}`;
 
