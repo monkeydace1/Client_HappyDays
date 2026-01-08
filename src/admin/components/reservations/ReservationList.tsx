@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Calendar, Car, Phone, Clock, Check, XCircle } from 'lucide-react';
+import { Search, Filter, Calendar, Car, Phone, Clock, Check, XCircle, Sparkles } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { AdminBooking, BookingStatus, ReservationFilters } from '../../types/admin';
@@ -11,29 +11,36 @@ interface ReservationListProps {
 }
 
 // Status config
+// new = purple, pending = orange, active = green, completed = blue, cancelled = red
 const statusConfig: Record<BookingStatus, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+  new: {
+    label: 'Nouveau',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
+    icon: <Sparkles className="w-4 h-4" />,
+  },
   pending: {
     label: 'En attente',
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
     icon: <Clock className="w-4 h-4" />,
   },
-  confirmed: {
-    label: 'Confirmée',
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
-    icon: <Check className="w-4 h-4" />,
+  active: {
+    label: 'En cours',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    icon: <Car className="w-4 h-4" />,
   },
   completed: {
     label: 'Terminée',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
     icon: <Check className="w-4 h-4" />,
   },
   cancelled: {
     label: 'Annulée',
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-100',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
     icon: <XCircle className="w-4 h-4" />,
   },
 };
@@ -129,7 +136,7 @@ export function ReservationList({ bookings, onBookingClick }: ReservationListPro
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1.5">Statut</label>
               <div className="flex flex-wrap gap-2">
-                {(['all', 'pending', 'confirmed', 'completed', 'cancelled'] as const).map((status) => (
+                {(['all', 'new', 'pending', 'active', 'completed', 'cancelled'] as const).map((status) => (
                   <button
                     key={status}
                     onClick={() => setFilters({ ...filters, status })}
@@ -190,7 +197,7 @@ export function ReservationList({ bookings, onBookingClick }: ReservationListPro
           </div>
         ) : (
           sortedBookings.map((booking, index) => {
-            const status = statusConfig[booking.status];
+            const status = statusConfig[booking.status] || statusConfig['active'];
             return (
               <motion.button
                 key={booking.id}

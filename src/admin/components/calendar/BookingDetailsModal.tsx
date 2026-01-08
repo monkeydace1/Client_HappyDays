@@ -3,12 +3,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, User, Phone, Calendar, Car, MapPin, MessageCircle, Check, Clock, XCircle,
   Edit3, Save, Mail, CreditCard, FileText, Image, Shield, Baby, Users, ChevronRight,
-  Globe, MapPinned, Cake
+  Globe, MapPinned, Cake, Sparkles, RefreshCw
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { AdminBooking, BookingStatus, FullBookingDetails } from '../../types/admin';
 import { fetchFullBookingDetails } from '../../services/adminService';
+import { vehicles as vehicleData } from '../../../data/vehicleData';
 
 interface BookingDetailsModalProps {
   isOpen: boolean;
@@ -21,29 +22,36 @@ interface BookingDetailsModalProps {
 type TabType = 'overview' | 'client' | 'documents';
 
 // Status config
+// new = purple, pending = orange, active = green, completed = blue, cancelled = red
 const statusConfig: Record<BookingStatus, { label: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+  new: {
+    label: 'Nouveau',
+    color: 'text-purple-600',
+    bgColor: 'bg-purple-100',
+    icon: <Sparkles className="w-4 h-4" />,
+  },
   pending: {
     label: 'En attente',
-    color: 'text-amber-600',
-    bgColor: 'bg-amber-100',
+    color: 'text-orange-600',
+    bgColor: 'bg-orange-100',
     icon: <Clock className="w-4 h-4" />,
   },
-  confirmed: {
-    label: 'Confirmée',
-    color: 'text-red-600',
-    bgColor: 'bg-red-100',
-    icon: <Check className="w-4 h-4" />,
+  active: {
+    label: 'En cours',
+    color: 'text-green-600',
+    bgColor: 'bg-green-100',
+    icon: <Car className="w-4 h-4" />,
   },
   completed: {
     label: 'Terminée',
-    color: 'text-gray-600',
-    bgColor: 'bg-gray-100',
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-100',
     icon: <Check className="w-4 h-4" />,
   },
   cancelled: {
     label: 'Annulée',
-    color: 'text-gray-500',
-    bgColor: 'bg-gray-100',
+    color: 'text-red-600',
+    bgColor: 'bg-red-100',
     icon: <XCircle className="w-4 h-4" />,
   },
 };
@@ -72,6 +80,11 @@ export function BookingDetailsModal({
     clientPhone: '',
     departureDate: '',
     returnDate: '',
+    pickupTime: '',
+    returnTime: '',
+    vehicleId: 0,
+    vehicleName: '',
+    pricePerDay: 0,
   });
 
   // Fetch full details when booking changes and it's a web booking
@@ -93,11 +106,19 @@ export function BookingDetailsModal({
   // Reset edit state when booking changes
   useEffect(() => {
     if (booking) {
+      // Get vehicle info from static data
+      const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+      const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
       setEditData({
         clientName: booking.clientName,
         clientPhone: booking.clientPhone || '',
         departureDate: booking.departureDate,
         returnDate: booking.returnDate,
+        pickupTime: booking.pickupTime || '',
+        returnTime: booking.returnTime || '',
+        vehicleId: booking.vehicleId,
+        vehicleName: booking.vehicleName,
+        pricePerDay: pricePerDay,
       });
       setIsEditing(false);
       setActiveTab('overview');
@@ -106,7 +127,8 @@ export function BookingDetailsModal({
 
   if (!booking) return null;
 
-  const status = statusConfig[booking.status];
+  // Get status config with fallback for legacy 'confirmed' status
+  const status = statusConfig[booking.status] || statusConfig['active'];
   const isWebBooking = booking.source === 'web';
 
   const handleWhatsApp = () => {
@@ -120,27 +142,62 @@ export function BookingDetailsModal({
     const departure = new Date(editData.departureDate);
     const returnDate = new Date(editData.returnDate);
     const days = Math.ceil((returnDate.getTime() - departure.getTime()) / (1000 * 60 * 60 * 24)) || 1;
-    const pricePerDay = booking.totalPrice / booking.rentalDays;
 
     onBookingUpdate(booking.id, {
       clientName: editData.clientName,
       clientPhone: editData.clientPhone,
       departureDate: editData.departureDate,
       returnDate: editData.returnDate,
+      pickupTime: editData.pickupTime || undefined,
+      returnTime: editData.returnTime || undefined,
       rentalDays: days,
-      totalPrice: Math.round(days * pricePerDay),
+      vehicleId: editData.vehicleId,
+      vehicleName: editData.vehicleName,
+      totalPrice: Math.round(days * editData.pricePerDay),
     });
     setIsEditing(false);
   };
 
+  // Handle vehicle change with automatic price update
+  const handleVehicleChange = (vehicleId: number) => {
+    const selectedVehicle = vehicleData.find(v => v.id === vehicleId);
+    if (selectedVehicle) {
+      setEditData({
+        ...editData,
+        vehicleId: selectedVehicle.id,
+        vehicleName: selectedVehicle.name,
+        pricePerDay: selectedVehicle.pricePerDay,
+      });
+    }
+  };
+
   const handleCancel = () => {
+    const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+    const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
     setEditData({
       clientName: booking.clientName,
       clientPhone: booking.clientPhone || '',
       departureDate: booking.departureDate,
       returnDate: booking.returnDate,
+      pickupTime: booking.pickupTime || '',
+      returnTime: booking.returnTime || '',
+      vehicleId: booking.vehicleId,
+      vehicleName: booking.vehicleName,
+      pricePerDay: pricePerDay,
     });
     setIsEditing(false);
+  };
+
+  // Helper to format time to 12h AM/PM
+  const formatTime12h = (time24: string | undefined): string => {
+    if (!time24) return '';
+    const [hoursStr, minutesStr] = time24.split(':');
+    const hours = parseInt(hoursStr, 10);
+    const minutes = minutesStr || '00';
+    if (isNaN(hours)) return time24;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hours12 = hours % 12 || 12;
+    return `${hours12}:${minutes} ${period}`;
   };
 
   // Tab content components
@@ -208,33 +265,92 @@ export function BookingDetailsModal({
         <h3 className="font-semibold text-gray-900 mb-3">Réservation</h3>
         <div className="space-y-3">
           <div className="flex items-center gap-3">
-            <Car className="w-5 h-5 text-gray-400" />
-            <span className="text-gray-900">{booking.vehicleName}</span>
+            <Car className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            {isEditing ? (
+              <div className="flex-1">
+                <select
+                  value={editData.vehicleId}
+                  onChange={(e) => handleVehicleChange(Number(e.target.value))}
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm appearance-none bg-white"
+                >
+                  {vehicleData.map((vehicle) => (
+                    <option key={vehicle.id} value={vehicle.id}>
+                      {vehicle.name} - {vehicle.year} - #{vehicle.id} ({vehicle.pricePerDay}€/j)
+                    </option>
+                  ))}
+                </select>
+                {editData.vehicleId !== booking.vehicleId && (
+                  <div className="flex items-center gap-1 mt-1 text-xs text-amber-600">
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Prix mis à jour: {editData.pricePerDay}€/jour</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="flex-1">
+                <span className="text-gray-900">{booking.vehicleName}</span>
+                {(() => {
+                  const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+                  return vehicleInfo ? (
+                    <span className="text-gray-500 text-sm ml-2">
+                      - {vehicleInfo.year} - #{booking.vehicleId}
+                    </span>
+                  ) : null;
+                })()}
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-3">
             <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
             {isEditing ? (
-              <div className="flex-1 flex gap-2">
-                <input
-                  type="date"
-                  value={editData.departureDate}
-                  onChange={(e) => setEditData({ ...editData, departureDate: e.target.value })}
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
-                />
-                <span className="text-gray-400 self-center">→</span>
-                <input
-                  type="date"
-                  value={editData.returnDate}
-                  onChange={(e) => setEditData({ ...editData, returnDate: e.target.value })}
-                  min={editData.departureDate}
-                  className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
-                />
+              <div className="flex-1 space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="date"
+                    value={editData.departureDate}
+                    onChange={(e) => setEditData({ ...editData, departureDate: e.target.value })}
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                  />
+                  <span className="text-gray-400 self-center">→</span>
+                  <input
+                    type="date"
+                    value={editData.returnDate}
+                    onChange={(e) => setEditData({ ...editData, returnDate: e.target.value })}
+                    min={editData.departureDate}
+                    className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-500">Heure départ</label>
+                    <input
+                      type="time"
+                      value={editData.pickupTime}
+                      onChange={(e) => setEditData({ ...editData, pickupTime: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-500">Heure retour</label>
+                    <input
+                      type="time"
+                      value={editData.returnTime}
+                      onChange={(e) => setEditData({ ...editData, returnTime: e.target.value })}
+                      className="w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                    />
+                  </div>
+                </div>
               </div>
             ) : (
-              <span className="text-gray-900">
-                {format(parseISO(booking.departureDate), 'dd MMM yyyy', { locale: fr })} →{' '}
-                {format(parseISO(booking.returnDate), 'dd MMM yyyy', { locale: fr })}
-              </span>
+              <div className="flex-1">
+                <div className="text-gray-900">
+                  {format(parseISO(booking.departureDate), 'dd MMM yyyy', { locale: fr })}
+                  {booking.pickupTime && <span className="text-primary ml-1">à {formatTime12h(booking.pickupTime)}</span>}
+                  {' → '}
+                  {format(parseISO(booking.returnDate), 'dd MMM yyyy', { locale: fr })}
+                  {booking.returnTime && <span className="text-primary ml-1">à {formatTime12h(booking.returnTime)}</span>}
+                </div>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-3">
@@ -295,12 +411,11 @@ export function BookingDetailsModal({
                       (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
                       (1000 * 60 * 60 * 24)
                     ) || 1;
-                    const pricePerDay = booking.totalPrice / booking.rentalDays;
-                    return Math.round(days * pricePerDay);
+                    return Math.round(days * editData.pricePerDay);
                   })()}€
                 </span>
                 <p className="text-xs text-gray-500">
-                  {Math.ceil(
+                  {editData.pricePerDay}€ × {Math.ceil(
                     (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
                     (1000 * 60 * 60 * 24)
                   ) || 1} jours
@@ -345,17 +460,30 @@ export function BookingDetailsModal({
         <div>
           <h3 className="font-semibold text-gray-900 mb-3">Changer le statut</h3>
           <div className="grid grid-cols-2 gap-2">
+            {/* New -> Pending */}
+            {booking.status === 'new' && (
+              <button
+                onClick={() => onStatusChange(booking.id, 'pending')}
+                className="py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium
+                         rounded-xl transition-all touch-manipulation flex items-center justify-center gap-2"
+              >
+                <Clock className="w-5 h-5" />
+                Contacter
+              </button>
+            )}
+            {/* Pending -> Active */}
             {booking.status === 'pending' && (
               <button
-                onClick={() => onStatusChange(booking.id, 'confirmed')}
-                className="py-3 px-4 bg-red-500 hover:bg-red-600 text-white font-medium
+                onClick={() => onStatusChange(booking.id, 'active')}
+                className="py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-medium
                          rounded-xl transition-all touch-manipulation flex items-center justify-center gap-2"
               >
                 <Check className="w-5 h-5" />
                 Confirmer
               </button>
             )}
-            {(booking.status === 'pending' || booking.status === 'confirmed') && (
+            {/* New/Pending/Active -> Cancelled */}
+            {(booking.status === 'new' || booking.status === 'pending' || booking.status === 'active') && (
               <button
                 onClick={() => onStatusChange(booking.id, 'cancelled')}
                 className="py-3 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium
@@ -365,10 +493,11 @@ export function BookingDetailsModal({
                 Annuler
               </button>
             )}
-            {booking.status === 'confirmed' && (
+            {/* Active -> Completed */}
+            {booking.status === 'active' && (
               <button
                 onClick={() => onStatusChange(booking.id, 'completed')}
-                className="py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-medium
+                className="py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium
                          rounded-xl transition-all touch-manipulation flex items-center justify-center gap-2"
               >
                 <Check className="w-5 h-5" />
@@ -376,6 +505,75 @@ export function BookingDetailsModal({
               </button>
             )}
           </div>
+        </div>
+      )}
+
+      {/* Quick Extend - Only for active reservations */}
+      {!isEditing && booking.status === 'active' && (
+        <div className="bg-amber-50 rounded-xl p-4">
+          <h3 className="font-semibold text-amber-800 mb-3">Prolonger la réservation</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                const currentReturn = new Date(booking.returnDate);
+                currentReturn.setDate(currentReturn.getDate() + 1);
+                const newReturnDate = currentReturn.toISOString().split('T')[0];
+                const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+                const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
+                const newDays = booking.rentalDays + 1;
+                onBookingUpdate(booking.id, {
+                  returnDate: newReturnDate,
+                  rentalDays: newDays,
+                  totalPrice: Math.round(newDays * pricePerDay),
+                });
+              }}
+              className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-medium
+                       rounded-lg transition-all touch-manipulation text-sm"
+            >
+              +1 jour
+            </button>
+            <button
+              onClick={() => {
+                const currentReturn = new Date(booking.returnDate);
+                currentReturn.setDate(currentReturn.getDate() + 3);
+                const newReturnDate = currentReturn.toISOString().split('T')[0];
+                const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+                const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
+                const newDays = booking.rentalDays + 3;
+                onBookingUpdate(booking.id, {
+                  returnDate: newReturnDate,
+                  rentalDays: newDays,
+                  totalPrice: Math.round(newDays * pricePerDay),
+                });
+              }}
+              className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-medium
+                       rounded-lg transition-all touch-manipulation text-sm"
+            >
+              +3 jours
+            </button>
+            <button
+              onClick={() => {
+                const currentReturn = new Date(booking.returnDate);
+                currentReturn.setDate(currentReturn.getDate() + 7);
+                const newReturnDate = currentReturn.toISOString().split('T')[0];
+                const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+                const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
+                const newDays = booking.rentalDays + 7;
+                onBookingUpdate(booking.id, {
+                  returnDate: newReturnDate,
+                  rentalDays: newDays,
+                  totalPrice: Math.round(newDays * pricePerDay),
+                });
+              }}
+              className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-medium
+                       rounded-lg transition-all touch-manipulation text-sm"
+            >
+              +7 jours
+            </button>
+          </div>
+          <p className="text-xs text-amber-700 mt-2">
+            Le prix sera automatiquement recalculé
+          </p>
         </div>
       )}
 

@@ -12,6 +12,40 @@ import {
   subscribeToVehicles,
   generateBookingReference,
 } from '../services/adminService';
+import { supabase } from '../../lib/supabase';
+
+// Send confirmation email when status changes to 'active'
+async function sendConfirmationEmail(booking: AdminBooking): Promise<void> {
+  if (!booking.clientEmail) {
+    console.log('No customer email, skipping confirmation email');
+    return;
+  }
+
+  try {
+    const { data, error } = await supabase.functions.invoke('send-confirmation-email', {
+      body: {
+        bookingReference: booking.bookingReference,
+        customerEmail: booking.clientEmail,
+        customerName: booking.clientName || 'Client',
+        vehicleName: booking.vehicleName || 'Véhicule',
+        departureDate: booking.departureDate,
+        returnDate: booking.returnDate,
+        pickupTime: booking.pickupTime,
+        returnTime: booking.returnTime,
+        pickupLocation: booking.pickupLocation,
+        totalPrice: booking.totalPrice || 0,
+      },
+    });
+
+    if (error) {
+      console.error('Error sending confirmation email:', error);
+    } else {
+      console.log('Confirmation email sent successfully:', data);
+    }
+  } catch (err) {
+    console.error('Failed to send confirmation email:', err);
+  }
+}
 
 // ============================================
 // FALLBACK SAMPLE DATA (when Supabase is empty/fails)
@@ -42,6 +76,8 @@ const SAMPLE_VEHICLES: AdminVehicle[] = [
   // Budget
   { id: 18, name: 'Nissan Micra 2015', brand: 'Nissan', model: 'Micra', year: 2015, category: 'Mini', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/nissan-micra/main.jpg', status: 'available' },
   { id: 19, name: 'Ford Fiesta 2014', brand: 'Ford', model: 'Fiesta', year: 2014, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/ford-fiesta/main.jpg', status: 'available' },
+  // New Vehicle
+  { id: 20, name: 'Renault Clio 4 Rouge', brand: 'Renault', model: 'Clio 4', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016/main.jpg', status: 'available' },
 ];
 
 // Generate sample bookings based on current date
@@ -60,13 +96,13 @@ function generateSampleBookings(): AdminBooking[] {
 
   // Create bookings spread across vehicles and dates
   const bookingConfigs = [
-    { vehicleId: 1, daysFromToday: -2, duration: 5, status: 'confirmed' as const },
-    { vehicleId: 3, daysFromToday: 1, duration: 3, status: 'confirmed' as const },
-    { vehicleId: 5, daysFromToday: 0, duration: 4, status: 'confirmed' as const },
+    { vehicleId: 1, daysFromToday: -2, duration: 5, status: 'active' as const },
+    { vehicleId: 3, daysFromToday: 1, duration: 3, status: 'active' as const },
+    { vehicleId: 5, daysFromToday: 0, duration: 4, status: 'active' as const },
     { vehicleId: 7, daysFromToday: 3, duration: 2, status: 'pending' as const },
-    { vehicleId: 10, daysFromToday: -1, duration: 6, status: 'confirmed' as const },
+    { vehicleId: 10, daysFromToday: -1, duration: 6, status: 'active' as const },
     { vehicleId: 13, daysFromToday: 2, duration: 3, status: 'pending' as const },
-    { vehicleId: 16, daysFromToday: 4, duration: 5, status: 'confirmed' as const },
+    { vehicleId: 16, daysFromToday: 4, duration: 5, status: 'active' as const },
     { vehicleId: 4, daysFromToday: -3, duration: 2, status: 'completed' as const },
   ];
 
@@ -238,6 +274,11 @@ export function useAdminData(): UseAdminDataReturn {
 
     try {
       await updateBookingStatus(bookingId, status);
+
+      // Send confirmation email when status changes to 'active'
+      if (status === 'active' && booking.status !== 'active') {
+        sendConfirmationEmail(booking);
+      }
     } catch (err) {
       // Revert on error
       setBookings((prev) =>
@@ -300,7 +341,7 @@ export function useAdminData(): UseAdminDataReturn {
 
     const newBooking: Omit<AdminBooking, 'id' | 'createdAt' | 'updatedAt'> = {
       bookingReference: generateBookingReference(),
-      status: 'confirmed',
+      status: 'pending',
       source: 'walk_in',
       departureDate: data.departureDate,
       returnDate: data.returnDate,

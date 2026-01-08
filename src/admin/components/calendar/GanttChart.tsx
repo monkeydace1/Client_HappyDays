@@ -57,16 +57,19 @@ function getBookingSpan(booking: AdminBooking, startDate: Date, totalDays: numbe
 }
 
 // Status color mapping
+// new = purple, pending = orange, active = green, completed = blue, cancelled = red
 function getStatusColor(status: AdminBooking['status']): string {
   switch (status) {
+    case 'new':
+      return 'bg-purple-500';
     case 'pending':
-      return 'bg-amber-500';
-    case 'confirmed':
-      return 'bg-red-500';
+      return 'bg-orange-500';
+    case 'active':
+      return 'bg-green-500';
     case 'completed':
-      return 'bg-gray-400';
+      return 'bg-blue-500';
     case 'cancelled':
-      return 'bg-gray-300';
+      return 'bg-red-500';
     default:
       return 'bg-gray-400';
   }
@@ -109,7 +112,7 @@ export function GanttChart({
   );
 
   const unassignedBookings = useMemo(
-    () => bookings.filter((b) => !b.assignedVehicleId && b.status === 'pending'),
+    () => bookings.filter((b) => !b.assignedVehicleId && (b.status === 'new' || b.status === 'pending')),
     [bookings]
   );
 

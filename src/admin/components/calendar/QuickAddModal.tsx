@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Phone, Calendar, Car } from 'lucide-react';
+import { X, User, Phone, Calendar, Car, Clock, Mail } from 'lucide-react';
 import { format, addDays, parseISO } from 'date-fns';
 import type { AdminVehicle, QuickAddData } from '../../types/admin';
+import { vehicles as vehicleData } from '../../../data/vehicleData';
 
 interface QuickAddModalProps {
   isOpen: boolean;
@@ -24,9 +25,12 @@ export function QuickAddModal({
   const [formData, setFormData] = useState<QuickAddData>({
     clientName: '',
     clientPhone: '',
+    clientEmail: '',
     vehicleId: initialVehicleId || 0,
     departureDate: initialDate || '',
     returnDate: initialDate ? format(addDays(parseISO(initialDate), 1), 'yyyy-MM-dd') : '',
+    pickupTime: '09:00',
+    returnTime: '09:00',
     notes: '',
   });
 
@@ -37,13 +41,21 @@ export function QuickAddModal({
       setFormData({
         clientName: '',
         clientPhone: '',
+        clientEmail: '',
         vehicleId: initialVehicleId || 0,
         departureDate: initialDate || '',
         returnDate: initialDate ? format(addDays(parseISO(initialDate), 1), 'yyyy-MM-dd') : '',
+        pickupTime: '09:00',
+        returnTime: '09:00',
         notes: '',
       });
     }
   }, [isOpen, initialDate, initialVehicleId]);
+
+  // Helper to get vehicle year from static data
+  const getVehicleYear = (vehicleId: number): number | undefined => {
+    return vehicleData.find(v => v.id === vehicleId)?.year;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +142,25 @@ export function QuickAddModal({
                 </div>
               </div>
 
+              {/* Email (Optional) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input
+                    type="email"
+                    value={formData.clientEmail}
+                    onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
+                    className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200
+                             focus:border-primary focus:ring-2 focus:ring-primary/20
+                             outline-none transition-all text-base"
+                    placeholder="email@exemple.com"
+                  />
+                </div>
+              </div>
+
               {/* Vehicle */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -148,11 +179,14 @@ export function QuickAddModal({
                     <option value={0}>Sélectionner un véhicule</option>
                     {vehicles
                       .filter((v) => v.status === 'available')
-                      .map((vehicle) => (
-                        <option key={vehicle.id} value={vehicle.id}>
-                          {vehicle.name} - {vehicle.pricePerDay}€/j
-                        </option>
-                      ))}
+                      .map((vehicle) => {
+                        const year = getVehicleYear(vehicle.id);
+                        return (
+                          <option key={vehicle.id} value={vehicle.id}>
+                            {vehicle.name} - {year || ''} - #{vehicle.id} ({vehicle.pricePerDay}€/j)
+                          </option>
+                        );
+                      })}
                   </select>
                 </div>
               </div>
@@ -161,7 +195,7 @@ export function QuickAddModal({
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Départ *
+                    Date départ *
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -178,7 +212,7 @@ export function QuickAddModal({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                    Retour *
+                    Date retour *
                   </label>
                   <div className="relative">
                     <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -191,6 +225,42 @@ export function QuickAddModal({
                                focus:border-primary focus:ring-2 focus:ring-primary/20
                                outline-none transition-all text-base"
                       required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Times */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Heure départ
+                  </label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="time"
+                      value={formData.pickupTime || '09:00'}
+                      onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
+                      className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-200
+                               focus:border-primary focus:ring-2 focus:ring-primary/20
+                               outline-none transition-all text-base"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    Heure retour
+                  </label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="time"
+                      value={formData.returnTime || '09:00'}
+                      onChange={(e) => setFormData({ ...formData, returnTime: e.target.value })}
+                      className="w-full pl-10 pr-3 py-3 rounded-xl border border-gray-200
+                               focus:border-primary focus:ring-2 focus:ring-primary/20
+                               outline-none transition-all text-base"
                     />
                   </div>
                 </div>

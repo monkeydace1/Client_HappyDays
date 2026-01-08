@@ -38,7 +38,7 @@ export function AdminDashboardPage() {
 
     // Get vehicles that are booked today
     const bookedVehicleIds = bookings
-      .filter(b => b.status === 'confirmed' && b.departureDate <= today && b.returnDate >= today)
+      .filter(b => b.status === 'active' && b.departureDate <= today && b.returnDate >= today)
       .map(b => b.assignedVehicleId || b.vehicleId);
 
     const actuallyAvailable = availableVehicles.filter(v => !bookedVehicleIds.includes(v.id));
@@ -46,8 +46,8 @@ export function AdminDashboardPage() {
     return {
       totalCars: vehicles.length,
       availableCars: actuallyAvailable.length,
-      activeReservations: bookings.filter(b => b.status === 'confirmed').length,
-      pendingReservations: bookings.filter(b => b.status === 'pending').length,
+      activeReservations: bookings.filter(b => b.status === 'active').length,
+      pendingReservations: bookings.filter(b => b.status === 'pending' || b.status === 'new').length,
     };
   }, [bookings, vehicles]);
 

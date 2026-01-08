@@ -36,25 +36,24 @@ serve(async (req) => {
 
     console.log(`Sending booking confirmation emails for ${bookingReference}`)
 
-    // Email to customer
-    const customerEmailResult = await resend.emails.send({
-      from: 'Happy Days Location <reservations@happydayslocation.com>',
-      to: [customerEmail],
-      subject: `Confirmation de votre réservation ${bookingReference}`,
-      html: customerEmailHTML,
-    })
-
-    console.log('Customer email sent:', customerEmailResult)
-
     // Email to admin/business owner
     const adminEmailResult = await resend.emails.send({
-      from: 'Happy Days Location <reservations@happydayslocation.com>',
-      to: ['contact@happydayslocation.com', 'anesmluffy@gmail.com'],
+      from: 'Happy Days Location <contact@happydayslocation.com>',
+      to: ['happydayslocation@gmail.com'],
       subject: `🚨 Nouvelle réservation ${bookingReference} - ${customerName}`,
       html: adminEmailHTML,
     })
 
     console.log('Admin email sent:', adminEmailResult)
+
+    // Email to customer
+    const customerEmailResult = await resend.emails.send({
+      from: 'Happy Days Location <contact@happydayslocation.com>',
+      to: [customerEmail],
+      subject: `Confirmation de votre réservation ${bookingReference}`,
+      html: customerEmailHTML,
+    })
+    console.log('Customer email sent:', customerEmailResult)
 
     return new Response(
       JSON.stringify({

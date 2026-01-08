@@ -325,6 +325,24 @@ export const vehicles: Vehicle[] = [
         pricePerDay: 20,
         featured: false,
         features: ['1.4L', 'Économique']
+    },
+
+    // === NEW VEHICLE ===
+    {
+        id: 20,
+        name: 'Renault Clio 4 Rouge',
+        brand: 'Renault',
+        model: 'Clio 4',
+        year: 2016,
+        category: 'Citadine',
+        image: getVehicleImage('renault-clio4-2016'),  // Reuse existing Clio 4 image
+        images: getVehicleImages('renault-clio4-2016', 0),
+        transmission: 'Manuelle',
+        fuel: 'Essence',
+        seats: 5,
+        pricePerDay: 25,
+        featured: false,
+        features: ['1.2L 16V', 'Rouge', 'Économique']
     }
 ];
 

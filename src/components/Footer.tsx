@@ -5,7 +5,7 @@ import logo from '../assets/123.png';
 // Client contact information
 const PHONE_NUMBER = '+213 559 599 955';
 const PHONE_NUMBER_WHATSAPP = '213559599955';
-const EMAIL = 'contact@happydays-dz.com'; // Update with client email
+const EMAIL = 'happydayslocation@gmail.com';
 const FACEBOOK_URL = 'https://facebook.com/happydayscar'; // Update with client Facebook
 const INSTAGRAM_URL = 'https://instagram.com/happydayscar'; // Update with client Instagram
 

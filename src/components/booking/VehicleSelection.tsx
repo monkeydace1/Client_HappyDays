@@ -1,20 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Fuel, Settings, Users, Gauge, ArrowLeft, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
 import { vehicles } from '../../data/vehicleData';
 import { ImageCarousel } from '../ImageCarousel';
+import { getBookedVehicleIds } from '../../lib/bookingService';
 import type { Vehicle } from '../../types';
 
 export const VehicleSelection: React.FC = () => {
     const {
         rentalDays,
+        departureDate,
+        returnDate,
         setSelectedVehicle,
         nextStep,
         previousStep
     } = useBookingStore();
 
     const [transmissionFilter, setTransmissionFilter] = useState<'all' | 'Manuelle' | 'Automatique'>('all');
+    const [bookedVehicleIds, setBookedVehicleIds] = useState<number[]>([]);
+    const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
+
+    // Fetch booked vehicles when dates are available
+    useEffect(() => {
+        if (departureDate && returnDate) {
+            setIsLoadingAvailability(true);
+            getBookedVehicleIds(departureDate, returnDate)
+                .then((ids) => setBookedVehicleIds(ids))
+                .finally(() => setIsLoadingAvailability(false));
+        }
+    }, [departureDate, returnDate]);
 
     const handleVehicleBook = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
@@ -107,9 +122,17 @@ export const VehicleSelection: React.FC = () => {
                 </button>
             </div>
 
+            {isLoadingAvailability && (
+                <div className="text-center py-4 text-gray-500">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+                    Vérification des disponibilités...
+                </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {vehicles
                     .filter(v => transmissionFilter === 'all' || v.transmission === transmissionFilter)
+                    .filter(v => !bookedVehicleIds.includes(v.id)) // Hide booked vehicles
                     .sort((a, b) => a.pricePerDay - b.pricePerDay)
                     .map((vehicle, index) => {
                     const totalPrice = calculateTotalPrice(vehicle.pricePerDay);

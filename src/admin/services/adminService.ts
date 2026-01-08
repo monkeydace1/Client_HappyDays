@@ -62,6 +62,8 @@ export async function createBooking(
     departure_date: booking.departureDate,
     return_date: booking.returnDate,
     rental_days: booking.rentalDays,
+    pickup_time: booking.pickupTime,
+    return_time: booking.returnTime,
     pickup_location: booking.pickupLocation,
     vehicle_id: booking.vehicleId,
     vehicle_name: booking.vehicleName,
@@ -124,12 +126,17 @@ export async function updateBooking(
 
   if (updates.clientName) dbUpdates.client_name = updates.clientName;
   if (updates.clientPhone) dbUpdates.client_phone = updates.clientPhone;
+  if (updates.clientEmail !== undefined) dbUpdates.client_email = updates.clientEmail;
   if (updates.departureDate) dbUpdates.departure_date = updates.departureDate;
   if (updates.returnDate) dbUpdates.return_date = updates.returnDate;
+  if (updates.pickupTime !== undefined) dbUpdates.pickup_time = updates.pickupTime;
+  if (updates.returnTime !== undefined) dbUpdates.return_time = updates.returnTime;
   if (updates.rentalDays) dbUpdates.rental_days = updates.rentalDays;
   if (updates.totalPrice) dbUpdates.total_price = updates.totalPrice;
   if (updates.status) dbUpdates.status = updates.status;
   if (updates.assignedVehicleId) dbUpdates.assigned_vehicle_id = updates.assignedVehicleId;
+  if (updates.vehicleId) dbUpdates.vehicle_id = updates.vehicleId;
+  if (updates.vehicleName) dbUpdates.vehicle_name = updates.vehicleName;
 
   const { error } = await supabase
     .from('admin_bookings')
@@ -312,6 +319,8 @@ function mapBookingFromDb(row: Record<string, unknown>): AdminBooking {
     departureDate: row.departure_date as string,
     returnDate: row.return_date as string,
     rentalDays: row.rental_days as number,
+    pickupTime: row.pickup_time as string | undefined,
+    returnTime: row.return_time as string | undefined,
     pickupLocation: row.pickup_location as string,
     vehicleId: row.vehicle_id as number,
     vehicleName: row.vehicle_name as string,

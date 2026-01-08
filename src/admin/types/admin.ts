@@ -8,7 +8,8 @@ export interface AdminVehicle extends Vehicle {
 }
 
 // Booking status for admin dashboard
-export type BookingStatus = 'pending' | 'confirmed' | 'completed' | 'cancelled';
+// Flow: new -> pending -> active -> completed/cancelled
+export type BookingStatus = 'new' | 'pending' | 'active' | 'completed' | 'cancelled';
 
 // Booking source
 export type BookingSource = 'web' | 'walk_in' | 'phone';
@@ -20,10 +21,12 @@ export interface AdminBooking {
   status: BookingStatus;
   source: BookingSource;
 
-  // Dates
+  // Dates and Times
   departureDate: string;
   returnDate: string;
   rentalDays: number;
+  pickupTime?: string;  // Format: "HH:MM" (stored 24h, display 12h AM/PM)
+  returnTime?: string;  // Format: "HH:MM"
 
   // Location
   pickupLocation: string;
@@ -52,9 +55,12 @@ export interface AdminBooking {
 export interface QuickAddData {
   clientName: string;
   clientPhone?: string;
+  clientEmail?: string;
   vehicleId: number;
   departureDate: string;
   returnDate: string;
+  pickupTime?: string;
+  returnTime?: string;
   notes?: string;
 }
 

@@ -280,6 +280,30 @@ export async function saveBooking(
 }
 
 /**
+ * Extract time from ISO datetime string (e.g., "2024-12-20T10:00" -> "10:00")
+ */
+function extractTimeFromDateString(dateString: string): string | null {
+  if (!dateString) return null;
+  if (dateString.includes('T')) {
+    const timePart = dateString.split('T')[1];
+    // Return just HH:MM (first 5 characters)
+    return timePart ? timePart.substring(0, 5) : null;
+  }
+  return null;
+}
+
+/**
+ * Extract date from ISO datetime string (e.g., "2024-12-20T10:00" -> "2024-12-20")
+ */
+function extractDateFromDateString(dateString: string): string {
+  if (!dateString) return dateString;
+  if (dateString.includes('T')) {
+    return dateString.split('T')[0];
+  }
+  return dateString;
+}
+
+/**
  * Sync booking to admin_bookings table
  * This ensures web bookings appear in the admin calendar immediately
  */
@@ -288,12 +312,20 @@ async function syncToAdminBookings(
   submission: BookingSubmission
 ): Promise<void> {
   try {
+    // Extract date and time separately from the datetime strings
+    const departureDate = extractDateFromDateString(submission.departureDate);
+    const returnDate = extractDateFromDateString(submission.returnDate);
+    const pickupTime = extractTimeFromDateString(submission.departureDate);
+    const returnTime = extractTimeFromDateString(submission.returnDate);
+
     const adminBookingData = {
       booking_reference: bookingReference,
       status: 'pending',
       source: 'web',
-      departure_date: submission.departureDate,
-      return_date: submission.returnDate,
+      departure_date: departureDate,
+      return_date: returnDate,
+      pickup_time: pickupTime,
+      return_time: returnTime,
       rental_days: submission.rentalDays,
       pickup_location: submission.pickupLocation,
       vehicle_id: submission.selectedVehicle.id,
@@ -406,6 +438,41 @@ export function openWhatsApp(bookingReference: string, submission: BookingSubmis
 /**
  * Send booking confirmation emails via Supabase Edge Function
  */
+/**
+ * Get IDs of vehicles that are booked/active during a date range
+ * Used to hide unavailable vehicles on the customer booking page
+ */
+export async function getBookedVehicleIds(
+  departureDate: string,
+  returnDate: string
+): Promise<number[]> {
+  try {
+    // Query admin_bookings for overlapping bookings with active/pending status
+    const { data, error } = await supabase
+      .from('admin_bookings')
+      .select('assigned_vehicle_id, vehicle_id')
+      .in('status', ['new', 'pending', 'active'])
+      .or(`and(departure_date.lte.${returnDate},return_date.gte.${departureDate})`);
+
+    if (error) {
+      console.error('Error fetching booked vehicles:', error);
+      return [];
+    }
+
+    // Collect unique vehicle IDs (either assigned or default vehicle)
+    const vehicleIds = new Set<number>();
+    (data || []).forEach((booking) => {
+      const id = booking.assigned_vehicle_id || booking.vehicle_id;
+      if (id) vehicleIds.add(id);
+    });
+
+    return Array.from(vehicleIds);
+  } catch (error) {
+    console.error('Error in getBookedVehicleIds:', error);
+    return [];
+  }
+}
+
 async function sendBookingConfirmationEmails(
   bookingReference: string,
   submission: BookingSubmission

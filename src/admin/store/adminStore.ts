@@ -53,9 +53,11 @@ interface AdminState {
   resetReservationFilters: () => void;
 }
 
+// Default to showing 'pending' status as an action queue
+// This helps admin focus on reservations that need attention
 const getDefaultFilters = (): ReservationFilters => ({
   search: '',
-  status: 'all',
+  status: 'pending', // Changed from 'all' to 'pending' to act as action queue
   dateFrom: undefined,
   dateTo: undefined,
 });
