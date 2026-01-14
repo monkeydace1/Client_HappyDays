@@ -133,7 +133,12 @@ export const VehicleSelection: React.FC = () => {
                 {vehicles
                     .filter(v => transmissionFilter === 'all' || v.transmission === transmissionFilter)
                     .filter(v => !bookedVehicleIds.includes(v.id)) // Hide booked vehicles
-                    .sort((a, b) => a.pricePerDay - b.pricePerDay)
+                    .sort((a, b) => {
+                        // Put Clio 4 Rouge (id: 20) last
+                        if (a.id === 20) return 1;
+                        if (b.id === 20) return -1;
+                        return a.pricePerDay - b.pricePerDay;
+                    })
                     .map((vehicle, index) => {
                     const totalPrice = calculateTotalPrice(vehicle.pricePerDay);
 
