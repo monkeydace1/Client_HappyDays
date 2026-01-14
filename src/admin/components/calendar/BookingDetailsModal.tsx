@@ -287,13 +287,16 @@ export function BookingDetailsModal({
                 )}
               </div>
             ) : (
-              <div className="flex-1">
+              <div className="flex-1 flex items-center gap-2">
+                <span className="bg-primary/10 text-primary font-semibold px-2 py-0.5 rounded text-sm">
+                  #{booking.vehicleId}
+                </span>
                 <span className="text-gray-900">{booking.vehicleName}</span>
                 {(() => {
                   const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
                   return vehicleInfo ? (
-                    <span className="text-gray-500 text-sm ml-2">
-                      - {vehicleInfo.year} - #{booking.vehicleId}
+                    <span className="text-gray-500 text-sm">
+                      ({vehicleInfo.year})
                     </span>
                   ) : null;
                 })()}
@@ -414,12 +417,21 @@ export function BookingDetailsModal({
                     return Math.round(days * editData.pricePerDay);
                   })()}€
                 </span>
-                <p className="text-xs text-gray-500">
-                  {editData.pricePerDay}€ × {Math.ceil(
-                    (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                  ) || 1} jours
-                </p>
+                <div className="flex items-center gap-2 mt-1">
+                  <input
+                    type="number"
+                    value={editData.pricePerDay}
+                    onChange={(e) => setEditData({ ...editData, pricePerDay: Number(e.target.value) })}
+                    className="w-20 px-2 py-1 text-sm text-right rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                    min="0"
+                  />
+                  <span className="text-xs text-gray-500">
+                    €/jour × {Math.ceil(
+                      (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
+                      (1000 * 60 * 60 * 24)
+                    ) || 1} jours
+                  </span>
+                </div>
               </>
             ) : (
               <>
