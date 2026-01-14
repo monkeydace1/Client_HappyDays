@@ -448,11 +448,13 @@ export async function getBookedVehicleIds(
 ): Promise<number[]> {
   try {
     // Query admin_bookings for overlapping bookings with active/pending status
+    // Date overlap: booking.departure <= customer.return AND booking.return >= customer.departure
     const { data, error } = await supabase
       .from('admin_bookings')
       .select('assigned_vehicle_id, vehicle_id')
       .in('status', ['new', 'pending', 'active'])
-      .or(`and(departure_date.lte.${returnDate},return_date.gte.${departureDate})`);
+      .lte('departure_date', returnDate)
+      .gte('return_date', departureDate);
 
     if (error) {
       console.error('Error fetching booked vehicles:', error);
