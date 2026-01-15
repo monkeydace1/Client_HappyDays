@@ -50,7 +50,7 @@ serve(async (req) => {
     const customerEmailResult = await resend.emails.send({
       from: 'Happy Days Location <contact@happydayslocation.com>',
       to: [customerEmail],
-      subject: `Confirmation de votre réservation ${bookingReference}`,
+      subject: `Demande de réservation reçue - ${bookingReference}`,
       html: customerEmailHTML,
     })
     console.log('Customer email sent:', customerEmailResult)
