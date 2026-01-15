@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, User, Phone, Calendar, Car, MapPin, MessageCircle, Check, Clock, XCircle,
   Edit3, Save, Mail, CreditCard, FileText, Image, Shield, Baby, Users, ChevronRight,
-  Globe, MapPinned, Cake, Sparkles, RefreshCw
+  Globe, MapPinned, Cake, Sparkles, RefreshCw, Euro
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -359,6 +359,54 @@ export function BookingDetailsModal({
           <div className="flex items-center gap-3">
             <MapPin className="w-5 h-5 text-gray-400" />
             <span className="text-gray-900">{booking.pickupLocation}</span>
+          </div>
+          {/* Price per day - Editable */}
+          <div className="flex items-center gap-3">
+            <Euro className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            {isEditing ? (
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    value={editData.pricePerDay}
+                    onChange={(e) => setEditData({ ...editData, pricePerDay: Number(e.target.value) })}
+                    className="w-24 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                    min="0"
+                    placeholder="Prix"
+                  />
+                  <span className="text-gray-500 text-sm">€/jour</span>
+                </div>
+                {(() => {
+                  const vehicleInfo = vehicleData.find(v => v.id === editData.vehicleId);
+                  const defaultPrice = vehicleInfo?.pricePerDay || 0;
+                  if (editData.pricePerDay !== defaultPrice) {
+                    return (
+                      <div className="flex items-center gap-1 mt-1 text-xs text-orange-600">
+                        <span>Prix modifié (défaut: {defaultPrice}€)</span>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="text-gray-900">{Math.round(booking.totalPrice / booking.rentalDays)}€/jour</span>
+                {(() => {
+                  const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+                  const defaultPrice = vehicleInfo?.pricePerDay || 0;
+                  const currentPrice = Math.round(booking.totalPrice / booking.rentalDays);
+                  if (currentPrice !== defaultPrice) {
+                    return (
+                      <span className="text-xs text-orange-500 bg-orange-50 px-2 py-0.5 rounded">
+                        prix modifié
+                      </span>
+                    );
+                  }
+                  return null;
+                })()}
+              </div>
+            )}
           </div>
         </div>
       </div>

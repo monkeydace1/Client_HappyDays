@@ -143,6 +143,7 @@ export function AdminDashboardPage() {
           <ReservationList
             bookings={bookings}
             onBookingClick={handleBookingClick}
+            onAddClick={handleNewReservation}
           />
         );
       case 'vehicles':

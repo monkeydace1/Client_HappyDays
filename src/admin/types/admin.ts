@@ -62,6 +62,7 @@ export interface QuickAddData {
   pickupTime?: string;
   returnTime?: string;
   notes?: string;
+  pricePerDay?: number; // Custom price override for negotiations/discounts
 }
 
 // KPI data

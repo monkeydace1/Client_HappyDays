@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Filter, Calendar, Car, Phone, Clock, Check, XCircle, Sparkles } from 'lucide-react';
+import { Search, Filter, Calendar, Car, Phone, Clock, Check, XCircle, Sparkles, Plus } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { AdminBooking, BookingStatus, ReservationFilters } from '../../types/admin';
@@ -8,6 +8,7 @@ import type { AdminBooking, BookingStatus, ReservationFilters } from '../../type
 interface ReservationListProps {
   bookings: AdminBooking[];
   onBookingClick: (bookingId: string) => void;
+  onAddClick?: () => void;
 }
 
 // Status config
@@ -45,7 +46,7 @@ const statusConfig: Record<BookingStatus, { label: string; color: string; bgColo
   },
 };
 
-export function ReservationList({ bookings, onBookingClick }: ReservationListProps) {
+export function ReservationList({ bookings, onBookingClick, onAddClick }: ReservationListProps) {
   const [filters, setFilters] = useState<ReservationFilters>({
     search: '',
     status: 'all',
@@ -93,33 +94,45 @@ export function ReservationList({ bookings, onBookingClick }: ReservationListPro
   return (
     <div className="flex flex-col h-full">
       {/* Search & Filter Bar */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 space-y-3">
-        {/* Search */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            value={filters.search}
-            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-            placeholder="Rechercher par nom, référence, véhicule..."
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200
-                     focus:border-primary focus:ring-2 focus:ring-primary/20
-                     outline-none transition-all text-base"
-          />
+      <div className="bg-white border-b border-gray-200 px-3 sm:px-4 py-3 space-y-2 sm:space-y-3">
+        {/* Search with Add Button */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+            <input
+              type="text"
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              placeholder="Rechercher..."
+              className="w-full pl-9 sm:pl-10 pr-3 py-2.5 sm:py-3 rounded-xl border border-gray-200
+                       focus:border-primary focus:ring-2 focus:ring-primary/20
+                       outline-none transition-all text-sm sm:text-base"
+            />
+          </div>
+          {onAddClick && (
+            <button
+              onClick={onAddClick}
+              className="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2.5 sm:py-3 bg-primary hover:bg-primary-hover
+                       text-white font-medium rounded-xl transition-all touch-manipulation whitespace-nowrap text-sm sm:text-base"
+            >
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">Ajouter</span>
+            </button>
+          )}
         </div>
 
         {/* Filter Toggle */}
         <div className="flex items-center justify-between">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-colors touch-manipulation
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm transition-colors touch-manipulation
               ${showFilters ? 'bg-primary text-white' : 'bg-gray-100 text-gray-600'}`}
           >
-            <Filter className="w-4 h-4" />
+            <Filter className="w-3.5 h-3.5" />
             Filtres
           </button>
 
-          <span className="text-sm text-gray-500">
+          <span className="text-xs sm:text-sm text-gray-500">
             {sortedBookings.length} réservation{sortedBookings.length > 1 ? 's' : ''}
           </span>
         </div>
@@ -134,13 +147,13 @@ export function ReservationList({ bookings, onBookingClick }: ReservationListPro
           >
             {/* Status Filter */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1.5">Statut</label>
-              <div className="flex flex-wrap gap-2">
+              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Statut</label>
+              <div className="flex flex-wrap gap-1.5">
                 {(['all', 'new', 'pending', 'active', 'completed', 'cancelled'] as const).map((status) => (
                   <button
                     key={status}
                     onClick={() => setFilters({ ...filters, status })}
-                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors touch-manipulation
+                    className={`px-2 sm:px-3 py-1 sm:py-1.5 rounded-lg text-xs sm:text-sm font-medium transition-colors touch-manipulation
                       ${filters.status === status
                         ? 'bg-primary text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
@@ -152,27 +165,27 @@ export function ReservationList({ bookings, onBookingClick }: ReservationListPro
             </div>
 
             {/* Date Range */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Du</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Du</label>
                 <input
                   type="date"
                   value={filters.dateFrom || ''}
                   onChange={(e) => setFilters({ ...filters, dateFrom: e.target.value || undefined })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200
+                  className="w-full px-2 py-1.5 rounded-lg border border-gray-200
                            focus:border-primary focus:ring-2 focus:ring-primary/20
-                           outline-none transition-all text-sm"
+                           outline-none transition-all text-xs sm:text-sm"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Au</label>
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">Au</label>
                 <input
                   type="date"
                   value={filters.dateTo || ''}
                   onChange={(e) => setFilters({ ...filters, dateTo: e.target.value || undefined })}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200
+                  className="w-full px-2 py-1.5 rounded-lg border border-gray-200
                            focus:border-primary focus:ring-2 focus:ring-primary/20
-                           outline-none transition-all text-sm"
+                           outline-none transition-all text-xs sm:text-sm"
                 />
               </div>
             </div>

@@ -250,21 +250,39 @@ export function GanttChart({
               {/* Date headers */}
               {dates.map((date, index) => {
                 const isToday = isSameDay(date, new Date());
-                const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                const monthIndex = date.getMonth();
+                const isOddMonth = monthIndex % 2 === 1; // Feb, Apr, Jun, Aug, Oct, Dec = gray
+                const dayOfMonth = date.getDate();
+                const isFirstOfMonth = dayOfMonth === 1;
+                const isFirstInView = index === 0;
+                const showMonth = isFirstOfMonth || isFirstInView;
                 return (
                   <th
                     key={index}
                     className={`sticky top-0 z-20 border-b border-r border-gray-200 p-0
-                      ${isToday ? 'bg-primary text-white' : isWeekend ? 'bg-gray-200' : 'bg-gray-100'}`}
+                      ${isToday ? 'bg-primary text-white' : isOddMonth ? 'bg-gray-200' : 'bg-gray-100'}`}
                     style={{ width: cellWidth, minWidth: cellWidth }}
                   >
                     <div className="h-10 flex flex-col items-center justify-center">
-                      <div className="text-[10px] font-medium leading-none">
-                        {format(date, 'EEE', { locale: fr }).slice(0, 2)}
-                      </div>
-                      <div className={`text-sm font-bold leading-none ${isToday ? '' : 'text-gray-900'}`}>
-                        {format(date, 'd')}
-                      </div>
+                      {showMonth ? (
+                        <>
+                          <div className={`text-[8px] font-medium leading-none uppercase ${isToday ? 'text-white/80' : 'text-primary'}`}>
+                            {format(date, 'MMM', { locale: fr })}
+                          </div>
+                          <div className={`text-sm font-bold leading-none ${isToday ? '' : 'text-gray-900'}`}>
+                            {format(date, 'd')}
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-[10px] font-medium leading-none">
+                            {format(date, 'EEE', { locale: fr }).slice(0, 2)}
+                          </div>
+                          <div className={`text-sm font-bold leading-none ${isToday ? '' : 'text-gray-900'}`}>
+                            {format(date, 'd')}
+                          </div>
+                        </>
+                      )}
                     </div>
                   </th>
                 );
@@ -297,7 +315,8 @@ export function GanttChart({
                   {/* Date Cells */}
                   {dates.map((date, dateIndex) => {
                     const booking = getBookingForCell(bookings, vehicle.id, date);
-                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+                    const monthIndex = date.getMonth();
+                    const isOddMonth = monthIndex % 2 === 1; // Feb, Apr, Jun, Aug, Oct, Dec = gray
                     const isStart = booking && isBookingStart(booking, date);
                     const span = booking && isStart
                       ? getBookingSpan(booking, parseISO(calendarStartDate), calendarViewDays)
@@ -307,7 +326,7 @@ export function GanttChart({
                       <td
                         key={dateIndex}
                         className={`relative border-b border-r border-gray-100 p-0
-                          ${isWeekend ? 'bg-gray-50' : 'bg-white'}
+                          ${isOddMonth ? 'bg-gray-100' : 'bg-white'}
                           ${isInMaintenance ? 'bg-gray-200' : ''}`}
                         style={{ width: cellWidth, minWidth: cellWidth }}
                       >

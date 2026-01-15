@@ -26,7 +26,7 @@ export function generateCustomerEmailHTML(
           <!-- Header -->
           <tr>
             <td style="background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px;">🎉 Réservation Confirmée !</h1>
+              <h1 style="color: #ffffff; margin: 0; font-size: 28px;">📋 Réservation en traitement</h1>
               <p style="color: #e0f2fe; margin: 10px 0 0 0; font-size: 16px;">Merci pour votre confiance</p>
             </td>
           </tr>

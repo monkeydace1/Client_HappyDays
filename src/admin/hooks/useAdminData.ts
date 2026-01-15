@@ -352,7 +352,7 @@ export function useAdminData(): UseAdminDataReturn {
       assignedVehicleId: data.vehicleId,
       clientName: data.clientName,
       clientPhone: data.clientPhone || '',
-      totalPrice: days * vehicle.pricePerDay,
+      totalPrice: days * (data.pricePerDay || vehicle.pricePerDay),
     };
 
     try {
