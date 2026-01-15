@@ -8,6 +8,7 @@ import {
   assignVehicleToBooking,
   updateBooking,
   createBooking,
+  deleteBooking,
   subscribeToBookings,
   subscribeToVehicles,
   generateBookingReference,
@@ -187,6 +188,8 @@ interface UseAdminDataReturn {
   assignVehicle: (bookingId: string, vehicleId: number) => Promise<void>;
   updateBookingDetails: (bookingId: string, updates: Partial<AdminBooking>) => Promise<void>;
   addWalkInBooking: (data: QuickAddData, vehicles: AdminVehicle[]) => Promise<void>;
+  bulkDeleteBookings: (bookingIds: string[]) => Promise<void>;
+  bulkChangeStatus: (bookingIds: string[], status: BookingStatus) => Promise<void>;
 }
 
 export function useAdminData(): UseAdminDataReturn {
@@ -415,6 +418,50 @@ export function useAdminData(): UseAdminDataReturn {
     }
   }, []);
 
+  // Bulk delete bookings
+  const bulkDeleteBookings = useCallback(async (bookingIds: string[]) => {
+    // Optimistic update - remove from state
+    const deletedBookings = bookings.filter((b) => bookingIds.includes(b.id));
+    setBookings((prev) => prev.filter((b) => !bookingIds.includes(b.id)));
+
+    try {
+      // Delete all bookings in parallel
+      await Promise.all(bookingIds.map((id) => deleteBooking(id)));
+    } catch (err) {
+      // Revert on error
+      setBookings((prev) => [...deletedBookings, ...prev]);
+      console.error('Error bulk deleting bookings:', err);
+      throw err;
+    }
+  }, [bookings]);
+
+  // Bulk change status
+  const bulkChangeStatus = useCallback(async (bookingIds: string[], status: BookingStatus) => {
+    // Store original statuses for rollback
+    const originalStatuses = bookings
+      .filter((b) => bookingIds.includes(b.id))
+      .reduce((acc, b) => ({ ...acc, [b.id]: b.status }), {} as Record<string, BookingStatus>);
+
+    // Optimistic update
+    setBookings((prev) =>
+      prev.map((b) => (bookingIds.includes(b.id) ? { ...b, status } : b))
+    );
+
+    try {
+      // Update all bookings in parallel
+      await Promise.all(bookingIds.map((id) => updateBookingStatus(id, status)));
+    } catch (err) {
+      // Revert on error
+      setBookings((prev) =>
+        prev.map((b) =>
+          originalStatuses[b.id] ? { ...b, status: originalStatuses[b.id] } : b
+        )
+      );
+      console.error('Error bulk changing status:', err);
+      throw err;
+    }
+  }, [bookings]);
+
   return {
     vehicles,
     bookings,
@@ -427,5 +474,7 @@ export function useAdminData(): UseAdminDataReturn {
     assignVehicle,
     updateBookingDetails,
     addWalkInBooking,
+    bulkDeleteBookings,
+    bulkChangeStatus,
   };
 }

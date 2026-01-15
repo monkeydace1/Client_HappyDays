@@ -29,6 +29,8 @@ export function AdminDashboardPage() {
     assignVehicle,
     updateBookingDetails,
     addWalkInBooking,
+    bulkDeleteBookings,
+    bulkChangeStatus,
   } = useAdminData();
 
   // Calculate KPIs
@@ -144,6 +146,8 @@ export function AdminDashboardPage() {
             bookings={bookings}
             onBookingClick={handleBookingClick}
             onAddClick={handleNewReservation}
+            onBulkDelete={bulkDeleteBookings}
+            onBulkStatusChange={bulkChangeStatus}
           />
         );
       case 'vehicles':
