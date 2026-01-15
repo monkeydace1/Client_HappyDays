@@ -314,14 +314,22 @@ export function QuickAddModal({
 
               {/* Submit Button - Fixed at bottom */}
               <div className="p-3 sm:p-4 border-t border-gray-200 flex-shrink-0 bg-white">
-                <button
-                  type="submit"
-                  className="w-full py-3 bg-primary hover:bg-primary-hover text-white font-bold
-                           rounded-xl transition-all duration-200 active:scale-[0.98]
-                           touch-manipulation text-sm sm:text-base"
-                >
-                  Créer la réservation
-                </button>
+                {(() => {
+                  const isValid = formData.clientName && formData.vehicleId && formData.departureDate && formData.returnDate;
+                  return (
+                    <button
+                      type="submit"
+                      disabled={!isValid}
+                      className={`w-full py-3 font-bold rounded-xl transition-all duration-200
+                               touch-manipulation text-sm sm:text-base
+                               ${isValid
+                                 ? 'bg-primary hover:bg-primary-hover text-white active:scale-[0.98]'
+                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'}`}
+                    >
+                      {isValid ? 'Créer la réservation' : 'Remplir tous les champs *'}
+                    </button>
+                  );
+                })()}
               </div>
             </form>
           </motion.div>
