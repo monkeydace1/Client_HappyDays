@@ -46,19 +46,24 @@ serve(async (req) => {
 
     console.log('Admin email sent:', adminEmailResult)
 
-    // Email to customer
-    const customerEmailResult = await resend.emails.send({
-      from: 'Happy Days Location <contact@happydayslocation.com>',
-      to: [customerEmail],
-      subject: `Demande de réservation reçue - ${bookingReference}`,
-      html: customerEmailHTML,
-    })
-    console.log('Customer email sent:', customerEmailResult)
+    // Email to customer (only if email is provided)
+    let customerEmailResult = null
+    if (customerEmail && customerEmailHTML) {
+      customerEmailResult = await resend.emails.send({
+        from: 'Happy Days Location <contact@happydayslocation.com>',
+        to: [customerEmail],
+        subject: `Demande de réservation reçue - ${bookingReference}`,
+        html: customerEmailHTML,
+      })
+      console.log('Customer email sent:', customerEmailResult)
+    } else {
+      console.log('No customer email provided, skipping customer notification')
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
-        customerEmailId: customerEmailResult.data?.id,
+        customerEmailId: customerEmailResult?.data?.id || null,
         adminEmailId: adminEmailResult.data?.id,
       }),
       {

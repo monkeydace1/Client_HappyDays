@@ -13,6 +13,11 @@ import {
   generateBookingReference,
 } from '../services/adminService';
 import { supabase } from '../../lib/supabase';
+import {
+  generateManualBookingCustomerEmailHTML,
+  generateManualBookingAdminEmailHTML,
+  type ManualBookingData,
+} from '../../lib/emailTemplates';
 
 // Send confirmation email when status changes to 'active'
 async function sendConfirmationEmail(booking: AdminBooking): Promise<void> {
@@ -44,6 +49,34 @@ async function sendConfirmationEmail(booking: AdminBooking): Promise<void> {
     }
   } catch (err) {
     console.error('Failed to send confirmation email:', err);
+  }
+}
+
+// Send email for manual bookings (walk-in/phone)
+async function sendManualBookingEmail(bookingData: ManualBookingData): Promise<void> {
+  try {
+    const customerEmailHTML = bookingData.clientEmail
+      ? generateManualBookingCustomerEmailHTML(bookingData)
+      : '';
+    const adminEmailHTML = generateManualBookingAdminEmailHTML(bookingData);
+
+    const { data, error } = await supabase.functions.invoke('send-booking-email', {
+      body: {
+        bookingReference: bookingData.bookingReference,
+        customerEmail: bookingData.clientEmail || '',
+        customerName: bookingData.clientName,
+        customerEmailHTML,
+        adminEmailHTML,
+      },
+    });
+
+    if (error) {
+      console.error('Error sending manual booking email:', error);
+    } else {
+      console.log('Manual booking email sent successfully:', data);
+    }
+  } catch (err) {
+    console.error('Failed to send manual booking email:', err);
   }
 }
 
@@ -338,9 +371,11 @@ export function useAdminData(): UseAdminDataReturn {
     const departureDate = new Date(data.departureDate);
     const returnDate = new Date(data.returnDate);
     const days = Math.ceil((returnDate.getTime() - departureDate.getTime()) / (1000 * 60 * 60 * 24)) || 1;
+    const totalPrice = days * (data.pricePerDay || vehicle.pricePerDay);
+    const bookingReference = generateBookingReference();
 
     const newBooking: Omit<AdminBooking, 'id' | 'createdAt' | 'updatedAt'> = {
-      bookingReference: generateBookingReference(),
+      bookingReference,
       status: 'pending',
       source: 'walk_in',
       departureDate: data.departureDate,
@@ -352,12 +387,28 @@ export function useAdminData(): UseAdminDataReturn {
       assignedVehicleId: data.vehicleId,
       clientName: data.clientName,
       clientPhone: data.clientPhone || '',
-      totalPrice: days * (data.pricePerDay || vehicle.pricePerDay),
+      clientEmail: data.clientEmail || '',
+      totalPrice,
     };
 
     try {
       const created = await createBooking(newBooking);
       setBookings((prev) => [created, ...prev]);
+
+      // Send email notification for manual booking
+      sendManualBookingEmail({
+        bookingReference,
+        clientName: data.clientName,
+        clientPhone: data.clientPhone,
+        clientEmail: data.clientEmail,
+        vehicleName: vehicle.name,
+        departureDate: data.departureDate,
+        returnDate: data.returnDate,
+        pickupTime: data.pickupTime,
+        returnTime: data.returnTime,
+        rentalDays: days,
+        totalPrice,
+      });
     } catch (err) {
       console.error('Error creating booking:', err);
       throw err;
