@@ -139,8 +139,7 @@ function generateConfirmationEmailHTML(data: ConfirmationEmailRequest): string {
                     <p style="margin: 0 0 10px 0; font-weight: bold; color: #92400e;">Important :</p>
                     <ul style="margin: 0; padding-left: 20px; color: #92400e; font-size: 14px;">
                       <li style="margin-bottom: 5px;">Présentez-vous avec votre permis de conduire valide</li>
-                      <li style="margin-bottom: 5px;">En cas de retard, veuillez nous prévenir</li>
-                      <li>Tout retard non signalé sera facturé 700 DZD/heure</li>
+                      <li>En cas de retard, veuillez nous prévenir</li>
                     </ul>
                   </div>
 
