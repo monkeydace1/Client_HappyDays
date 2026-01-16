@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
@@ -13,6 +14,7 @@ import { ConditionsPage } from './pages/ConditionsPage';
 import { ThankYouPage } from './pages/ThankYouPage';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { TopBanner } from './components/TopBanner';
+import { captureUTMParams } from './lib/utmTracking';
 
 // Admin imports
 import { AdminLoginPage } from './admin/pages/AdminLoginPage';
@@ -53,6 +55,11 @@ function AdminLayout({ children }: { children: React.ReactNode }) {
 function AppRoutes() {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
+
+  // Capture UTM parameters on initial load and route changes
+  useEffect(() => {
+    captureUTMParams();
+  }, [location.search]);
 
   if (isAdminRoute) {
     return (

@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { Vehicle, Supplement, ClientInfo } from '../types';
 import { generateCustomerEmailHTML, generateAdminEmailHTML } from './emailTemplates';
+import { getUTMParamsForDatabase, clearUTMParams } from './utmTracking';
 
 // Types for booking submission
 export interface BookingSubmission {
@@ -214,6 +215,9 @@ export async function saveBooking(
       // Metadata
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
       locale: typeof navigator !== 'undefined' ? navigator.language : null,
+
+      // UTM Tracking (for ad attribution)
+      ...getUTMParamsForDatabase(),
     };
 
     // Insert into database
@@ -268,6 +272,9 @@ export async function saveBooking(
       console.error('Failed to send confirmation emails:', err);
       // Don't fail the booking if email fails
     });
+
+    // Clear UTM params after successful booking (so next booking gets fresh attribution)
+    clearUTMParams();
 
     return { success: true, data: data as BookingRecord };
   } catch (error) {
