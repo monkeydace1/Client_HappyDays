@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Phone, Calendar, Car, Clock, Mail, Euro } from 'lucide-react';
+import { X, User, Phone, Car, Mail, Euro } from 'lucide-react';
 import { format, addDays, parseISO } from 'date-fns';
 import type { AdminVehicle, QuickAddData } from '../../types/admin';
 import { vehicles as vehicleData } from '../../../data/vehicleData';
