@@ -62,8 +62,6 @@ const getDefaultFilters = (): ReservationFilters => ({
   dateTo: undefined,
 });
 
-const getTodayISO = () => new Date().toISOString().split('T')[0];
-
 // Start calendar 3 days before today for better context
 const getCalendarStartDate = () => {
   const date = new Date();
