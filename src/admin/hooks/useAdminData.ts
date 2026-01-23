@@ -9,6 +9,8 @@ import {
   updateBooking,
   createBooking,
   deleteBooking,
+  createVehicle,
+  deleteVehicle as deleteVehicleService,
   subscribeToBookings,
   subscribeToVehicles,
   generateBookingReference,
@@ -99,7 +101,7 @@ const SAMPLE_VEHICLES: AdminVehicle[] = [
   { id: 8, name: 'Clio 4 Limited 2019', brand: 'Renault', model: 'Clio 4 Limited', year: 2019, category: 'Citadine', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 32, image: '/vehicles/renault-clio4-limited/main.jpg', status: 'available' },
   { id: 9, name: 'Seat Ibiza Style 2018', brand: 'Seat', model: 'Ibiza Style', year: 2018, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 30, image: '/vehicles/seat-ibiza-style/main.jpg', status: 'available' },
   { id: 10, name: 'Fiat 500 Dolce Vita 2025', brand: 'Fiat', model: '500 Dolce Vita', year: 2025, category: 'Citadine', transmission: 'Manuelle', fuel: 'Hybride', seats: 4, pricePerDay: 30, image: '/vehicles/fiat-500-dolcevita/main.jpg', status: 'available' },
-  { id: 11, name: 'Toyota Yaris Auto', brand: 'Toyota', model: 'Yaris', year: 2020, category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 28, image: '/vehicles/toyota-yaris/main.jpg', status: 'available' },
+  { id: 11, name: 'Toyota Yaris Auto', brand: 'Toyota', model: 'Yaris', year: 2017, category: 'Citadine', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 28, image: '/vehicles/toyota-yaris/main.jpg', status: 'available' },
   // Économiques
   { id: 12, name: 'Renault Symbol 2018', brand: 'Renault', model: 'Symbol', year: 2018, category: 'Berline', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 26, image: '/vehicles/renault-symbol/main.jpg', status: 'available' },
   { id: 13, name: 'Seat Ibiza Sol 2017', brand: 'Seat', model: 'Ibiza Sol', year: 2017, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 27, image: '/vehicles/seat-ibiza-sol/main.jpg', status: 'available' },
@@ -188,6 +190,8 @@ interface UseAdminDataReturn {
   assignVehicle: (bookingId: string, vehicleId: number) => Promise<void>;
   updateBookingDetails: (bookingId: string, updates: Partial<AdminBooking>) => Promise<void>;
   addWalkInBooking: (data: QuickAddData, vehicles: AdminVehicle[]) => Promise<void>;
+  addVehicle: (vehicle: Omit<AdminVehicle, 'id'>) => Promise<void>;
+  deleteVehicle: (vehicleId: number) => Promise<void>;
   bulkDeleteBookings: (bookingIds: string[]) => Promise<void>;
   bulkChangeStatus: (bookingIds: string[], status: BookingStatus) => Promise<void>;
 }
@@ -244,16 +248,27 @@ export function useAdminData(): UseAdminDataReturn {
     const unsubscribeBookings = subscribeToBookings(
       // On insert
       (newBooking) => {
-        setBookings((prev) => [newBooking, ...prev]);
+        console.log('[REALTIME] New booking inserted:', newBooking.bookingReference, newBooking);
+        setBookings((prev) => {
+          // Prevent duplicate if already exists
+          if (prev.some(b => b.id === newBooking.id)) {
+            console.log('[REALTIME] Booking already exists, skipping insert');
+            return prev;
+          }
+          return [newBooking, ...prev];
+        });
       },
       // On update
       (updatedBooking) => {
+        console.log('[REALTIME] Booking updated:', updatedBooking.bookingReference, updatedBooking);
         setBookings((prev) =>
           prev.map((b) => (b.id === updatedBooking.id ? updatedBooking : b))
         );
       },
       // On delete
       (deletedId) => {
+        console.log('[REALTIME] Booking DELETED! ID:', deletedId);
+        console.trace('[REALTIME] Delete stack trace:');
         setBookings((prev) => prev.filter((b) => b.id !== deletedId));
       }
     );
@@ -366,6 +381,35 @@ export function useAdminData(): UseAdminDataReturn {
     }
   }, [bookings]);
 
+  // Add new vehicle
+  const addVehicle = useCallback(async (vehicle: Omit<AdminVehicle, 'id'>) => {
+    try {
+      const created = await createVehicle(vehicle);
+      setVehicles((prev) => [...prev, created].sort((a, b) => a.id - b.id));
+    } catch (err) {
+      console.error('Error creating vehicle:', err);
+      throw err;
+    }
+  }, []);
+
+  // Delete vehicle
+  const deleteVehicle = useCallback(async (vehicleId: number) => {
+    const vehicle = vehicles.find((v) => v.id === vehicleId);
+    if (!vehicle) return;
+
+    // Optimistic update - remove from state
+    setVehicles((prev) => prev.filter((v) => v.id !== vehicleId));
+
+    try {
+      await deleteVehicleService(vehicleId);
+    } catch (err) {
+      // Revert on error
+      setVehicles((prev) => [...prev, vehicle].sort((a, b) => a.id - b.id));
+      console.error('Error deleting vehicle:', err);
+      throw err;
+    }
+  }, [vehicles]);
+
   // Add walk-in booking
   const addWalkInBooking = useCallback(async (data: QuickAddData, vehiclesList: AdminVehicle[]) => {
     const vehicle = vehiclesList.find((v) => v.id === data.vehicleId);
@@ -474,6 +518,8 @@ export function useAdminData(): UseAdminDataReturn {
     assignVehicle,
     updateBookingDetails,
     addWalkInBooking,
+    addVehicle,
+    deleteVehicle,
     bulkDeleteBookings,
     bulkChangeStatus,
   };

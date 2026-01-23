@@ -64,6 +64,13 @@ const getDefaultFilters = (): ReservationFilters => ({
 
 const getTodayISO = () => new Date().toISOString().split('T')[0];
 
+// Start calendar 3 days before today for better context
+const getCalendarStartDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 3);
+  return date.toISOString().split('T')[0];
+};
+
 export const useAdminStore = create<AdminState>()(
   persist(
     (set, get) => ({
@@ -72,7 +79,7 @@ export const useAdminStore = create<AdminState>()(
       pinVerified: false,
       activeTab: 'calendar',
       calendarViewDays: 14,
-      calendarStartDate: getTodayISO(),
+      calendarStartDate: getCalendarStartDate(),
       quickAddModalOpen: false,
       quickAddDate: null,
       quickAddVehicleId: null,
@@ -99,12 +106,14 @@ export const useAdminStore = create<AdminState>()(
       navigateCalendar: (direction) => {
         const { calendarStartDate, calendarViewDays } = get();
         const current = new Date(calendarStartDate);
-        const offset = direction === 'next' ? calendarViewDays : -calendarViewDays;
+        // Move by half the view days for overlap (minimum 3 days)
+        const stepDays = Math.max(3, Math.floor(calendarViewDays / 2));
+        const offset = direction === 'next' ? stepDays : -stepDays;
         current.setDate(current.getDate() + offset);
         set({ calendarStartDate: current.toISOString().split('T')[0] });
       },
 
-      goToToday: () => set({ calendarStartDate: getTodayISO() }),
+      goToToday: () => set({ calendarStartDate: getCalendarStartDate() }),
 
       // Modal actions
       openQuickAdd: (date, vehicleId) => set({

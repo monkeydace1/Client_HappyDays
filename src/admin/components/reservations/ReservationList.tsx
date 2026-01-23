@@ -11,6 +11,7 @@ interface ReservationListProps {
   onAddClick?: () => void;
   onBulkDelete?: (bookingIds: string[]) => Promise<void>;
   onBulkStatusChange?: (bookingIds: string[], status: BookingStatus) => Promise<void>;
+  onStatusChange?: (bookingId: string, status: BookingStatus) => Promise<void>;
 }
 
 // Status config
@@ -48,7 +49,7 @@ const statusConfig: Record<BookingStatus, { label: string; color: string; bgColo
   },
 };
 
-export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDelete, onBulkStatusChange }: ReservationListProps) {
+export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDelete, onBulkStatusChange, onStatusChange }: ReservationListProps) {
   const [filters, setFilters] = useState<ReservationFilters>({
     search: '',
     status: 'all',
@@ -419,8 +420,11 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4 text-gray-400" />
                         <span>
-                          {format(parseISO(booking.departureDate), 'dd MMM', { locale: fr })} →{' '}
+                          {format(parseISO(booking.departureDate), 'dd MMM', { locale: fr })}
+                          {booking.pickupTime && ` à ${booking.pickupTime}`}
+                          {' → '}
                           {format(parseISO(booking.returnDate), 'dd MMM', { locale: fr })}
+                          {booking.returnTime && ` à ${booking.returnTime}`}
                         </span>
                       </div>
                       {booking.clientPhone && (
@@ -431,14 +435,44 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
                       )}
                     </div>
 
-                    {/* Price */}
-                    <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between items-center">
-                      <span className="text-xs text-gray-500">
-                        {booking.source === 'web' ? 'Site web' : booking.source === 'walk_in' ? 'Direct' : 'Téléphone'}
-                      </span>
-                      <span className="font-bold text-primary">{booking.totalPrice}€</span>
+                    {/* Price & Meta */}
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-gray-500">
+                          {booking.source === 'web' ? 'Site web' : booking.source === 'walk_in' ? 'Direct' : 'Téléphone'}
+                        </span>
+                        <span className="font-bold text-primary">{booking.totalPrice}€</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-1.5 text-xs text-gray-400">
+                        <Clock className="w-3 h-3" />
+                        <span>Ajouté le {format(parseISO(booking.createdAt), "dd MMM yyyy 'à' HH:mm", { locale: fr })}</span>
+                      </div>
                     </div>
                   </button>
+
+                  {/* Quick Status Change Buttons */}
+                  {onStatusChange && !isSelectionMode && (
+                    <div className="px-4 pb-3 pt-0">
+                      <div className="flex flex-wrap gap-1.5">
+                        {(['new', 'pending', 'active', 'completed', 'cancelled'] as BookingStatus[])
+                          .filter(s => s !== booking.status)
+                          .map((newStatus) => (
+                            <button
+                              key={newStatus}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onStatusChange(booking.id, newStatus);
+                              }}
+                              className={`px-2 py-1 rounded-md text-xs font-medium transition-all
+                                ${statusConfig[newStatus].bgColor} ${statusConfig[newStatus].color}
+                                hover:opacity-80 hover:scale-105 active:scale-95`}
+                            >
+                              {statusConfig[newStatus].label}
+                            </button>
+                          ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </motion.div>
             );

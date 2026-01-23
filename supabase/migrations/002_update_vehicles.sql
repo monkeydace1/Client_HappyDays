@@ -34,7 +34,7 @@ INSERT INTO vehicles (id, name, brand, model, year, category, transmission, fuel
 (8, 'Renault Clio 4 Limited', 'Renault', 'Clio 4 Limited 2', 2019, 'Citadine', 'Manuelle', 'Diesel', 5, 32, '/vehicles/renault-clio4-limited/main.jpg', 'available', false),
 (9, 'Seat Ibiza Style', 'Seat', 'Ibiza Style', 2018, 'Citadine', 'Manuelle', 'Essence', 5, 30, '/vehicles/seat-ibiza-style/main.jpg', 'available', false),
 (10, 'Fiat 500 Dolce Vita', 'Fiat', '500 Dolce Vita', 2025, 'Citadine', 'Manuelle', 'Hybride', 4, 30, '/vehicles/fiat-500-dolcevita/main.jpg', 'available', false),
-(11, 'Toyota Yaris', 'Toyota', 'Yaris', 2020, 'Citadine', 'Automatique', 'Essence', 5, 28, '/vehicles/toyota-yaris/main.jpg', 'available', false),
+(11, 'Toyota Yaris', 'Toyota', 'Yaris', 2017, 'Citadine', 'Automatique', 'Essence', 5, 28, '/vehicles/toyota-yaris/main.jpg', 'available', false),
 
 -- Économiques
 (12, 'Renault Symbol', 'Renault', 'Symbol', 2018, 'Berline', 'Manuelle', 'Essence', 5, 26, '/vehicles/renault-symbol/main.jpg', 'available', false),

@@ -34,6 +34,51 @@ export async function updateVehicleStatus(
   }
 }
 
+export async function createVehicle(
+  vehicle: Omit<AdminVehicle, 'id'>
+): Promise<AdminVehicle> {
+  const dbVehicle = {
+    name: vehicle.name,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    year: vehicle.year,
+    category: vehicle.category,
+    transmission: vehicle.transmission,
+    fuel: vehicle.fuel,
+    seats: vehicle.seats,
+    price_per_day: vehicle.pricePerDay,
+    image: vehicle.image,
+    status: vehicle.status || 'available',
+    license_plate: vehicle.licensePlate,
+    notes: vehicle.notes,
+  };
+
+  const { data, error } = await supabase
+    .from('vehicles')
+    .insert(dbVehicle)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating vehicle:', error);
+    throw error;
+  }
+
+  return mapVehicleFromDb(data);
+}
+
+export async function deleteVehicle(vehicleId: number): Promise<void> {
+  const { error } = await supabase
+    .from('vehicles')
+    .delete()
+    .eq('id', vehicleId);
+
+  if (error) {
+    console.error('Error deleting vehicle:', error);
+    throw error;
+  }
+}
+
 // ============================================
 // BOOKING OPERATIONS
 // ============================================
@@ -55,6 +100,13 @@ export async function fetchBookings(): Promise<AdminBooking[]> {
 export async function createBooking(
   booking: Omit<AdminBooking, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<AdminBooking> {
+  console.log('[createBooking] Creating new booking:', {
+    ref: booking.bookingReference,
+    vehicleId: booking.vehicleId,
+    dates: `${booking.departureDate} to ${booking.returnDate}`,
+    client: booking.clientName,
+  });
+
   const dbBooking = {
     booking_reference: booking.bookingReference,
     status: booking.status,
@@ -81,10 +133,11 @@ export async function createBooking(
     .single();
 
   if (error) {
-    console.error('Error creating booking:', error);
+    console.error('[createBooking] Error:', error);
     throw error;
   }
 
+  console.log('[createBooking] Success! ID:', data.id);
   return mapBookingFromDb(data);
 }
 
@@ -150,14 +203,40 @@ export async function updateBooking(
 }
 
 export async function deleteBooking(bookingId: string): Promise<void> {
-  const { error } = await supabase
+  // First, get the booking to find its reference
+  const { data: booking, error: fetchError } = await supabase
+    .from('admin_bookings')
+    .select('booking_reference')
+    .eq('id', bookingId)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching booking for deletion:', fetchError);
+    throw fetchError;
+  }
+
+  // Delete from admin_bookings
+  const { error: deleteAdminError } = await supabase
     .from('admin_bookings')
     .delete()
     .eq('id', bookingId);
 
-  if (error) {
-    console.error('Error deleting booking:', error);
-    throw error;
+  if (deleteAdminError) {
+    console.error('Error deleting from admin_bookings:', deleteAdminError);
+    throw deleteAdminError;
+  }
+
+  // Also delete from bookings table (web bookings) if exists
+  if (booking?.booking_reference) {
+    const { error: deleteBookingsError } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('booking_reference', booking.booking_reference);
+
+    if (deleteBookingsError) {
+      // Log but don't throw - the booking might not exist in web bookings table
+      console.warn('Note: Could not delete from bookings table:', deleteBookingsError);
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Loader2 } from 'lucide-react';
 import { AdminLayout } from '../components/layout/AdminLayout';
@@ -7,14 +7,18 @@ import { QuickAddModal } from '../components/calendar/QuickAddModal';
 import { BookingDetailsModal } from '../components/calendar/BookingDetailsModal';
 import { ReservationList } from '../components/reservations/ReservationList';
 import { VehicleGrid } from '../components/vehicles/VehicleGrid';
+import { VehicleAddModal } from '../components/vehicles/VehicleAddModal';
 import { useAdminStore } from '../store/adminStore';
 import { useAdminData } from '../hooks/useAdminData';
-import type { DashboardKPIs, QuickAddData, BookingStatus } from '../types/admin';
+import type { DashboardKPIs, QuickAddData, BookingStatus, AdminVehicle } from '../types/admin';
 
 export function AdminDashboardPage() {
   const { activeTab, quickAddModalOpen, quickAddDate, quickAddVehicleId,
           bookingDetailsModalOpen, selectedBookingId, openQuickAdd, closeQuickAdd,
           openBookingDetails, closeBookingDetails } = useAdminStore();
+
+  // Vehicle add modal state
+  const [vehicleAddModalOpen, setVehicleAddModalOpen] = useState(false);
 
   // Use real data from Supabase
   const {
@@ -29,6 +33,8 @@ export function AdminDashboardPage() {
     assignVehicle,
     updateBookingDetails,
     addWalkInBooking,
+    addVehicle,
+    deleteVehicle,
     bulkDeleteBookings,
     bulkChangeStatus,
   } = useAdminData();
@@ -81,6 +87,11 @@ export function AdminDashboardPage() {
     closeBookingDetails();
   }, [changeBookingStatus, closeBookingDetails]);
 
+  // Status change from calendar (doesn't close modal)
+  const handleCalendarStatusChange = useCallback(async (bookingId: string, newStatus: BookingStatus) => {
+    await changeBookingStatus(bookingId, newStatus);
+  }, [changeBookingStatus]);
+
   const handleAssignVehicle = useCallback(async (bookingId: string, vehicleId: number) => {
     await assignVehicle(bookingId, vehicleId);
   }, [assignVehicle]);
@@ -89,9 +100,62 @@ export function AdminDashboardPage() {
     await toggleVehicleMaintenance(vehicleId);
   }, [toggleVehicleMaintenance]);
 
+  const handleAddVehicle = useCallback(async (vehicle: Omit<AdminVehicle, 'id'>) => {
+    await addVehicle(vehicle);
+  }, [addVehicle]);
+
+  const handleDeleteVehicle = useCallback(async (vehicleId: number) => {
+    await deleteVehicle(vehicleId);
+  }, [deleteVehicle]);
+
   const handleBookingUpdate = useCallback(async (bookingId: string, updates: Partial<{ clientName: string; clientPhone: string; departureDate: string; returnDate: string; rentalDays: number; totalPrice: number }>) => {
     await updateBookingDetails(bookingId, updates);
   }, [updateBookingDetails]);
+
+  // Handle booking move from drag and drop in calendar
+  const handleBookingMove = useCallback(async (
+    bookingId: string,
+    newDepartureDate: string,
+    newReturnDate: string,
+    newVehicleId?: number
+  ) => {
+    const booking = bookings.find(b => b.id === bookingId);
+    if (!booking) return;
+
+    // Calculate new rental days
+    const departure = new Date(newDepartureDate);
+    const returnDate = new Date(newReturnDate);
+    const newDays = Math.ceil((returnDate.getTime() - departure.getTime()) / (1000 * 60 * 60 * 24)) || 1;
+
+    // Calculate new total price (keep same daily rate)
+    const dailyRate = Math.round(booking.totalPrice / booking.rentalDays);
+    const newTotalPrice = dailyRate * newDays;
+
+    // Prepare updates
+    const updates: Partial<typeof booking> = {
+      departureDate: newDepartureDate,
+      returnDate: newReturnDate,
+      rentalDays: newDays,
+      totalPrice: newTotalPrice,
+    };
+
+    // If vehicle changed, update assigned vehicle
+    if (newVehicleId) {
+      updates.assignedVehicleId = newVehicleId;
+      // Update vehicle name too
+      const newVehicle = vehicles.find(v => v.id === newVehicleId);
+      if (newVehicle) {
+        updates.vehicleName = newVehicle.name;
+      }
+    }
+
+    await updateBookingDetails(bookingId, updates);
+  }, [bookings, vehicles, updateBookingDetails]);
+
+  // Handle single booking deletion from calendar
+  const handleDeleteBooking = useCallback(async (bookingId: string) => {
+    await bulkDeleteBookings([bookingId]);
+  }, [bulkDeleteBookings]);
 
   const handleNewReservation = useCallback(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -138,6 +202,9 @@ export function AdminDashboardPage() {
             onCellClick={handleCellClick}
             onBookingClick={handleBookingClick}
             onAssignVehicle={handleAssignVehicle}
+            onStatusChange={handleCalendarStatusChange}
+            onBookingMove={handleBookingMove}
+            onDeleteBooking={handleDeleteBooking}
           />
         );
       case 'reservations':
@@ -148,6 +215,7 @@ export function AdminDashboardPage() {
             onAddClick={handleNewReservation}
             onBulkDelete={bulkDeleteBookings}
             onBulkStatusChange={bulkChangeStatus}
+            onStatusChange={handleCalendarStatusChange}
           />
         );
       case 'vehicles':
@@ -155,6 +223,8 @@ export function AdminDashboardPage() {
           <VehicleGrid
             vehicles={vehicles}
             onToggleMaintenance={handleToggleMaintenance}
+            onAddVehicle={() => setVehicleAddModalOpen(true)}
+            onDeleteVehicle={handleDeleteVehicle}
           />
         );
       default:
@@ -183,6 +253,14 @@ export function AdminDashboardPage() {
         booking={selectedBooking}
         onStatusChange={handleStatusChange}
         onBookingUpdate={handleBookingUpdate}
+        onDelete={handleDeleteBooking}
+      />
+
+      {/* Vehicle Add Modal */}
+      <VehicleAddModal
+        isOpen={vehicleAddModalOpen}
+        onClose={() => setVehicleAddModalOpen(false)}
+        onSubmit={handleAddVehicle}
       />
 
       {/* Floating Action Button - New Reservation */}

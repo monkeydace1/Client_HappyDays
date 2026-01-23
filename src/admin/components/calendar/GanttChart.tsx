@@ -1,10 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, Sparkles, Clock, Car, Check, XCircle, Trash2 } from 'lucide-react';
 import { format, addDays, isSameDay, isWithinInterval, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAdminStore } from '../../store/adminStore';
-import type { AdminVehicle, AdminBooking, CalendarViewDays } from '../../types/admin';
+import type { AdminVehicle, AdminBooking, CalendarViewDays, BookingStatus } from '../../types/admin';
 
 interface GanttChartProps {
   vehicles: AdminVehicle[];
@@ -12,6 +12,9 @@ interface GanttChartProps {
   onCellClick: (date: string, vehicleId: number) => void;
   onBookingClick: (bookingId: string) => void;
   onAssignVehicle?: (bookingId: string, vehicleId: number) => void;
+  onStatusChange?: (bookingId: string, newStatus: BookingStatus) => void;
+  onBookingMove?: (bookingId: string, newDepartureDate: string, newReturnDate: string, newVehicleId?: number) => void;
+  onDeleteBooking?: (bookingId: string) => void;
 }
 
 // Generate date range from start date
@@ -24,18 +27,18 @@ function generateDates(startDate: string, days: number): Date[] {
   return dates;
 }
 
-// Get booking for a specific vehicle and date
-function getBookingForCell(
+// Get ALL bookings for a specific vehicle and date (supports overlapping bookings)
+function getBookingsForCell(
   bookings: AdminBooking[],
   vehicleId: number,
   date: Date
-): AdminBooking | null {
-  return bookings.find((booking) => {
+): AdminBooking[] {
+  return bookings.filter((booking) => {
     if (booking.assignedVehicleId !== vehicleId && booking.vehicleId !== vehicleId) return false;
     const start = parseISO(booking.departureDate);
     const end = parseISO(booking.returnDate);
     return isWithinInterval(date, { start, end }) || isSameDay(date, start) || isSameDay(date, end);
-  }) || null;
+  });
 }
 
 // Check if date is start of booking
@@ -87,12 +90,24 @@ function getVehicleStatusBg(status: AdminVehicle['status']): string {
   }
 }
 
+// Status options for quick change menu
+const statusOptions: { value: BookingStatus; label: string; color: string; bgColor: string; icon: React.ReactNode }[] = [
+  { value: 'new', label: 'Nouveau', color: 'text-purple-600', bgColor: 'bg-purple-500', icon: <Sparkles className="w-4 h-4" /> },
+  { value: 'pending', label: 'En attente', color: 'text-orange-600', bgColor: 'bg-orange-500', icon: <Clock className="w-4 h-4" /> },
+  { value: 'active', label: 'En cours', color: 'text-green-600', bgColor: 'bg-green-500', icon: <Car className="w-4 h-4" /> },
+  { value: 'completed', label: 'Terminée', color: 'text-blue-600', bgColor: 'bg-blue-500', icon: <Check className="w-4 h-4" /> },
+  { value: 'cancelled', label: 'Annulée', color: 'text-red-600', bgColor: 'bg-red-500', icon: <XCircle className="w-4 h-4" /> },
+];
+
 export function GanttChart({
   vehicles,
   bookings,
   onCellClick,
   onBookingClick,
   onAssignVehicle,
+  onStatusChange,
+  onBookingMove,
+  onDeleteBooking,
 }: GanttChartProps) {
   const {
     calendarStartDate,
@@ -105,6 +120,114 @@ export function GanttChart({
     selectedUnassignedBookingId,
     selectUnassignedBooking,
   } = useAdminStore();
+
+  // Drag and drop state
+  const [draggedBooking, setDraggedBooking] = useState<AdminBooking | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ date: string; vehicleId: number } | null>(null);
+
+  // Status menu state
+  const [statusMenuBooking, setStatusMenuBooking] = useState<AdminBooking | null>(null);
+  const [statusMenuPosition, setStatusMenuPosition] = useState<{ x: number; y: number } | null>(null);
+  const statusMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close status menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusMenuRef.current && !statusMenuRef.current.contains(event.target as Node)) {
+        setStatusMenuBooking(null);
+        setStatusMenuPosition(null);
+      }
+    };
+
+    if (statusMenuBooking) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [statusMenuBooking]);
+
+  // Handle booking right-click or long-press for status menu
+  const handleBookingContextMenu = (e: React.MouseEvent, booking: AdminBooking) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setStatusMenuBooking(booking);
+    setStatusMenuPosition({ x: e.clientX, y: e.clientY });
+  };
+
+  // Handle status change from menu
+  const handleStatusChange = (newStatus: BookingStatus) => {
+    if (statusMenuBooking && onStatusChange) {
+      onStatusChange(statusMenuBooking.id, newStatus);
+    }
+    setStatusMenuBooking(null);
+    setStatusMenuPosition(null);
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, booking: AdminBooking) => {
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', booking.id);
+    setDraggedBooking(booking);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedBooking(null);
+    setDropTarget(null);
+  };
+
+  const handleDragOver = (e: React.DragEvent, date: string, vehicleId: number) => {
+    // Only allow dropping on the same vehicle row
+    if (draggedBooking) {
+      const currentVehicleId = draggedBooking.assignedVehicleId || draggedBooking.vehicleId;
+      if (vehicleId !== currentVehicleId) {
+        e.dataTransfer.dropEffect = 'none';
+        return;
+      }
+    }
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTarget({ date, vehicleId });
+  };
+
+  const handleDragLeave = () => {
+    setDropTarget(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetDate: string, targetVehicleId: number) => {
+    e.preventDefault();
+    if (!draggedBooking || !onBookingMove) {
+      setDraggedBooking(null);
+      setDropTarget(null);
+      return;
+    }
+
+    // Only allow dropping on the same vehicle row
+    const currentVehicleId = draggedBooking.assignedVehicleId || draggedBooking.vehicleId;
+    if (targetVehicleId !== currentVehicleId) {
+      setDraggedBooking(null);
+      setDropTarget(null);
+      return;
+    }
+
+    // Calculate new dates based on the drop position
+    const originalStart = parseISO(draggedBooking.departureDate);
+    const originalEnd = parseISO(draggedBooking.returnDate);
+    const duration = Math.ceil((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24));
+
+    const newStart = parseISO(targetDate);
+    const newEnd = addDays(newStart, duration);
+
+    const newDepartureDate = format(newStart, 'yyyy-MM-dd');
+    const newReturnDate = format(newEnd, 'yyyy-MM-dd');
+
+    onBookingMove(
+      draggedBooking.id,
+      newDepartureDate,
+      newReturnDate
+    );
+
+    setDraggedBooking(null);
+    setDropTarget(null);
+  };
 
   const dates = useMemo(
     () => generateDates(calendarStartDate, calendarViewDays),
@@ -314,45 +437,90 @@ export function GanttChart({
 
                   {/* Date Cells */}
                   {dates.map((date, dateIndex) => {
-                    const booking = getBookingForCell(bookings, vehicle.id, date);
+                    const cellBookings = getBookingsForCell(bookings, vehicle.id, date);
                     const monthIndex = date.getMonth();
                     const isOddMonth = monthIndex % 2 === 1; // Feb, Apr, Jun, Aug, Oct, Dec = gray
-                    const isStart = booking && isBookingStart(booking, date);
-                    const span = booking && isStart
-                      ? getBookingSpan(booking, parseISO(calendarStartDate), calendarViewDays)
-                      : 0;
+                    const dateStr = format(date, 'yyyy-MM-dd');
+
+                    // Get bookings that START on this date (to render the bar)
+                    const startingBookings = cellBookings.filter(b => isBookingStart(b, date));
+                    const hasBookings = cellBookings.length > 0;
+
+                    // Check if this cell is the current drop target
+                    const isDropTarget = dropTarget?.date === dateStr && dropTarget?.vehicleId === vehicle.id;
 
                     return (
                       <td
                         key={dateIndex}
                         className={`relative border-b border-r border-gray-100 p-0
                           ${isOddMonth ? 'bg-gray-100' : 'bg-white'}
-                          ${isInMaintenance ? 'bg-gray-200' : ''}`}
+                          ${isInMaintenance ? 'bg-gray-200' : ''}
+                          ${isDropTarget ? 'bg-blue-200 ring-2 ring-blue-400 ring-inset' : ''}`}
                         style={{ width: cellWidth, minWidth: cellWidth }}
+                        onDragOver={(e) => !isInMaintenance && handleDragOver(e, dateStr, vehicle.id)}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => !isInMaintenance && handleDrop(e, dateStr, vehicle.id)}
                       >
                         <div className="h-12 relative overflow-visible">
-                          {booking && isStart ? (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onBookingClick(booking.id);
-                              }}
-                              className={`absolute top-0.5 left-0.5 h-11 rounded ${getStatusColor(booking.status)}
-                                text-white font-medium px-1.5 overflow-hidden text-[9px]
-                                hover:opacity-90 transition-opacity touch-manipulation`}
-                              style={{
-                                width: `${Math.min(span, calendarViewDays - dateIndex) * cellWidth - 4}px`,
-                                zIndex: 5,
-                              }}
-                            >
-                              <div className="truncate leading-tight">{booking.clientName.split(' ')[0]}</div>
-                            </button>
-                          ) : !booking && !isInMaintenance && !isSelecting ? (
+                          {startingBookings.length > 0 ? (
+                            // Render each booking that starts on this date
+                            startingBookings.map((booking, bookingIndex) => {
+                              const span = getBookingSpan(booking, parseISO(calendarStartDate), calendarViewDays);
+                              const height = startingBookings.length > 1
+                                ? `${Math.floor(44 / startingBookings.length) - 1}px`
+                                : '44px';
+                              const top = startingBookings.length > 1
+                                ? `${bookingIndex * (44 / startingBookings.length) + 2}px`
+                                : '2px';
+                              const isDragging = draggedBooking?.id === booking.id;
+
+                              return (
+                                <div
+                                  key={booking.id}
+                                  draggable={!!onBookingMove}
+                                  onDragStart={(e) => handleDragStart(e, booking)}
+                                  onDragEnd={handleDragEnd}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onBookingClick(booking.id);
+                                  }}
+                                  onContextMenu={(e) => handleBookingContextMenu(e, booking)}
+                                  className={`absolute left-0.5 rounded ${getStatusColor(booking.status)}
+                                    text-white font-medium px-1.5 overflow-hidden text-[9px]
+                                    hover:opacity-90 transition-opacity touch-manipulation cursor-grab active:cursor-grabbing
+                                    ${statusMenuBooking?.id === booking.id ? 'ring-2 ring-white ring-offset-1' : ''}
+                                    ${isDragging ? 'opacity-50 ring-2 ring-white' : ''}`}
+                                  style={{
+                                    width: `${Math.min(span, calendarViewDays - dateIndex) * cellWidth - 4}px`,
+                                    height,
+                                    top,
+                                    zIndex: statusMenuBooking?.id === booking.id ? 10 : 5 + bookingIndex,
+                                  }}
+                                >
+                                  <div className="truncate leading-tight">{booking.clientName.split(' ')[0]}</div>
+                                </div>
+                              );
+                            })
+                          ) : !hasBookings && !isInMaintenance && !isSelecting && !draggedBooking ? (
                             <button
                               onClick={() => onCellClick(format(date, 'yyyy-MM-dd'), vehicle.id)}
                               className="w-full h-full hover:bg-green-100 transition-colors touch-manipulation"
                             />
                           ) : null}
+
+                          {/* Drop zone indicator when dragging - only on same vehicle row */}
+                          {draggedBooking && !hasBookings && !isInMaintenance && (draggedBooking.assignedVehicleId || draggedBooking.vehicleId) === vehicle.id && (
+                            <div className="absolute inset-0 pointer-events-none">
+                              {isDropTarget ? (
+                                <div className="w-full h-full bg-blue-300/50 rounded flex items-center justify-center">
+                                  <span className="text-[8px] text-blue-700 font-medium">Déposer</span>
+                                </div>
+                              ) : (
+                                <div className="w-full h-full bg-blue-100/30 rounded" />
+                              )}
+                            </div>
+                          )}
+
                         </div>
                       </td>
                     );
@@ -363,6 +531,72 @@ export function GanttChart({
           </tbody>
         </table>
       </div>
+
+      {/* Status Change Context Menu */}
+      <AnimatePresence>
+        {statusMenuBooking && statusMenuPosition && (
+          <motion.div
+            ref={statusMenuRef}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.1 }}
+            className="fixed bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 min-w-[160px]"
+            style={{
+              left: Math.min(statusMenuPosition.x, window.innerWidth - 180),
+              top: Math.min(statusMenuPosition.y, window.innerHeight - 280),
+            }}
+          >
+            <div className="px-3 py-1.5 border-b border-gray-100 mb-1">
+              <p className="text-xs font-medium text-gray-500">Changer le statut</p>
+              <p className="text-sm font-semibold text-gray-900 truncate">{statusMenuBooking.clientName}</p>
+            </div>
+            {statusOptions.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => handleStatusChange(option.value)}
+                className={`w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 transition-colors
+                  ${statusMenuBooking.status === option.value ? 'bg-gray-50' : ''}`}
+              >
+                <div className={`w-6 h-6 rounded-full ${option.bgColor} flex items-center justify-center text-white`}>
+                  {option.icon}
+                </div>
+                <span className={`text-sm font-medium ${option.color}`}>{option.label}</span>
+                {statusMenuBooking.status === option.value && (
+                  <Check className="w-4 h-4 ml-auto text-green-500" />
+                )}
+              </button>
+            ))}
+            <div className="border-t border-gray-100 mt-1 pt-1">
+              <button
+                onClick={() => {
+                  onBookingClick(statusMenuBooking.id);
+                  setStatusMenuBooking(null);
+                  setStatusMenuPosition(null);
+                }}
+                className="w-full px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 text-left"
+              >
+                Voir les détails...
+              </button>
+              {onDeleteBooking && (
+                <button
+                  onClick={() => {
+                    if (confirm(`Supprimer la réservation et le contact de ${statusMenuBooking.clientName} ?`)) {
+                      onDeleteBooking(statusMenuBooking.id);
+                    }
+                    setStatusMenuBooking(null);
+                    setStatusMenuPosition(null);
+                  }}
+                  className="w-full px-3 py-2 text-sm text-red-600 hover:bg-red-50 text-left flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Supprimer réservation et contact
+                </button>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

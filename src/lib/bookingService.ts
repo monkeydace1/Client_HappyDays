@@ -446,6 +446,20 @@ export function openWhatsApp(bookingReference: string, submission: BookingSubmis
  * Send booking confirmation emails via Supabase Edge Function
  */
 /**
+ * Extract just the date part (YYYY-MM-DD) from a date string
+ * Handles both "2024-12-20" and "2024-12-20T10:00" formats
+ */
+function extractDateOnly(dateString: string): string {
+  if (!dateString) return dateString;
+  // If the string contains 'T', split and take the date part
+  if (dateString.includes('T')) {
+    return dateString.split('T')[0];
+  }
+  // Already in YYYY-MM-DD format
+  return dateString;
+}
+
+/**
  * Get IDs of vehicles that are booked/active during a date range
  * Used to hide unavailable vehicles on the customer booking page
  */
@@ -454,30 +468,73 @@ export async function getBookedVehicleIds(
   returnDate: string
 ): Promise<number[]> {
   try {
-    // Query admin_bookings for overlapping bookings with active/pending status
-    // Date overlap: booking.departure <= customer.return AND booking.return >= customer.departure
+    // Normalize dates to YYYY-MM-DD format for consistent comparison
+    // The database stores dates without time, so we need to match that format
+    const normalizedDeparture = extractDateOnly(departureDate);
+    const normalizedReturn = extractDateOnly(returnDate);
+
+    console.log('[getBookedVehicleIds] =================================');
+    console.log('[getBookedVehicleIds] Customer dates:', {
+      raw: { departureDate, returnDate },
+      normalized: { normalizedDeparture, normalizedReturn },
+    });
+
+    // First, let's fetch ALL active bookings to debug
+    const { data: allBookings, error: allError } = await supabase
+      .from('admin_bookings')
+      .select('id, assigned_vehicle_id, vehicle_id, departure_date, return_date, status, booking_reference')
+      .in('status', ['new', 'pending', 'active']);
+
+    console.log('[getBookedVehicleIds] ALL active/pending/new bookings in DB:', allBookings);
+    if (allError) {
+      console.error('[getBookedVehicleIds] Error fetching all bookings:', allError);
+    }
+
+    // Now apply date filtering
+    // Date overlap logic: booking.departure <= customer.return AND booking.return >= customer.departure
     const { data, error } = await supabase
       .from('admin_bookings')
-      .select('assigned_vehicle_id, vehicle_id')
+      .select('assigned_vehicle_id, vehicle_id, departure_date, return_date, status, booking_reference')
       .in('status', ['new', 'pending', 'active'])
-      .lte('departure_date', returnDate)
-      .gte('return_date', departureDate);
+      .lte('departure_date', normalizedReturn)
+      .gte('return_date', normalizedDeparture);
 
     if (error) {
-      console.error('Error fetching booked vehicles:', error);
+      console.error('[getBookedVehicleIds] Error fetching overlapping bookings:', error);
       return [];
     }
 
-    // Collect unique vehicle IDs (either assigned or default vehicle)
+    console.log('[getBookedVehicleIds] Overlapping bookings (after date filter):', data);
+
+    // If no data from query but we have bookings, manually check overlap
+    if ((!data || data.length === 0) && allBookings && allBookings.length > 0) {
+      console.log('[getBookedVehicleIds] Query returned empty, checking overlap manually...');
+      allBookings.forEach(b => {
+        const bookingStart = b.departure_date;
+        const bookingEnd = b.return_date;
+        const overlaps = bookingStart <= normalizedReturn && bookingEnd >= normalizedDeparture;
+        console.log(`[getBookedVehicleIds] Booking ${b.booking_reference}: ${bookingStart} to ${bookingEnd}, overlaps=${overlaps}`);
+      });
+    }
+
+    // Collect unique vehicle IDs - mark BOTH assigned and original vehicle as booked
     const vehicleIds = new Set<number>();
     (data || []).forEach((booking) => {
-      const id = booking.assigned_vehicle_id || booking.vehicle_id;
-      if (id) vehicleIds.add(id);
+      if (booking.assigned_vehicle_id) {
+        vehicleIds.add(booking.assigned_vehicle_id);
+      }
+      if (booking.vehicle_id) {
+        vehicleIds.add(booking.vehicle_id);
+      }
     });
 
-    return Array.from(vehicleIds);
+    const result = Array.from(vehicleIds);
+    console.log('[getBookedVehicleIds] Final booked vehicle IDs:', result);
+    console.log('[getBookedVehicleIds] =================================');
+
+    return result;
   } catch (error) {
-    console.error('Error in getBookedVehicleIds:', error);
+    console.error('[getBookedVehicleIds] Error:', error);
     return [];
   }
 }

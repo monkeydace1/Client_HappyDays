@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, User, Phone, Calendar, Car, MapPin, MessageCircle, Check, Clock, XCircle,
   Edit3, Save, Mail, CreditCard, FileText, Image, Shield, Baby, Users, ChevronRight,
-  Globe, MapPinned, Cake, Sparkles, RefreshCw, Euro
+  Globe, MapPinned, Cake, Sparkles, RefreshCw, Euro, Trash2
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -17,6 +17,7 @@ interface BookingDetailsModalProps {
   booking: AdminBooking | null;
   onStatusChange: (bookingId: string, newStatus: BookingStatus) => void;
   onBookingUpdate: (bookingId: string, updates: Partial<AdminBooking>) => void;
+  onDelete?: (bookingId: string) => void;
 }
 
 type TabType = 'overview' | 'client' | 'documents';
@@ -69,6 +70,7 @@ export function BookingDetailsModal({
   booking,
   onStatusChange,
   onBookingUpdate,
+  onDelete,
 }: BookingDetailsModalProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -106,9 +108,8 @@ export function BookingDetailsModal({
   // Reset edit state when booking changes
   useEffect(() => {
     if (booking) {
-      // Get vehicle info from static data
-      const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
-      const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
+      // Calculate actual price per day from the booking's total (preserves custom prices)
+      const actualPricePerDay = Math.round(booking.totalPrice / booking.rentalDays);
       setEditData({
         clientName: booking.clientName,
         clientPhone: booking.clientPhone || '',
@@ -118,7 +119,7 @@ export function BookingDetailsModal({
         returnTime: booking.returnTime || '',
         vehicleId: booking.vehicleId,
         vehicleName: booking.vehicleName,
-        pricePerDay: pricePerDay,
+        pricePerDay: actualPricePerDay,
       });
       setIsEditing(false);
       setActiveTab('overview');
@@ -172,8 +173,8 @@ export function BookingDetailsModal({
   };
 
   const handleCancel = () => {
-    const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
-    const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
+    // Calculate actual price per day from the booking's total (preserves custom prices)
+    const actualPricePerDay = Math.round(booking.totalPrice / booking.rentalDays);
     setEditData({
       clientName: booking.clientName,
       clientPhone: booking.clientPhone || '',
@@ -183,7 +184,7 @@ export function BookingDetailsModal({
       returnTime: booking.returnTime || '',
       vehicleId: booking.vehicleId,
       vehicleName: booking.vehicleName,
-      pricePerDay: pricePerDay,
+      pricePerDay: actualPricePerDay,
     });
     setIsEditing(false);
   };
@@ -515,56 +516,49 @@ export function BookingDetailsModal({
         </div>
       )}
 
-      {/* Status Actions */}
+      {/* Status Actions - All statuses available */}
       {!isEditing && (
         <div>
           <h3 className="font-semibold text-gray-900 mb-3">Changer le statut</h3>
-          <div className="grid grid-cols-2 gap-2">
-            {/* New -> Pending */}
-            {booking.status === 'new' && (
-              <button
-                onClick={() => onStatusChange(booking.id, 'pending')}
-                className="py-3 px-4 bg-orange-500 hover:bg-orange-600 text-white font-medium
-                         rounded-xl transition-all touch-manipulation flex items-center justify-center gap-2"
-              >
-                <Clock className="w-5 h-5" />
-                Contacter
-              </button>
-            )}
-            {/* Pending -> Active */}
-            {booking.status === 'pending' && (
-              <button
-                onClick={() => onStatusChange(booking.id, 'active')}
-                className="py-3 px-4 bg-green-500 hover:bg-green-600 text-white font-medium
-                         rounded-xl transition-all touch-manipulation flex items-center justify-center gap-2"
-              >
-                <Check className="w-5 h-5" />
-                Confirmer
-              </button>
-            )}
-            {/* New/Pending/Active -> Cancelled */}
-            {(booking.status === 'new' || booking.status === 'pending' || booking.status === 'active') && (
-              <button
-                onClick={() => onStatusChange(booking.id, 'cancelled')}
-                className="py-3 px-4 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium
-                         rounded-xl transition-all touch-manipulation flex items-center justify-center gap-2"
-              >
-                <XCircle className="w-5 h-5" />
-                Annuler
-              </button>
-            )}
-            {/* Active -> Completed */}
-            {booking.status === 'active' && (
-              <button
-                onClick={() => onStatusChange(booking.id, 'completed')}
-                className="py-3 px-4 bg-blue-500 hover:bg-blue-600 text-white font-medium
-                         rounded-xl transition-all touch-manipulation flex items-center justify-center gap-2"
-              >
-                <Check className="w-5 h-5" />
-                Terminer
-              </button>
-            )}
+          <div className="flex flex-wrap gap-2">
+            {(['new', 'pending', 'active', 'completed', 'cancelled'] as BookingStatus[])
+              .filter(s => s !== booking.status)
+              .map((newStatus) => {
+                const config = statusConfig[newStatus];
+                return (
+                  <button
+                    key={newStatus}
+                    onClick={() => onStatusChange(booking.id, newStatus)}
+                    className={`flex-1 min-w-[calc(50%-0.25rem)] py-3 px-4 font-medium rounded-xl
+                              transition-all touch-manipulation flex items-center justify-center gap-2
+                              ${config.bgColor} ${config.color} hover:opacity-80 active:scale-95`}
+                  >
+                    {config.icon}
+                    {config.label}
+                  </button>
+                );
+              })}
           </div>
+        </div>
+      )}
+
+      {/* Delete Button */}
+      {!isEditing && onDelete && (
+        <div className="pt-2">
+          <button
+            onClick={() => {
+              if (confirm(`Supprimer la réservation et le contact de ${booking.clientName} ?`)) {
+                onDelete(booking.id);
+                onClose();
+              }
+            }}
+            className="w-full py-3 px-4 bg-red-100 hover:bg-red-200 text-red-600 font-medium rounded-xl
+                      transition-all touch-manipulation flex items-center justify-center gap-2
+                      active:scale-95"
+          >
+            <Trash2 className="w-4 h-4" />
+            Supprimer réservation et contact
+          </button>
         </div>
       )}
 
