@@ -30,7 +30,8 @@ public/vehicles/
 ├── renault-clio4-2016/  → Renault Clio 4 2016 (25€)
 ├── renault-clio4-2013/  → Renault Clio 4 2013 (22€)
 ├── nissan-micra/        → Nissan Micra 2015 (20€)
-└── ford-fiesta/         → Ford Fiesta 2014 (20€)
+├── ford-fiesta/         → Ford Fiesta 2014 (20€)
+└── renault-clio4-2016-b/→ Renault Clio 4 2016 (25€) [NEW]
 ```
 
 ## Image Requirements
@@ -72,3 +73,4 @@ public/vehicles/
 | 17 | renault-clio4-2013 | Renault Clio 4 2013 | 22€ |
 | 18 | nissan-micra | Nissan Micra 2015 | 20€ |
 | 19 | ford-fiesta | Ford Fiesta 2014 | 20€ |
+| 20 | renault-clio4-2016-b | Renault Clio 4 2016 | 25€ |

@@ -220,7 +220,7 @@ export const vehicles: Vehicle[] = [
         year: 2017,
         category: 'Citadine',
         image: getVehicleImage('seat-ibiza-sol'),
-        images: getVehicleImages('seat-ibiza-sol', 0),
+        images: getVehicleImages('seat-ibiza-sol', 2),
         transmission: 'Manuelle',
         fuel: 'Essence',
         seats: 5,
@@ -268,7 +268,7 @@ export const vehicles: Vehicle[] = [
         year: 2016,
         category: 'Citadine',
         image: getVehicleImage('renault-clio4-2016'),
-        images: getVehicleImages('renault-clio4-2016', 0),
+        images: getVehicleImages('renault-clio4-2016', 1),
         transmission: 'Manuelle',
         fuel: 'Essence',
         seats: 5,
@@ -330,19 +330,19 @@ export const vehicles: Vehicle[] = [
     // === NEW VEHICLE ===
     {
         id: 20,
-        name: 'Renault Clio 4 Rouge',
+        name: 'Renault Clio 4',
         brand: 'Renault',
         model: 'Clio 4',
         year: 2016,
         category: 'Citadine',
-        image: getVehicleImage('renault-clio4-2016'),  // Reuse existing Clio 4 image
-        images: getVehicleImages('renault-clio4-2016', 0),
+        image: getVehicleImage('renault-clio4-2016-b'),
+        images: getVehicleImages('renault-clio4-2016-b', 1),
         transmission: 'Manuelle',
         fuel: 'Essence',
         seats: 5,
         pricePerDay: 25,
         featured: false,
-        features: ['1.2L 16V', 'Rouge', 'Économique']
+        features: ['1.2L 16V', 'Économique']
     }
 ];
 

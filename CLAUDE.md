@@ -63,6 +63,30 @@ useAdminData hook → adminService.ts → Supabase (with real-time subscriptions
 - **Resend**: Email delivery
 - **Analytics**: Google Analytics, Google Ads, Facebook Pixel
 
+## Vehicle Management
+
+### Key Files
+| File | Purpose |
+|------|---------|
+| `src/data/vehicleData.ts` | All vehicle definitions (20 vehicles) |
+| `src/admin/data/adminVehicleData.ts` | Admin vehicle data (auto-synced from vehicleData) |
+| `public/vehicles/` | Vehicle images (see README.md inside) |
+
+### Add a New Vehicle
+1. Create folder in `public/vehicles/{brand-model}/`
+2. Add `main.jpg` (required) and `1.jpg`, `2.jpg`, etc. (optional)
+3. Add vehicle object in `src/data/vehicleData.ts` with new ID
+4. Set correct image count in `getVehicleImages(folder, count)` call
+5. Admin auto-syncs from vehicleData.ts - no extra steps needed
+
+### Update Vehicle Images
+1. Navigate to `public/vehicles/{folder}/`
+2. Replace/add images (`main.jpg`, `1.jpg`, `2.jpg`, etc.)
+3. Update image count in `vehicleData.ts` if changed
+
+### Current Fleet: 20 vehicles
+See `public/vehicles/README.md` for complete list with folder paths and prices.
+
 ## Conventions
 
 - French localization for all UI strings

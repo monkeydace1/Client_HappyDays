@@ -113,7 +113,7 @@ const SAMPLE_VEHICLES: AdminVehicle[] = [
   { id: 18, name: 'Nissan Micra 2015', brand: 'Nissan', model: 'Micra', year: 2015, category: 'Mini', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/nissan-micra/main.jpg', status: 'available' },
   { id: 19, name: 'Ford Fiesta 2014', brand: 'Ford', model: 'Fiesta', year: 2014, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/ford-fiesta/main.jpg', status: 'available' },
   // New Vehicle
-  { id: 20, name: 'Renault Clio 4 Rouge', brand: 'Renault', model: 'Clio 4', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016/main.jpg', status: 'available' },
+  { id: 20, name: 'Renault Clio 4', brand: 'Renault', model: 'Clio 4', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016-b/main.jpg', status: 'available' },
 ];
 
 // Generate sample bookings based on current date
