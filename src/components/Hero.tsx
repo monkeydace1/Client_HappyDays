@@ -51,7 +51,7 @@ export const Hero = () => {
             </div>
 
             {/* Content */}
-            <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+            <div className="relative z-10 w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -71,7 +71,7 @@ export const Hero = () => {
                     initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 0.2 }}
-                    className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 max-w-5xl mx-auto"
+                    className="bg-white rounded-2xl shadow-2xl p-4 sm:p-6 md:p-8 max-w-4xl mx-auto"
                 >
                     <div className="space-y-4 md:space-y-6">
                         {/* Row 1: Date Picker (wide) */}

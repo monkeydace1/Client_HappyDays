@@ -62,6 +62,16 @@ export function QuickAddModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (formData.clientName && formData.vehicleId && formData.departureDate && formData.returnDate) {
+      // Validate return date is after departure
+      if (formData.returnDate <= formData.departureDate) {
+        alert('La date de retour doit être après la date de départ');
+        return;
+      }
+      // Validate price is not negative
+      if (formData.pricePerDay !== undefined && formData.pricePerDay < 0) {
+        alert('Le prix ne peut pas être négatif');
+        return;
+      }
       onSubmit(formData);
       onClose();
     }

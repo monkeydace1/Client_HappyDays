@@ -8,7 +8,7 @@ export const TopBanner = () => {
 
     return (
         <div className="fixed w-full top-0 z-50 bg-gradient-to-r from-primary to-primary-hover text-white py-2 px-4">
-            <div className="max-w-7xl mx-auto flex items-center justify-center gap-2 md:gap-4 text-xs md:text-sm font-medium">
+            <div className="max-w-6xl mx-auto flex items-center justify-center gap-2 md:gap-4 text-xs md:text-sm font-medium">
                 <span className="flex items-center gap-1.5">
                     <Calendar size={14} className="text-accent" />
                     <span className="hidden sm:inline">Réservation</span>

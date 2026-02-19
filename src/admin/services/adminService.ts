@@ -182,8 +182,8 @@ export async function updateBooking(
   if (updates.clientEmail !== undefined) dbUpdates.client_email = updates.clientEmail;
   if (updates.departureDate) dbUpdates.departure_date = updates.departureDate;
   if (updates.returnDate) dbUpdates.return_date = updates.returnDate;
-  if (updates.pickupTime !== undefined) dbUpdates.pickup_time = updates.pickupTime;
-  if (updates.returnTime !== undefined) dbUpdates.return_time = updates.returnTime;
+  if ('pickupTime' in updates) dbUpdates.pickup_time = updates.pickupTime ?? null;
+  if ('returnTime' in updates) dbUpdates.return_time = updates.returnTime ?? null;
   if (updates.rentalDays) dbUpdates.rental_days = updates.rentalDays;
   if (updates.totalPrice) dbUpdates.total_price = updates.totalPrice;
   if (updates.status) dbUpdates.status = updates.status;
@@ -332,7 +332,15 @@ export function subscribeToBookings(
       { event: 'DELETE', schema: 'public', table: 'admin_bookings' },
       (payload) => onDelete(payload.old.id)
     )
-    .subscribe();
+    .subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR') {
+        console.error('Bookings subscription error, retrying...', err);
+        setTimeout(() => {
+          supabase.removeChannel(channel);
+          subscribeToBookings(onInsert, onUpdate, onDelete);
+        }, 5000);
+      }
+    });
 
   return () => {
     supabase.removeChannel(channel);
@@ -349,7 +357,15 @@ export function subscribeToVehicles(
       { event: 'UPDATE', schema: 'public', table: 'vehicles' },
       (payload) => onUpdate(mapVehicleFromDb(payload.new))
     )
-    .subscribe();
+    .subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR') {
+        console.error('Vehicles subscription error, retrying...', err);
+        setTimeout(() => {
+          supabase.removeChannel(channel);
+          subscribeToVehicles(onUpdate);
+        }, 5000);
+      }
+    });
 
   return () => {
     supabase.removeChannel(channel);

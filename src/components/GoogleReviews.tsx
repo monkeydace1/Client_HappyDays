@@ -47,7 +47,7 @@ const reviews = [
 export const GoogleReviews = () => {
     return (
         <section className="py-12 md:py-20 bg-gray-100">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}

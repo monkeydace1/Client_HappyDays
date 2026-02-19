@@ -78,9 +78,9 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
         return false;
       }
 
-      // Date filters
+      // Date filters - check if booking overlaps with the filter range
       if (filters.dateFrom) {
-        if (booking.departureDate < filters.dateFrom) return false;
+        if (booking.returnDate < filters.dateFrom) return false;
       }
       if (filters.dateTo) {
         if (booking.departureDate > filters.dateTo) return false;
@@ -348,7 +348,7 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
 
             {/* Reset */}
             <button
-              onClick={() => setFilters({ search: '', status: 'all' })}
+              onClick={() => setFilters({ search: '', status: 'all', dateFrom: undefined, dateTo: undefined })}
               className="text-sm text-primary hover:underline"
             >
               Réinitialiser les filtres

@@ -209,12 +209,13 @@ export function GanttChart({
     }
 
     // Calculate new dates based on the drop position
+    // Use the exact day difference to preserve the booking's original duration
     const originalStart = parseISO(draggedBooking.departureDate);
     const originalEnd = parseISO(draggedBooking.returnDate);
-    const duration = Math.ceil((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.round((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24));
 
     const newStart = parseISO(targetDate);
-    const newEnd = addDays(newStart, duration);
+    const newEnd = addDays(newStart, daysDiff);
 
     const newDepartureDate = format(newStart, 'yyyy-MM-dd');
     const newReturnDate = format(newEnd, 'yyyy-MM-dd');
@@ -442,8 +443,17 @@ export function GanttChart({
                     const isOddMonth = monthIndex % 2 === 1; // Feb, Apr, Jun, Aug, Oct, Dec = gray
                     const dateStr = format(date, 'yyyy-MM-dd');
 
-                    // Get bookings that START on this date (to render the bar)
-                    const startingBookings = cellBookings.filter(b => isBookingStart(b, date));
+                    // Get bookings that should render their bar starting on this date
+                    // This includes bookings that actually start on this date OR
+                    // bookings that started before the visible range (render on first visible date)
+                    const viewStart = parseISO(calendarStartDate);
+                    const startingBookings = cellBookings.filter(b => {
+                      const bookingStart = parseISO(b.departureDate);
+                      if (isSameDay(bookingStart, date)) return true;
+                      // For bookings that started before the view, render on the first visible date
+                      if (bookingStart < viewStart && isSameDay(date, viewStart)) return true;
+                      return false;
+                    });
                     const hasBookings = cellBookings.length > 0;
 
                     // Check if this cell is the current drop target
@@ -543,8 +553,8 @@ export function GanttChart({
             transition={{ duration: 0.1 }}
             className="fixed bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50 min-w-[160px]"
             style={{
-              left: Math.min(statusMenuPosition.x, window.innerWidth - 180),
-              top: Math.min(statusMenuPosition.y, window.innerHeight - 280),
+              left: Math.max(8, Math.min(statusMenuPosition.x, window.innerWidth - 180)),
+              top: Math.max(8, Math.min(statusMenuPosition.y, window.innerHeight - 280)),
             }}
           >
             <div className="px-3 py-1.5 border-b border-gray-100 mb-1">

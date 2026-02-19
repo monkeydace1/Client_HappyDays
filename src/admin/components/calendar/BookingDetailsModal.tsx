@@ -80,6 +80,7 @@ export function BookingDetailsModal({
   const [editData, setEditData] = useState({
     clientName: '',
     clientPhone: '',
+    clientEmail: '',
     departureDate: '',
     returnDate: '',
     pickupTime: '',
@@ -113,6 +114,7 @@ export function BookingDetailsModal({
       setEditData({
         clientName: booking.clientName,
         clientPhone: booking.clientPhone || '',
+        clientEmail: booking.clientEmail || '',
         departureDate: booking.departureDate,
         returnDate: booking.returnDate,
         pickupTime: booking.pickupTime || '',
@@ -142,15 +144,23 @@ export function BookingDetailsModal({
   const handleSave = () => {
     const departure = new Date(editData.departureDate);
     const returnDate = new Date(editData.returnDate);
-    const days = Math.ceil((returnDate.getTime() - departure.getTime()) / (1000 * 60 * 60 * 24)) || 1;
+
+    // Validate departure is before return
+    if (returnDate <= departure) {
+      alert('La date de retour doit être après la date de départ');
+      return;
+    }
+
+    const days = Math.ceil((returnDate.getTime() - departure.getTime()) / (1000 * 60 * 60 * 24)) + 1;
 
     onBookingUpdate(booking.id, {
       clientName: editData.clientName,
       clientPhone: editData.clientPhone,
+      clientEmail: editData.clientEmail || undefined,
       departureDate: editData.departureDate,
       returnDate: editData.returnDate,
-      pickupTime: editData.pickupTime || undefined,
-      returnTime: editData.returnTime || undefined,
+      pickupTime: editData.pickupTime !== '' ? editData.pickupTime : null,
+      returnTime: editData.returnTime !== '' ? editData.returnTime : null,
       rentalDays: days,
       vehicleId: editData.vehicleId,
       vehicleName: editData.vehicleName,
@@ -178,6 +188,7 @@ export function BookingDetailsModal({
     setEditData({
       clientName: booking.clientName,
       clientPhone: booking.clientPhone || '',
+      clientEmail: booking.clientEmail || '',
       departureDate: booking.departureDate,
       returnDate: booking.returnDate,
       pickupTime: booking.pickupTime || '',
@@ -240,14 +251,24 @@ export function BookingDetailsModal({
               <span className="text-gray-400">Non renseigné</span>
             )}
           </div>
-          {booking.clientEmail && !isEditing && (
-            <div className="flex items-center gap-3">
-              <Mail className="w-5 h-5 text-gray-400" />
+          <div className="flex items-center gap-3">
+            <Mail className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            {isEditing ? (
+              <input
+                type="email"
+                value={editData.clientEmail}
+                onChange={(e) => setEditData({ ...editData, clientEmail: e.target.value })}
+                className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm"
+                placeholder="Email"
+              />
+            ) : booking.clientEmail ? (
               <a href={`mailto:${booking.clientEmail}`} className="text-primary hover:underline">
                 {booking.clientEmail}
               </a>
-            </div>
-          )}
+            ) : (
+              <span className="text-gray-400">Non renseigné</span>
+            )}
+          </div>
           {/* Show link to full details if web booking */}
           {isWebBooking && fullDetails && !isEditing && (
             <button
@@ -462,7 +483,7 @@ export function BookingDetailsModal({
                     const days = Math.ceil(
                       (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
                       (1000 * 60 * 60 * 24)
-                    ) || 1;
+                    ) + 1;
                     return Math.round(days * editData.pricePerDay);
                   })()}€
                 </span>
@@ -824,7 +845,16 @@ export function BookingDetailsModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={() => {
+              if (isEditing) {
+                if (confirm('Vous avez des modifications non enregistrées. Fermer quand même ?')) {
+                  setIsEditing(false);
+                  onClose();
+                }
+              } else {
+                onClose();
+              }
+            }}
             className="fixed inset-0 bg-black/50 z-50"
           />
 
@@ -883,7 +913,16 @@ export function BookingDetailsModal({
                   </>
                 )}
                 <button
-                  onClick={onClose}
+                  onClick={() => {
+                    if (isEditing) {
+                      if (confirm('Vous avez des modifications non enregistrées. Fermer quand même ?')) {
+                        setIsEditing(false);
+                        onClose();
+                      }
+                    } else {
+                      onClose();
+                    }
+                  }}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors touch-manipulation"
                 >
                   <X className="w-5 h-5" />

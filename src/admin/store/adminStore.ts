@@ -136,6 +136,8 @@ export const useAdminStore = create<AdminState>()(
       // Unassigned panel actions
       toggleUnassignedPanel: () => set((state) => ({
         unassignedPanelExpanded: !state.unassignedPanelExpanded,
+        // Clear selection when closing the panel
+        selectedUnassignedBookingId: state.unassignedPanelExpanded ? null : state.selectedUnassignedBookingId,
       })),
       selectUnassignedBooking: (bookingId) => set({
         selectedUnassignedBookingId: bookingId,
