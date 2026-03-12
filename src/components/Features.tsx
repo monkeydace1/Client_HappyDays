@@ -29,8 +29,8 @@ const features = [
     },
     {
         icon: Gauge,
-        title: "Kilométrage Illimité",
-        description: "Explorez sans compter, profitez de chaque kilomètre."
+        title: "Véhicules Récents",
+        description: "Une flotte moderne et bien entretenue pour votre confort."
     }
 ];
 

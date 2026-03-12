@@ -13,7 +13,7 @@ const faqs = [
     },
     {
         question: "Le kilométrage est-il limité ?",
-        answer: "Le kilométrage est plafonné à 250 km/jour. À partir de 7 jours de location, le kilométrage devient illimité."
+        answer: "Le kilométrage est plafonné à 250 km/jour. Au-delà, des frais supplémentaires peuvent s'appliquer."
     },
     {
         question: "Proposez-vous la livraison à l'aéroport ?",

@@ -60,7 +60,7 @@ export const Fleet = () => {
                                     </div>
                                     <div className="flex items-center gap-1 text-gray-600 text-[10px] sm:text-xs md:text-sm">
                                         <Gauge size={12} className="text-accent flex-shrink-0 sm:w-[14px] sm:h-[14px]" />
-                                        <span>Illimité</span>
+                                        <span>{car.transmission}</span>
                                     </div>
                                 </div>
 

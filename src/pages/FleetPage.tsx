@@ -111,7 +111,7 @@ export const FleetPage = () => {
                                     </div>
                                     <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
                                         <Gauge size={14} className="text-accent flex-shrink-0" />
-                                        <span>Km illimité</span>
+                                        <span>{car.transmission}</span>
                                     </div>
                                 </div>
 

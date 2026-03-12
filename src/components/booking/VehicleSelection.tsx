@@ -191,7 +191,7 @@ export const VehicleSelection: React.FC = () => {
                                     </div>
                                     <div className="flex items-center gap-1 sm:gap-2 text-gray-600 text-xs sm:text-sm">
                                         <Gauge size={14} className="text-primary flex-shrink-0" />
-                                        <span>Illimité</span>
+                                        <span>{vehicle.transmission}</span>
                                     </div>
                                 </div>
 
