@@ -41,11 +41,6 @@ function getBookingsForCell(
   });
 }
 
-// Check if date is start of booking
-function isBookingStart(booking: AdminBooking, date: Date): boolean {
-  return isSameDay(parseISO(booking.departureDate), date);
-}
-
 // Calculate booking span in days
 function getBookingSpan(booking: AdminBooking, startDate: Date, totalDays: number): number {
   const bookingStart = parseISO(booking.departureDate);
