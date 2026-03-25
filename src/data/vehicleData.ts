@@ -318,7 +318,7 @@ export const vehicles: Vehicle[] = [
         year: 2014,
         category: 'Citadine',
         image: getVehicleImage('ford-fiesta'),
-        images: getVehicleImages('ford-fiesta', 0),
+        images: getVehicleImages('ford-fiesta', 1),
         transmission: 'Manuelle',
         fuel: 'Essence',
         seats: 5,
