@@ -108,7 +108,7 @@ export function AdminDashboardPage() {
     await deleteVehicle(vehicleId);
   }, [deleteVehicle]);
 
-  const handleBookingUpdate = useCallback(async (bookingId: string, updates: Partial<{ clientName: string; clientPhone: string; departureDate: string; returnDate: string; rentalDays: number; totalPrice: number }>) => {
+  const handleBookingUpdate = useCallback(async (bookingId: string, updates: Partial<{ clientName: string; clientPhone: string; clientEmail: string; departureDate: string; returnDate: string; pickupTime: string; returnTime: string; rentalDays: number; vehicleId: number; assignedVehicleId: number; vehicleName: string; totalPrice: number }>) => {
     await updateBookingDetails(bookingId, updates);
   }, [updateBookingDetails]);
 

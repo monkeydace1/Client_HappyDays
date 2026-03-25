@@ -163,6 +163,7 @@ export function BookingDetailsModal({
       returnTime: editData.returnTime !== '' ? editData.returnTime : undefined,
       rentalDays: days,
       vehicleId: editData.vehicleId,
+      assignedVehicleId: editData.vehicleId,
       vehicleName: editData.vehicleName,
       totalPrice: Math.round(days * editData.pricePerDay),
     });
