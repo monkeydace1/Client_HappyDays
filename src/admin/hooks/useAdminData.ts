@@ -435,6 +435,8 @@ export function useAdminData(): UseAdminDataReturn {
       clientName: data.clientName,
       clientPhone: data.clientPhone || '',
       clientEmail: data.clientEmail || '',
+      pickupTime: data.pickupTime,
+      returnTime: data.returnTime,
       totalPrice,
     };
 
