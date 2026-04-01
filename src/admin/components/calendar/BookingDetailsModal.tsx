@@ -138,7 +138,8 @@ export function BookingDetailsModal({
     const message = encodeURIComponent(
       `Bonjour ${booking.clientName}, concernant votre réservation ${booking.bookingReference} du ${format(parseISO(booking.departureDate), 'dd/MM/yyyy')} au ${format(parseISO(booking.returnDate), 'dd/MM/yyyy')} pour ${booking.vehicleName}.`
     );
-    window.open(`https://wa.me/${booking.clientPhone?.replace(/\D/g, '')}?text=${message}`, '_blank');
+    const phone = booking.clientPhone?.replace(/\D/g, '').replace(/^00/, '') || '';
+    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
   };
 
   const handleSave = () => {

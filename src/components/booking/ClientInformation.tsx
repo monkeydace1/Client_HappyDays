@@ -85,6 +85,9 @@ export const ClientInformation: React.FC = () => {
         if (!formData.driverLicense.expirationDate) {
             newErrors.licenseExpiration = 'La date d\'expiration est requise';
         }
+        if (!formData.driverLicense.photoFile && !formData.driverLicense.photoUrl) {
+            newErrors.photo = 'La photo du permis est requise';
+        }
 
         if (!formData.acceptedTerms) {
             newErrors.acceptedTerms = 'Vous devez accepter les termes et conditions';
@@ -383,7 +386,7 @@ export const ClientInformation: React.FC = () => {
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
                             <Upload size={16} className="text-primary" />
-                            Photo du permis
+                            Photo du permis *
                         </label>
                         <div className="flex items-center gap-4">
                             <label className="flex-1 cursor-pointer">
