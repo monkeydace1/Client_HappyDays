@@ -214,8 +214,8 @@ export function BookingDetailsModal({
     return `${hours12}:${minutes} ${period}`;
   };
 
-  // Tab content components
-  const OverviewTab = () => (
+  // Tab content - inline JSX (not component functions, to preserve input focus on re-render)
+  const overviewContent = (
     <div className="space-y-4">
       {/* Client Info (basic) */}
       <div className="bg-gray-50 rounded-xl p-4">
@@ -669,19 +669,14 @@ export function BookingDetailsModal({
     </div>
   );
 
-  const ClientTab = () => {
-    if (!fullDetails) {
-      return (
-        <div className="text-center py-8 text-gray-500">
-          <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p>Détails client non disponibles</p>
-          <p className="text-sm mt-1">Réservation créée manuellement</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
+  const clientContent = !fullDetails ? (
+    <div className="text-center py-8 text-gray-500">
+      <User className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+      <p>Détails client non disponibles</p>
+      <p className="text-sm mt-1">Réservation créée manuellement</p>
+    </div>
+  ) : (
+    <div className="space-y-4">
         {/* Personal Information */}
         <div className="bg-gray-50 rounded-xl p-4">
           <h3 className="font-semibold text-gray-900 mb-3">Informations personnelles</h3>
@@ -756,22 +751,16 @@ export function BookingDetailsModal({
         )}
       </div>
     );
-  };
 
-  const DocumentsTab = () => {
-    if (!fullDetails) {
-      return (
-        <div className="text-center py-8 text-gray-500">
-          <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <p>Documents non disponibles</p>
-          <p className="text-sm mt-1">Réservation créée manuellement</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="space-y-4">
-        {/* Driver's License Info */}
+  const documentsContent = !fullDetails ? (
+    <div className="text-center py-8 text-gray-500">
+      <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+      <p>Documents non disponibles</p>
+      <p className="text-sm mt-1">Réservation créée manuellement</p>
+    </div>
+  ) : (
+    <div className="space-y-4">
+      {/* Driver's License Info */}
         <div className="bg-gray-50 rounded-xl p-4">
           <h3 className="font-semibold text-gray-900 mb-3">Permis de conduire</h3>
           <div className="space-y-3">
@@ -835,8 +824,7 @@ export function BookingDetailsModal({
           )}
         </div>
       </div>
-    );
-  };
+  );
 
   return (
     <AnimatePresence>
@@ -976,9 +964,9 @@ export function BookingDetailsModal({
                 </div>
               ) : (
                 <>
-                  {activeTab === 'overview' && <OverviewTab />}
-                  {activeTab === 'client' && <ClientTab />}
-                  {activeTab === 'documents' && <DocumentsTab />}
+                  {activeTab === 'overview' && overviewContent}
+                  {activeTab === 'client' && clientContent}
+                  {activeTab === 'documents' && documentsContent}
                 </>
               )}
             </div>

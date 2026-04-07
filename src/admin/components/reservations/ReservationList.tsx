@@ -449,31 +449,31 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
                       </div>
                     </div>
                   </button>
-
-                  {/* Quick Status Change Buttons */}
-                  {onStatusChange && !isSelectionMode && (
-                    <div className="px-4 pb-3 pt-0">
-                      <div className="flex flex-wrap gap-1.5">
-                        {(['new', 'pending', 'active', 'completed', 'cancelled'] as BookingStatus[])
-                          .filter(s => s !== booking.status)
-                          .map((newStatus) => (
-                            <button
-                              key={newStatus}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onStatusChange(booking.id, newStatus);
-                              }}
-                              className={`px-2 py-1 rounded-md text-xs font-medium transition-all
-                                ${statusConfig[newStatus].bgColor} ${statusConfig[newStatus].color}
-                                hover:opacity-80 hover:scale-105 active:scale-95`}
-                            >
-                              {statusConfig[newStatus].label}
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
+
+                {/* Quick Status Change Buttons - below card content */}
+                {onStatusChange && !isSelectionMode && (
+                  <div className="px-4 pb-3 border-t border-gray-100">
+                    <div className="flex flex-wrap gap-1.5 pt-2">
+                      {(['new', 'pending', 'active', 'completed', 'cancelled'] as BookingStatus[])
+                        .filter(s => s !== booking.status)
+                        .map((newStatus) => (
+                          <button
+                            key={newStatus}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onStatusChange(booking.id, newStatus);
+                            }}
+                            className={`px-2 py-1 rounded-md text-xs font-medium transition-all
+                              ${statusConfig[newStatus].bgColor} ${statusConfig[newStatus].color}
+                              hover:opacity-80 hover:scale-105 active:scale-95`}
+                          >
+                            {statusConfig[newStatus].label}
+                          </button>
+                        ))}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             );
           })
