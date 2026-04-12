@@ -5,6 +5,7 @@ import { useBookingStore } from '../../store/bookingStore';
 import { vehicles } from '../../data/vehicleData';
 import { ImageCarousel } from '../ImageCarousel';
 import { getBookedVehicleIds } from '../../lib/bookingService';
+import { fetchHiddenVehicleIds } from '../../lib/vehicleStatusService';
 import type { Vehicle } from '../../types';
 
 export const VehicleSelection: React.FC = () => {
@@ -19,6 +20,7 @@ export const VehicleSelection: React.FC = () => {
 
     const [transmissionFilter, setTransmissionFilter] = useState<'all' | 'Manuelle' | 'Automatique'>('all');
     const [bookedVehicleIds, setBookedVehicleIds] = useState<number[]>([]);
+    const [hiddenVehicleIds, setHiddenVehicleIds] = useState<Set<number>>(new Set());
     const [isLoadingAvailability, setIsLoadingAvailability] = useState(false);
 
     // Fetch booked vehicles when dates are available
@@ -30,6 +32,11 @@ export const VehicleSelection: React.FC = () => {
                 .finally(() => setIsLoadingAvailability(false));
         }
     }, [departureDate, returnDate]);
+
+    // Fetch vehicles in maintenance/retired (hidden from public)
+    useEffect(() => {
+        fetchHiddenVehicleIds().then(setHiddenVehicleIds);
+    }, []);
 
     const handleVehicleBook = (vehicle: Vehicle) => {
         setSelectedVehicle(vehicle);
@@ -131,6 +138,7 @@ export const VehicleSelection: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
                 {vehicles
+                    .filter(v => !hiddenVehicleIds.has(v.id)) // Hide maintenance/retired vehicles
                     .filter(v => transmissionFilter === 'all' || v.transmission === transmissionFilter)
                     .filter(v => !bookedVehicleIds.includes(v.id)) // Hide booked vehicles
                     .sort((a, b) => {

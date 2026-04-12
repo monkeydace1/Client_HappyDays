@@ -1,17 +1,24 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Fuel, Gauge, Settings, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { vehicles } from '../data/vehicleData';
+import { fetchHiddenVehicleIds } from '../lib/vehicleStatusService';
 
 type TransmissionFilter = 'all' | 'Manuelle' | 'Automatique';
 
 export const FleetPage = () => {
     const [filter, setFilter] = useState<TransmissionFilter>('all');
+    const [hiddenIds, setHiddenIds] = useState<Set<number>>(new Set());
 
+    useEffect(() => {
+        fetchHiddenVehicleIds().then(setHiddenIds);
+    }, []);
+
+    const visibleVehicles = vehicles.filter(v => !hiddenIds.has(v.id));
     const filteredVehicles = filter === 'all'
-        ? vehicles
-        : vehicles.filter(v => v.transmission === filter);
+        ? visibleVehicles
+        : visibleVehicles.filter(v => v.transmission === filter);
 
     return (
         <div className="min-h-screen pt-28 md:pt-32 pb-12 bg-gray-50">
