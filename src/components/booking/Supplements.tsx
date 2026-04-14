@@ -220,8 +220,8 @@ export const Supplements: React.FC = () => {
                                                 <input
                                                     type="radio"
                                                     checked={isSelected}
-                                                    onChange={() => handleInsuranceSelect(insurance)}
-                                                    className="mt-1 w-5 h-5 text-primary focus:ring-primary"
+                                                    readOnly
+                                                    className="mt-1 w-5 h-5 text-primary focus:ring-primary pointer-events-none"
                                                 />
                                                 <div>
                                                     <h4 className="font-bold text-secondary">{insurance.name}</h4>
