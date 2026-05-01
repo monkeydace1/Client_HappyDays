@@ -12,9 +12,11 @@ import { BookingPage } from './pages/BookingPage';
 import { FleetPage } from './pages/FleetPage';
 import { ConditionsPage } from './pages/ConditionsPage';
 import { ThankYouPage } from './pages/ThankYouPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { WhatsAppButton } from './components/WhatsAppButton';
 import { TopBanner } from './components/TopBanner';
 import { captureUTMParams } from './lib/utmTracking';
+import { useSEO } from './lib/seo';
 
 // Admin imports
 import { AdminLoginPage } from './admin/pages/AdminLoginPage';
@@ -22,6 +24,12 @@ import { AdminPinPage } from './admin/pages/AdminPinPage';
 import { AdminDashboardPage } from './admin/pages/AdminDashboardPage';
 
 function HomePage() {
+  useSEO({
+    title: 'Happy Days Location — Location de voitures à Oran, Algérie',
+    description:
+      "Location de voitures à Oran avec livraison gratuite à l'aéroport. Citadines, SUV et automatiques à partir de 25€/jour. Réservation en ligne en 2 minutes.",
+    path: '/',
+  });
   return (
     <>
       <Hero />
@@ -81,6 +89,7 @@ function AppRoutes() {
         <Route path="/booking" element={<BookingPage />} />
         <Route path="/fleet" element={<FleetPage />} />
         <Route path="/conditions" element={<ConditionsPage />} />
+        <Route path="/politique-confidentialite" element={<PrivacyPolicyPage />} />
         <Route path="/merci" element={<ThankYouPage />} />
       </Routes>
     </PublicLayout>

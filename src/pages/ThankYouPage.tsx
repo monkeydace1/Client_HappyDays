@@ -3,6 +3,13 @@ import { motion } from 'framer-motion';
 import { CheckCircle, Calendar, Car, Phone, ArrowRight } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
+import { useSEO } from '../lib/seo';
+
+// Google Ads conversion ID is loaded in index.html (AW-17780680945).
+// REPLACE the empty string below with the conversion label from Google Ads
+// (Tools & Settings → Conversions → your action → Tag setup → "Use Google tag").
+// Final value should look like: 'AW-17780680945/AbCdEfGhIjKlMnOp'
+const GOOGLE_ADS_CONVERSION_SEND_TO = 'AW-17780680945/3lCcCI2Z36UcEPHRvp5C';
 
 interface LocationState {
   bookingReference?: string;
@@ -11,9 +18,17 @@ interface LocationState {
   departureDate?: string;
   returnDate?: string;
   totalPrice?: number;
+  email?: string;
+  phone?: string;
 }
 
 export const ThankYouPage = () => {
+  useSEO({
+    title: 'Merci pour votre réservation | Happy Days Location',
+    description: 'Votre demande de réservation a bien été reçue. Nous vous contactons sous 24h.',
+    path: '/merci',
+    noindex: true,
+  });
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -21,6 +36,7 @@ export const ThankYouPage = () => {
 
   const [bookingData, setBookingData] = useState<LocationState | null>(null);
   const [loading, setLoading] = useState(true);
+  const [conversionFired, setConversionFired] = useState(false);
 
   // Get booking reference from URL param or state
   const refFromUrl = searchParams.get('ref');
@@ -62,6 +78,8 @@ export const ThankYouPage = () => {
           departureDate: data.departure_date,
           returnDate: data.return_date,
           totalPrice: data.total_price,
+          email: data.email,
+          phone: data.phone,
         });
       } catch (error) {
         console.error('Error:', error);
@@ -73,6 +91,36 @@ export const ThankYouPage = () => {
 
     fetchBookingData();
   }, [bookingReference, state, navigate]);
+
+  // Fire Google Ads conversion (and Enhanced Conversions) once we have booking data.
+  // Guarded by `conversionFired` so reloads of /merci?ref=… don't double-count.
+  useEffect(() => {
+    if (!bookingData || conversionFired) return;
+    const w = window as any;
+    if (typeof w.gtag !== 'function') return;
+
+    if (bookingData.email || bookingData.phone) {
+      w.gtag('set', 'user_data', {
+        email: bookingData.email,
+        phone_number: bookingData.phone,
+      });
+    }
+
+    if (GOOGLE_ADS_CONVERSION_SEND_TO) {
+      w.gtag('event', 'conversion', {
+        send_to: GOOGLE_ADS_CONVERSION_SEND_TO,
+        value: bookingData.totalPrice ?? 0,
+        currency: 'EUR',
+        transaction_id: bookingData.bookingReference,
+      });
+    } else if (typeof console !== 'undefined') {
+      console.warn(
+        '[Ads] GOOGLE_ADS_CONVERSION_SEND_TO is empty — set the conversion label in src/pages/ThankYouPage.tsx',
+      );
+    }
+
+    setConversionFired(true);
+  }, [bookingData, conversionFired]);
 
   if (loading) {
     return (

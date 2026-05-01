@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { useSEO } from '../lib/seo';
 
 const sections = [
     {
@@ -65,6 +66,12 @@ const sections = [
 ];
 
 export const ConditionsPage = () => {
+    useSEO({
+        title: 'Conditions de location | Happy Days Location Oran',
+        description:
+            "Consultez nos conditions de location de voitures à Oran : documents requis, kilométrage, caution, modes de paiement et livraison à l'aéroport.",
+        path: '/conditions',
+    });
     return (
         <div className="min-h-screen pt-28 md:pt-32 pb-12 bg-white">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">

@@ -6,8 +6,15 @@ import { VehicleSelection } from '../components/booking/VehicleSelection';
 import { Supplements } from '../components/booking/Supplements';
 import { ClientInformation } from '../components/booking/ClientInformation';
 import { OrderSummary } from '../components/booking/OrderSummary';
+import { useSEO } from '../lib/seo';
 
 export const BookingPage: React.FC = () => {
+    useSEO({
+        title: 'Réservation en ligne | Happy Days Location Oran',
+        description:
+            "Réservez votre voiture à Oran en quelques minutes. Sélection des dates, du véhicule et confirmation rapide. Livraison gratuite à l'aéroport.",
+        path: '/booking',
+    });
     const { currentStep, departureDate, returnDate, pickupLocation, goToStep } = useBookingStore();
 
     // If user came from homepage with dates already filled, skip to step 2

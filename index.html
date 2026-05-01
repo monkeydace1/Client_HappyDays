@@ -3,12 +3,123 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Happy Days Location - Location de Voitures</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+
+  <!-- Primary SEO -->
+  <title>Happy Days Location — Location de voitures à Oran, Algérie</title>
+  <meta name="description" content="Location de voitures à Oran avec livraison gratuite à l'aéroport. Citadines, SUV et automatiques à partir de 25€/jour. Réservation en ligne en 2 minutes." />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0a2540" />
+  <link rel="canonical" href="https://www.happydayslocation.com/" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Happy Days Location" />
+  <meta property="og:title" content="Happy Days Location — Location de voitures à Oran" />
+  <meta property="og:description" content="Location de voitures à Oran avec livraison gratuite à l'aéroport. Réservation simple et rapide." />
+  <meta property="og:url" content="https://www.happydayslocation.com/" />
+  <meta property="og:image" content="https://www.happydayslocation.com/favicon.png" />
+  <meta property="og:locale" content="fr_FR" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Happy Days Location — Location de voitures à Oran" />
+  <meta name="twitter:description" content="Location de voitures à Oran avec livraison gratuite à l'aéroport." />
+  <meta name="twitter:image" content="https://www.happydayslocation.com/favicon.png" />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Structured Data: LocalBusiness -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "AutoRental",
+    "name": "Happy Days Location",
+    "description": "Agence de location de voitures à Oran, Algérie. Livraison gratuite à l'aéroport.",
+    "url": "https://www.happydayslocation.com",
+    "logo": "https://www.happydayslocation.com/favicon.png",
+    "image": "https://www.happydayslocation.com/favicon.png",
+    "telephone": "+213559599955",
+    "email": "happydayslocation@gmail.com",
+    "priceRange": "€€",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Oran",
+      "addressCountry": "DZ"
+    },
+    "areaServed": {
+      "@type": "City",
+      "name": "Oran"
+    },
+    "openingHoursSpecification": [{
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+      "opens": "08:00",
+      "closes": "20:00"
+    }],
+    "sameAs": [
+      "https://facebook.com/happydayscar",
+      "https://instagram.com/happydayscar"
+    ]
+  }
+  </script>
+
+  <!-- Structured Data: FAQ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Quels documents sont nécessaires pour louer une voiture ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Pour louer une voiture chez Happy Days, vous aurez besoin de votre passeport, votre permis de conduire valide, et votre billet d'avion si vous arrivez de l'étranger."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quel est l'âge minimum pour louer un véhicule ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "L'âge minimum requis pour louer un véhicule chez Happy Days est de 25 ans."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Le kilométrage est-il limité ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Le kilométrage est plafonné à 250 km/jour. Au-delà, des frais supplémentaires peuvent s'appliquer."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Proposez-vous la livraison à l'aéroport ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Oui, nous proposons un service de livraison gratuit à l'Aéroport International Ahmed Ben Bella d'Oran. Nous pouvons également livrer votre véhicule à votre hôtel ou à une adresse de votre choix."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Quels modes de paiement acceptez-vous ?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Nous acceptons les paiements en espèces et par virement instantané."
+        }
+      }
+    ]
+  }
+  </script>
 
   <!-- Meta Pixel Code -->
   <script>
@@ -25,7 +136,7 @@
   </script>
   <!-- End Meta Pixel Code -->
 
-  <!-- Google tag (gtag.js) - Analytics -->
+  <!-- Google tag (gtag.js) - Analytics + Ads (single loader, multiple configs) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-J16KF425BN"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -33,15 +144,6 @@
     gtag('js', new Date());
 
     gtag('config', 'G-J16KF425BN');
-  </script>
-
-  <!-- Google tag (gtag.js) - Ads Conversion -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17780680945"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
     gtag('config', 'AW-17780680945');
   </script>
 </head>

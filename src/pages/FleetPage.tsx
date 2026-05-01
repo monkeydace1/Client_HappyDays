@@ -4,10 +4,17 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { vehicles } from '../data/vehicleData';
 import { fetchHiddenVehicleIds } from '../lib/vehicleStatusService';
+import { useSEO } from '../lib/seo';
 
 type TransmissionFilter = 'all' | 'Manuelle' | 'Automatique';
 
 export const FleetPage = () => {
+    useSEO({
+        title: 'Notre flotte de voitures à louer à Oran | Happy Days Location',
+        description:
+            "Découvrez notre flotte : citadines, SUV, automatiques et manuelles. Toutes nos voitures à Oran, prix transparents à partir de 25€/jour.",
+        path: '/fleet',
+    });
     const [filter, setFilter] = useState<TransmissionFilter>('all');
     const [hiddenIds, setHiddenIds] = useState<Set<number>>(new Set());
 
