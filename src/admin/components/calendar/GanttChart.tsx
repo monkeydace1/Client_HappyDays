@@ -240,6 +240,7 @@ export function GanttChart({
     { value: 14, label: '14j' },
     { value: 30, label: '30j' },
     { value: 60, label: '60j' },
+    { value: 180, label: '6 mois' },
   ];
 
   const handleVehicleRowClick = (vehicleId: number) => {

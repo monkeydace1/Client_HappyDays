@@ -343,6 +343,22 @@ export const vehicles: Vehicle[] = [
         pricePerDay: 25,
         featured: false,
         features: ['1.2L 16V', 'Économique']
+    },
+    {
+        id: 21,
+        name: 'Seat Leon',
+        brand: 'Seat',
+        model: 'Leon 1.0 TSI',
+        year: 2021,
+        category: 'Compacte',
+        image: getVehicleImage('seat-leon'),
+        images: getVehicleImages('seat-leon', 0),
+        transmission: 'Manuelle',
+        fuel: 'Essence',
+        seats: 5,
+        pricePerDay: 50,
+        featured: false,
+        features: ['1.0L TSI', 'Écran tactile', 'Compact']
     }
 ];
 

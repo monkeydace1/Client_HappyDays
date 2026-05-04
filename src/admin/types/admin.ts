@@ -74,7 +74,7 @@ export interface DashboardKPIs {
 }
 
 // Calendar view options
-export type CalendarViewDays = 7 | 14 | 30 | 60;
+export type CalendarViewDays = 7 | 14 | 30 | 60 | 180;
 
 // Admin tab types
 export type AdminTab = 'calendar' | 'reservations' | 'vehicles';

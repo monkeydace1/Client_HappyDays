@@ -114,6 +114,7 @@ const SAMPLE_VEHICLES: AdminVehicle[] = [
   { id: 19, name: 'Ford Fiesta 2014', brand: 'Ford', model: 'Fiesta', year: 2014, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/ford-fiesta/main.jpg', status: 'available' },
   // New Vehicle
   { id: 20, name: 'Renault Clio 4', brand: 'Renault', model: 'Clio 4', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016-b/main.jpg', status: 'available' },
+  { id: 21, name: 'Seat Leon 1.0 TSI 2021', brand: 'Seat', model: 'Leon 1.0 TSI', year: 2021, category: 'Compacte', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 50, image: '/vehicles/seat-leon/main.jpg', status: 'available' },
 ];
 
 // Generate sample bookings based on current date
