@@ -3,6 +3,7 @@ import { Calendar, MapPin, ArrowRight, AlertCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
 import { PICKUP_LOCATIONS } from '../../types';
+import { formatRentalDuration } from '../../lib/pricing';
 
 export const DateSelection: React.FC = () => {
     const {
@@ -13,6 +14,7 @@ export const DateSelection: React.FC = () => {
         returnLocation,
         differentReturnLocation,
         rentalDays,
+        extraHours,
         setDepartureDate,
         setReturnDate,
         setPickupLocation,
@@ -363,7 +365,7 @@ export const DateSelection: React.FC = () => {
                             <p className="mt-1">{formatDate(departureDate)}</p>
                             <p>{formatDate(returnDate)}</p>
                             <p className="mt-2 text-primary font-bold text-lg">
-                                Durée: {rentalDays} jour{rentalDays > 1 ? 's' : ''}
+                                Durée: {formatRentalDuration({ fullDays: rentalDays, extraHours })}
                             </p>
                         </div>
                     </motion.div>

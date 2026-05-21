@@ -3,6 +3,7 @@ import { Calendar, MapPin, Car, Shield, Baby, UserPlus, Euro } from 'lucide-reac
 import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
 import type { Insurance } from '../../types';
+import { EXTRA_HOUR_RATE, formatRentalDuration } from '../../lib/pricing';
 
 export const OrderSummary: React.FC = () => {
     const {
@@ -10,6 +11,7 @@ export const OrderSummary: React.FC = () => {
         returnDate,
         pickupLocation,
         rentalDays,
+        extraHours,
         selectedVehicle,
         supplements,
         additionalDriver,
@@ -28,7 +30,9 @@ export const OrderSummary: React.FC = () => {
         });
     };
 
-    const vehicleTotal = selectedVehicle ? selectedVehicle.pricePerDay * (rentalDays || 1) : 0;
+    const billingDays = rentalDays || 1;
+    const vehicleDaysTotal = selectedVehicle ? selectedVehicle.pricePerDay * billingDays : 0;
+    const extraHoursTotal = extraHours * EXTRA_HOUR_RATE;
     const supplementsTotal = getSupplementsTotal();
     const totalPrice = getTotalPrice();
 
@@ -72,7 +76,7 @@ export const OrderSummary: React.FC = () => {
                     {rentalDays > 0 && (
                         <div className="bg-primary/5 rounded-lg px-3 py-2">
                             <p className="text-primary font-bold text-center">
-                                {rentalDays} jour{rentalDays > 1 ? 's' : ''}
+                                {formatRentalDuration({ fullDays: rentalDays, extraHours })}
                             </p>
                         </div>
                     )}
@@ -114,10 +118,18 @@ export const OrderSummary: React.FC = () => {
                         </div>
                         <div className="flex justify-between items-center pt-2 border-t border-gray-200">
                             <span className="text-sm text-gray-600">
-                                {selectedVehicle.pricePerDay}€ × {rentalDays || 1} jour{(rentalDays || 1) > 1 ? 's' : ''}
+                                {selectedVehicle.pricePerDay}€ × {billingDays} jour{billingDays > 1 ? 's' : ''}
                             </span>
-                            <span className="font-bold text-primary">{vehicleTotal}€</span>
+                            <span className="font-bold text-primary">{vehicleDaysTotal}€</span>
                         </div>
+                        {extraHours > 0 && (
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">
+                                    + {extraHours}h supplémentaire{extraHours > 1 ? 's' : ''} ({EXTRA_HOUR_RATE}€/h)
+                                </span>
+                                <span className="font-bold text-primary">{extraHoursTotal}€</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

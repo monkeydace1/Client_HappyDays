@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type { Vehicle, Supplement, ClientInfo } from '../types';
 import { generateCustomerEmailHTML, generateAdminEmailHTML } from './emailTemplates';
 import { getUTMParamsForDatabase, clearUTMParams } from './utmTracking';
+import { formatRentalDuration } from './pricing';
 
 // Types for booking submission
 export interface BookingSubmission {
@@ -9,6 +10,7 @@ export interface BookingSubmission {
   departureDate: string;
   returnDate: string;
   rentalDays: number;
+  extraHours: number;
   pickupLocation: string;
   customPickupLocation?: string;
   returnLocation?: string;
@@ -37,6 +39,7 @@ export interface BookingRecord {
   departure_date: string;
   return_date: string;
   rental_days: number;
+  extra_hours: number;
   pickup_location: string;
   custom_pickup_location?: string;
   return_location?: string;
@@ -169,6 +172,7 @@ export async function saveBooking(
       departure_date: submission.departureDate,
       return_date: submission.returnDate,
       rental_days: submission.rentalDays,
+      extra_hours: submission.extraHours,
       pickup_location: submission.pickupLocation,
       custom_pickup_location: submission.customPickupLocation || null,
       return_location: submission.returnLocation || null,
@@ -334,6 +338,7 @@ async function syncToAdminBookings(
       pickup_time: pickupTime,
       return_time: returnTime,
       rental_days: submission.rentalDays,
+      extra_hours: submission.extraHours,
       pickup_location: submission.pickupLocation,
       vehicle_id: submission.selectedVehicle.id,
       vehicle_name: submission.selectedVehicle.name,
@@ -395,7 +400,7 @@ export function formatWhatsAppMessage(
 📅 *PÉRIODE DE LOCATION*
 Départ: ${departureDate.toLocaleDateString('fr-FR', dateOptions)}
 Retour: ${returnDate.toLocaleDateString('fr-FR', dateOptions)}
-Durée: ${submission.rentalDays} jour(s)
+Durée: ${formatRentalDuration({ fullDays: submission.rentalDays, extraHours: submission.extraHours })}
 
 📍 *LIEU*
 Prise en charge: ${submission.pickupLocation}${submission.customPickupLocation ? ` (${submission.customPickupLocation})` : ''}${submission.differentReturnLocation ? `\nRetour: ${submission.returnLocation}` : ''}

@@ -88,6 +88,7 @@ export interface BookingData {
     currentStep: number;
     totalPrice: number;
     rentalDays: number;
+    extraHours: number;
 }
 
 // Pickup locations

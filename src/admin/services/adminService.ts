@@ -114,6 +114,7 @@ export async function createBooking(
     departure_date: booking.departureDate,
     return_date: booking.returnDate,
     rental_days: booking.rentalDays,
+    extra_hours: booking.extraHours ?? 0,
     pickup_time: booking.pickupTime,
     return_time: booking.returnTime,
     pickup_location: booking.pickupLocation,
@@ -185,6 +186,7 @@ export async function updateBooking(
   if ('pickupTime' in updates) dbUpdates.pickup_time = updates.pickupTime ?? null;
   if ('returnTime' in updates) dbUpdates.return_time = updates.returnTime ?? null;
   if (updates.rentalDays) dbUpdates.rental_days = updates.rentalDays;
+  if ('extraHours' in updates) dbUpdates.extra_hours = updates.extraHours ?? 0;
   if (updates.totalPrice) dbUpdates.total_price = updates.totalPrice;
   if (updates.status) dbUpdates.status = updates.status;
   if (updates.assignedVehicleId) dbUpdates.assigned_vehicle_id = updates.assignedVehicleId;
@@ -295,6 +297,7 @@ export async function fetchFullBookingDetails(
     vehicleTotal: data.vehicle_total,
     supplementsTotal: data.supplements_total,
     totalPrice: data.total_price,
+    extraHours: (data.extra_hours as number | null) ?? 0,
 
     // Payment & notes
     paymentMethod: data.payment_method || 'cash',
@@ -414,6 +417,7 @@ function mapBookingFromDb(row: Record<string, unknown>): AdminBooking {
     departureDate: row.departure_date as string,
     returnDate: row.return_date as string,
     rentalDays: row.rental_days as number,
+    extraHours: (row.extra_hours as number | null) ?? 0,
     pickupTime: row.pickup_time as string | undefined,
     returnTime: row.return_time as string | undefined,
     pickupLocation: row.pickup_location as string,

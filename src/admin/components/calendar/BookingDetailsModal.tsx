@@ -10,6 +10,12 @@ import { fr } from 'date-fns/locale';
 import type { AdminBooking, BookingStatus, FullBookingDetails } from '../../types/admin';
 import { fetchFullBookingDetails } from '../../services/adminService';
 import { vehicles as vehicleData } from '../../../data/vehicleData';
+import {
+  computeRentalUnitsFromDateTime,
+  computeVehicleSubtotal,
+  formatRentalDuration,
+  EXTRA_HOUR_RATE,
+} from '../../../lib/pricing';
 
 interface BookingDetailsModalProps {
   isOpen: boolean;
@@ -109,8 +115,11 @@ export function BookingDetailsModal({
   // Reset edit state when booking changes
   useEffect(() => {
     if (booking) {
-      // Calculate actual price per day from the booking's total (preserves custom prices)
-      const actualPricePerDay = Math.round(booking.totalPrice / booking.rentalDays);
+      // Back out the daily rate from total (subtract the hourly surcharge first)
+      const hoursPortion = (booking.extraHours || 0) * EXTRA_HOUR_RATE;
+      const actualPricePerDay = booking.rentalDays > 0
+        ? Math.round((booking.totalPrice - hoursPortion) / booking.rentalDays)
+        : 0;
       setEditData({
         clientName: booking.clientName,
         clientPhone: booking.clientPhone || '',
@@ -143,16 +152,24 @@ export function BookingDetailsModal({
   };
 
   const handleSave = () => {
-    const departure = new Date(editData.departureDate);
-    const returnDate = new Date(editData.returnDate);
-
-    // Validate departure is before return
-    if (returnDate <= departure) {
+    if (editData.returnDate < editData.departureDate) {
       alert('La date de retour doit être après la date de départ');
       return;
     }
 
-    const days = Math.ceil((returnDate.getTime() - departure.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+    const units = computeRentalUnitsFromDateTime(
+      editData.departureDate,
+      editData.pickupTime,
+      editData.returnDate,
+      editData.returnTime
+    );
+
+    if (units.fullDays === 0 && units.extraHours === 0) {
+      alert('La date/heure de retour doit être après la date/heure de départ');
+      return;
+    }
+
+    const totalPrice = Math.round(computeVehicleSubtotal(editData.pricePerDay, units));
 
     onBookingUpdate(booking.id, {
       clientName: editData.clientName,
@@ -162,11 +179,12 @@ export function BookingDetailsModal({
       returnDate: editData.returnDate,
       pickupTime: editData.pickupTime !== '' ? editData.pickupTime : undefined,
       returnTime: editData.returnTime !== '' ? editData.returnTime : undefined,
-      rentalDays: days,
+      rentalDays: units.fullDays,
+      extraHours: units.extraHours,
       vehicleId: editData.vehicleId,
       assignedVehicleId: editData.vehicleId,
       vehicleName: editData.vehicleName,
-      totalPrice: Math.round(days * editData.pricePerDay),
+      totalPrice,
     });
     setIsEditing(false);
   };
@@ -479,38 +497,42 @@ export function BookingDetailsModal({
           <span className="font-medium text-gray-700">Total</span>
           <div className="text-right">
             {isEditing && editData.departureDate && editData.returnDate ? (
-              <>
-                <span className="text-2xl font-bold text-primary">
-                  {(() => {
-                    const days = Math.ceil(
-                      (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
-                      (1000 * 60 * 60 * 24)
-                    ) + 1;
-                    return Math.round(days * editData.pricePerDay);
-                  })()}€
-                </span>
-                <div className="flex items-center gap-2 mt-1">
-                  <input
-                    type="number"
-                    value={editData.pricePerDay}
-                    onChange={(e) => setEditData({ ...editData, pricePerDay: Number(e.target.value) })}
-                    className="w-20 px-2 py-1 text-sm text-right rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
-                    min="0"
-                  />
-                  <span className="text-xs text-gray-500">
-                    €/jour × {Math.ceil(
-                      (new Date(editData.returnDate).getTime() - new Date(editData.departureDate).getTime()) /
-                      (1000 * 60 * 60 * 24)
-                    ) || 1} jours
-                  </span>
-                </div>
-              </>
+              (() => {
+                const units = computeRentalUnitsFromDateTime(
+                  editData.departureDate,
+                  editData.pickupTime,
+                  editData.returnDate,
+                  editData.returnTime
+                );
+                const previewTotal = Math.round(
+                  computeVehicleSubtotal(editData.pricePerDay, units)
+                );
+                return (
+                  <>
+                    <span className="text-2xl font-bold text-primary">{previewTotal}€</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="number"
+                        value={editData.pricePerDay}
+                        onChange={(e) => setEditData({ ...editData, pricePerDay: Number(e.target.value) })}
+                        className="w-20 px-2 py-1 text-sm text-right rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                        min="0"
+                      />
+                      <span className="text-xs text-gray-500">
+                        €/jour × {formatRentalDuration(units) || '0 jour'}
+                      </span>
+                    </div>
+                  </>
+                );
+              })()
             ) : (
               <>
                 <span className="text-2xl font-bold text-primary">
                   {isWebBooking && fullDetails ? fullDetails.totalPrice : booking.totalPrice}€
                 </span>
-                <p className="text-xs text-gray-500">{booking.rentalDays} jours</p>
+                <p className="text-xs text-gray-500">
+                  {formatRentalDuration({ fullDays: booking.rentalDays, extraHours: booking.extraHours || 0 }) || `${booking.rentalDays} jours`}
+                </p>
               </>
             )}
           </div>
@@ -519,7 +541,7 @@ export function BookingDetailsModal({
         {isWebBooking && fullDetails && !isEditing && (
           <div className="mt-3 pt-3 border-t border-primary/20 text-sm text-gray-600 space-y-1">
             <div className="flex justify-between">
-              <span>Véhicule ({booking.rentalDays} jours)</span>
+              <span>Véhicule ({formatRentalDuration({ fullDays: booking.rentalDays, extraHours: booking.extraHours || 0 }) || `${booking.rentalDays} jours`})</span>
               <span>{fullDetails.vehicleTotal}€</span>
             </div>
             {fullDetails.supplementsTotal > 0 && (
@@ -590,63 +612,36 @@ export function BookingDetailsModal({
         <div className="bg-amber-50 rounded-xl p-4">
           <h3 className="font-semibold text-amber-800 mb-3">Prolonger la réservation</h3>
           <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const currentReturn = new Date(booking.returnDate);
-                currentReturn.setDate(currentReturn.getDate() + 1);
-                const newReturnDate = currentReturn.toISOString().split('T')[0];
-                const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
-                const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
-                const newDays = booking.rentalDays + 1;
-                onBookingUpdate(booking.id, {
-                  returnDate: newReturnDate,
-                  rentalDays: newDays,
-                  totalPrice: Math.round(newDays * pricePerDay),
-                });
-              }}
-              className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-medium
-                       rounded-lg transition-all touch-manipulation text-sm"
-            >
-              +1 jour
-            </button>
-            <button
-              onClick={() => {
-                const currentReturn = new Date(booking.returnDate);
-                currentReturn.setDate(currentReturn.getDate() + 3);
-                const newReturnDate = currentReturn.toISOString().split('T')[0];
-                const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
-                const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
-                const newDays = booking.rentalDays + 3;
-                onBookingUpdate(booking.id, {
-                  returnDate: newReturnDate,
-                  rentalDays: newDays,
-                  totalPrice: Math.round(newDays * pricePerDay),
-                });
-              }}
-              className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-medium
-                       rounded-lg transition-all touch-manipulation text-sm"
-            >
-              +3 jours
-            </button>
-            <button
-              onClick={() => {
-                const currentReturn = new Date(booking.returnDate);
-                currentReturn.setDate(currentReturn.getDate() + 7);
-                const newReturnDate = currentReturn.toISOString().split('T')[0];
-                const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
-                const pricePerDay = vehicleInfo?.pricePerDay || (booking.totalPrice / booking.rentalDays);
-                const newDays = booking.rentalDays + 7;
-                onBookingUpdate(booking.id, {
-                  returnDate: newReturnDate,
-                  rentalDays: newDays,
-                  totalPrice: Math.round(newDays * pricePerDay),
-                });
-              }}
-              className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-medium
-                       rounded-lg transition-all touch-manipulation text-sm"
-            >
-              +7 jours
-            </button>
+            {[1, 3, 7].map((addDaysCount) => (
+              <button
+                key={addDaysCount}
+                onClick={() => {
+                  const currentReturn = new Date(booking.returnDate);
+                  currentReturn.setDate(currentReturn.getDate() + addDaysCount);
+                  const newReturnDate = currentReturn.toISOString().split('T')[0];
+                  const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
+                  const hoursPortion = (booking.extraHours || 0) * EXTRA_HOUR_RATE;
+                  const dailyRate = vehicleInfo?.pricePerDay
+                    ?? (booking.rentalDays > 0
+                      ? (booking.totalPrice - hoursPortion) / booking.rentalDays
+                      : booking.totalPrice);
+                  const newDays = booking.rentalDays + addDaysCount;
+                  const newTotal = Math.round(
+                    computeVehicleSubtotal(dailyRate, { fullDays: newDays, extraHours: booking.extraHours || 0 })
+                  );
+                  onBookingUpdate(booking.id, {
+                    returnDate: newReturnDate,
+                    rentalDays: newDays,
+                    extraHours: booking.extraHours || 0,
+                    totalPrice: newTotal,
+                  });
+                }}
+                className="flex-1 py-2 px-3 bg-amber-500 hover:bg-amber-600 text-white font-medium
+                         rounded-lg transition-all touch-manipulation text-sm"
+              >
+                +{addDaysCount} jour{addDaysCount > 1 ? 's' : ''}
+              </button>
+            ))}
           </div>
           <p className="text-xs text-amber-700 mt-2">
             Le prix sera automatiquement recalculé

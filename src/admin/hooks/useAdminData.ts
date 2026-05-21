@@ -21,6 +21,10 @@ import {
   generateManualBookingAdminEmailHTML,
   type ManualBookingData,
 } from '../../lib/emailTemplates';
+import {
+  computeRentalUnitsFromDateTime,
+  computeVehicleSubtotal,
+} from '../../lib/pricing';
 
 // Send confirmation email when status changes to 'active'
 async function sendConfirmationEmail(booking: AdminBooking): Promise<void> {
@@ -159,6 +163,7 @@ function generateSampleBookings(): AdminBooking[] {
       departureDate: startDate.toISOString().split('T')[0],
       returnDate: endDate.toISOString().split('T')[0],
       rentalDays: config.duration,
+      extraHours: 0,
       pickupLocation: 'Aéroport Oran',
       vehicleId: config.vehicleId,
       vehicleName: vehicle.name,
@@ -416,10 +421,14 @@ export function useAdminData(): UseAdminDataReturn {
     const vehicle = vehiclesList.find((v) => v.id === data.vehicleId);
     if (!vehicle) return;
 
-    const departureDate = new Date(data.departureDate);
-    const returnDate = new Date(data.returnDate);
-    const days = Math.ceil((returnDate.getTime() - departureDate.getTime()) / (1000 * 60 * 60 * 24)) || 1;
-    const totalPrice = days * (data.pricePerDay || vehicle.pricePerDay);
+    const pricePerDay = data.pricePerDay || vehicle.pricePerDay;
+    const units = computeRentalUnitsFromDateTime(
+      data.departureDate,
+      data.pickupTime,
+      data.returnDate,
+      data.returnTime
+    );
+    const totalPrice = Math.round(computeVehicleSubtotal(pricePerDay, units));
     const bookingReference = generateBookingReference();
 
     const newBooking: Omit<AdminBooking, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -428,7 +437,8 @@ export function useAdminData(): UseAdminDataReturn {
       source: 'walk_in',
       departureDate: data.departureDate,
       returnDate: data.returnDate,
-      rentalDays: days,
+      rentalDays: units.fullDays,
+      extraHours: units.extraHours,
       pickupLocation: 'Direct',
       vehicleId: data.vehicleId,
       vehicleName: vehicle.name,
@@ -456,7 +466,8 @@ export function useAdminData(): UseAdminDataReturn {
         returnDate: data.returnDate,
         pickupTime: data.pickupTime,
         returnTime: data.returnTime,
-        rentalDays: days,
+        rentalDays: units.fullDays,
+        extraHours: units.extraHours,
         totalPrice,
       });
     } catch (err) {

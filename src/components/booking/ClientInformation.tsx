@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../../store/bookingStore';
 import type { ClientInfo } from '../../types';
 import { saveBooking, uploadLicensePhoto, type BookingSubmission } from '../../lib/bookingService';
+import { computeVehicleSubtotal } from '../../lib/pricing';
 
 export const ClientInformation: React.FC = () => {
     const {
@@ -20,6 +21,7 @@ export const ClientInformation: React.FC = () => {
         differentReturnLocation,
         selectedVehicle,
         rentalDays,
+        extraHours,
         supplements,
         additionalDriver
     } = useBookingStore();
@@ -162,7 +164,10 @@ export const ClientInformation: React.FC = () => {
         try {
             const totalPrice = getTotalPrice();
             const supplementsTotal = getSupplementsTotal();
-            const vehicleTotal = selectedVehicle.pricePerDay * rentalDays;
+            const vehicleTotal = computeVehicleSubtotal(selectedVehicle.pricePerDay, {
+                fullDays: rentalDays,
+                extraHours,
+            });
 
             // Upload license photo if provided
             let licensePhotoUrl: string | null = null;
@@ -177,6 +182,7 @@ export const ClientInformation: React.FC = () => {
                 departureDate,
                 returnDate,
                 rentalDays,
+                extraHours,
                 pickupLocation,
                 customPickupLocation: customPickupLocation || undefined,
                 returnLocation: returnLocation || undefined,

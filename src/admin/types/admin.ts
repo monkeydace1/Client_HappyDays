@@ -25,7 +25,8 @@ export interface AdminBooking {
   departureDate: string;
   returnDate: string;
   rentalDays: number;
-  pickupTime?: string;  // Format: "HH:MM" (stored 24h, display 12h AM/PM)
+  extraHours: number;  // 0..10, charged at 3€/h; >10 is rolled into rentalDays
+  pickupTime?: string;  // Format: "HH:MM" (stored 24h)
   returnTime?: string;  // Format: "HH:MM"
 
   // Location
@@ -124,6 +125,7 @@ export interface FullBookingDetails {
   vehicleTotal: number;
   supplementsTotal: number;
   totalPrice: number;
+  extraHours: number;
 
   // Payment & notes
   paymentMethod: 'cash' | 'card' | 'transfer';

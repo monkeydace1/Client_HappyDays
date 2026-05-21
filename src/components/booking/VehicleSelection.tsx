@@ -3,6 +3,7 @@ import { Fuel, Settings, Users, Gauge, ArrowLeft, Calendar } from 'lucide-react'
 import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
 import { vehicles } from '../../data/vehicleData';
+import { EXTRA_HOUR_RATE, formatRentalDuration } from '../../lib/pricing';
 import { ImageCarousel } from '../ImageCarousel';
 import { getBookedVehicleIds } from '../../lib/bookingService';
 import { fetchHiddenVehicleIds } from '../../lib/vehicleStatusService';
@@ -11,6 +12,7 @@ import type { Vehicle } from '../../types';
 export const VehicleSelection: React.FC = () => {
     const {
         rentalDays,
+        extraHours,
         departureDate,
         returnDate,
         setSelectedVehicle,
@@ -75,7 +77,7 @@ export const VehicleSelection: React.FC = () => {
 
     const calculateTotalPrice = (pricePerDay: number) => {
         const days = rentalDays || 1;
-        return pricePerDay * days;
+        return pricePerDay * days + EXTRA_HOUR_RATE * extraHours;
     };
 
     return (
@@ -91,7 +93,7 @@ export const VehicleSelection: React.FC = () => {
                 </h2>
                 <p className="text-sm sm:text-base text-gray-600">
                     Sélectionnez le véhicule qui correspond à vos besoins
-                    {rentalDays > 0 && ` pour ${rentalDays} jour${rentalDays > 1 ? 's' : ''}`}
+                    {rentalDays > 0 && ` pour ${formatRentalDuration({ fullDays: rentalDays, extraHours })}`}
                 </p>
             </div>
 
@@ -214,6 +216,7 @@ export const VehicleSelection: React.FC = () => {
                                         </div>
                                         <p className="text-[10px] sm:text-xs text-gray-500 mt-1 text-right">
                                             {vehicle.pricePerDay}€ × {rentalDays} j.
+                                            {extraHours > 0 && ` + ${extraHours}h`}
                                         </p>
                                     </div>
                                 )}

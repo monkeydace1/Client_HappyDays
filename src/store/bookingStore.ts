@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 import type { Vehicle, Supplement, ClientInfo } from '../types';
 import { PICKUP_LOCATIONS } from '../types';
+import {
+  computeRentalUnits,
+  computeVehicleSubtotal,
+  computeSupplementSubtotal,
+} from '../lib/pricing';
 
 interface BookingState {
     // Step 1: Dates & Location
@@ -26,6 +31,7 @@ interface BookingState {
 
     // Computed values
     rentalDays: number;
+    extraHours: number;
 
     // Actions - Step 1
     setDepartureDate: (date: string) => void;
@@ -73,6 +79,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     clientInfo: null,
     currentStep: 1,
     rentalDays: 0,
+    extraHours: 0,
 
     // Step 1 actions
     setDepartureDate: (date) => {
@@ -134,31 +141,28 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     calculateRentalDays: () => {
         const state = get();
         if (state.departureDate && state.returnDate) {
-            const departure = new Date(state.departureDate);
-            const returnDate = new Date(state.returnDate);
-            const diffTime = Math.abs(returnDate.getTime() - departure.getTime());
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            set({ rentalDays: diffDays || 1 });
+            const units = computeRentalUnits(state.departureDate, state.returnDate);
+            set({ rentalDays: units.fullDays, extraHours: units.extraHours });
         } else {
-            set({ rentalDays: 0 });
+            set({ rentalDays: 0, extraHours: 0 });
         }
     },
 
     getSupplementsTotal: () => {
         const state = get();
-        const days = state.rentalDays || 1;
+        const units = { fullDays: state.rentalDays || 1, extraHours: state.extraHours };
 
         let total = 0;
 
-        // Add supplements with quantities
+        // Per-day supplements (charged on full days only)
         state.supplements.forEach(supplement => {
             const quantity = supplement.quantity || 1;
-            total += supplement.pricePerDay * quantity * days;
+            total += computeSupplementSubtotal(supplement.pricePerDay, quantity, units);
         });
 
-        // Add additional driver if selected
+        // Additional driver (8€/day, full days only)
         if (state.additionalDriver) {
-            total += 8 * days; // 8€ per day for additional driver
+            total += computeSupplementSubtotal(8, 1, units);
         }
 
         return total;
@@ -166,13 +170,13 @@ export const useBookingStore = create<BookingState>((set, get) => ({
 
     getTotalPrice: () => {
         const state = get();
-        const days = state.rentalDays || 1;
+        const units = { fullDays: state.rentalDays || 1, extraHours: state.extraHours };
 
         let total = 0;
 
-        // Vehicle price
+        // Vehicle: fullDays × pricePerDay + extraHours × 3€
         if (state.selectedVehicle) {
-            total += state.selectedVehicle.pricePerDay * days;
+            total += computeVehicleSubtotal(state.selectedVehicle.pricePerDay, units);
         }
 
         // Supplements
@@ -193,6 +197,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
         additionalDriver: false,
         clientInfo: null,
         currentStep: 1,
-        rentalDays: 0
+        rentalDays: 0,
+        extraHours: 0
     })
 }));

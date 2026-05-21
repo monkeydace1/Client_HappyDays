@@ -11,6 +11,11 @@ import { VehicleAddModal } from '../components/vehicles/VehicleAddModal';
 import { useAdminStore } from '../store/adminStore';
 import { useAdminData } from '../hooks/useAdminData';
 import type { DashboardKPIs, QuickAddData, BookingStatus, AdminVehicle } from '../types/admin';
+import {
+  computeRentalUnitsFromDateTime,
+  computeVehicleSubtotal,
+  EXTRA_HOUR_RATE,
+} from '../../lib/pricing';
 
 export function AdminDashboardPage() {
   const { activeTab, quickAddModalOpen, quickAddDate, quickAddVehicleId,
@@ -108,7 +113,7 @@ export function AdminDashboardPage() {
     await deleteVehicle(vehicleId);
   }, [deleteVehicle]);
 
-  const handleBookingUpdate = useCallback(async (bookingId: string, updates: Partial<{ clientName: string; clientPhone: string; clientEmail: string; departureDate: string; returnDate: string; pickupTime: string; returnTime: string; rentalDays: number; vehicleId: number; assignedVehicleId: number; vehicleName: string; totalPrice: number }>) => {
+  const handleBookingUpdate = useCallback(async (bookingId: string, updates: Partial<{ clientName: string; clientPhone: string; clientEmail: string; departureDate: string; returnDate: string; pickupTime: string; returnTime: string; rentalDays: number; extraHours: number; vehicleId: number; assignedVehicleId: number; vehicleName: string; totalPrice: number }>) => {
     await updateBookingDetails(bookingId, updates);
   }, [updateBookingDetails]);
 
@@ -122,20 +127,27 @@ export function AdminDashboardPage() {
     const booking = bookings.find(b => b.id === bookingId);
     if (!booking) return;
 
-    // Calculate new rental days
-    const departure = new Date(newDepartureDate);
-    const returnDate = new Date(newReturnDate);
-    const newDays = Math.ceil((returnDate.getTime() - departure.getTime()) / (1000 * 60 * 60 * 24)) || 1;
+    // Recompute units using the booking's existing pickup/return times
+    const units = computeRentalUnitsFromDateTime(
+      newDepartureDate,
+      booking.pickupTime,
+      newReturnDate,
+      booking.returnTime
+    );
 
-    // Calculate new total price (keep same daily rate)
-    const dailyRate = Math.round(booking.totalPrice / booking.rentalDays);
-    const newTotalPrice = dailyRate * newDays;
+    // Back out the daily rate from the old total (subtract previous hourly portion)
+    const oldHoursPortion = (booking.extraHours || 0) * EXTRA_HOUR_RATE;
+    const dailyRate = booking.rentalDays > 0
+      ? Math.round((booking.totalPrice - oldHoursPortion) / booking.rentalDays)
+      : booking.totalPrice;
+    const newTotalPrice = Math.round(computeVehicleSubtotal(dailyRate, units));
 
     // Prepare updates
     const updates: Partial<typeof booking> = {
       departureDate: newDepartureDate,
       returnDate: newReturnDate,
-      rentalDays: newDays,
+      rentalDays: units.fullDays,
+      extraHours: units.extraHours,
       totalPrice: newTotalPrice,
     };
 

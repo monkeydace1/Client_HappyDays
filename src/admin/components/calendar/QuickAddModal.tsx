@@ -4,6 +4,11 @@ import { X, User, Phone, Car, Mail, Euro } from 'lucide-react';
 import { format, addDays, parseISO } from 'date-fns';
 import type { AdminVehicle, QuickAddData } from '../../types/admin';
 import { vehicles as vehicleData } from '../../../data/vehicleData';
+import {
+  computeRentalUnitsFromDateTime,
+  computeVehicleSubtotal,
+  formatRentalDuration,
+} from '../../../lib/pricing';
 
 interface QuickAddModalProps {
   isOpen: boolean;
@@ -61,10 +66,19 @@ export function QuickAddModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (formData.clientName && formData.vehicleId && formData.departureDate && formData.returnDate) {
-      // Validate return date is after departure
-      if (formData.returnDate <= formData.departureDate) {
-        alert('La date de retour doit être après la date de départ');
+    if (
+      formData.clientName &&
+      formData.vehicleId &&
+      formData.departureDate &&
+      formData.returnDate &&
+      formData.pickupTime &&
+      formData.returnTime
+    ) {
+      // Validate return is strictly after departure (incl. time)
+      const startISO = `${formData.departureDate}T${formData.pickupTime}`;
+      const endISO = `${formData.returnDate}T${formData.returnTime}`;
+      if (endISO <= startISO) {
+        alert("La date/heure de retour doit être après la date/heure de départ");
         return;
       }
       // Validate price is not negative
@@ -269,28 +283,30 @@ export function QuickAddModal({
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      Heure départ
+                      Heure départ *
                     </label>
                     <input
                       type="time"
-                      value={formData.pickupTime || '09:00'}
+                      value={formData.pickupTime || ''}
                       onChange={(e) => setFormData({ ...formData, pickupTime: e.target.value })}
                       className="w-full px-2 py-2 rounded-lg border border-gray-200
                                focus:border-primary focus:ring-2 focus:ring-primary/20
                                outline-none transition-all text-sm"
+                      required
                     />
                   </div>
                   <div>
                     <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      Heure retour
+                      Heure retour *
                     </label>
                     <input
                       type="time"
-                      value={formData.returnTime || '09:00'}
+                      value={formData.returnTime || ''}
                       onChange={(e) => setFormData({ ...formData, returnTime: e.target.value })}
                       className="w-full px-2 py-2 rounded-lg border border-gray-200
                                focus:border-primary focus:ring-2 focus:ring-primary/20
                                outline-none transition-all text-sm"
+                      required
                     />
                   </div>
                 </div>
@@ -298,26 +314,31 @@ export function QuickAddModal({
                 {/* Price Preview */}
                 {selectedVehicle && formData.departureDate && formData.returnDate && (
                   <div className="bg-gray-50 rounded-lg p-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Total estimé</span>
-                      <span className="text-lg font-bold text-primary">
-                        {(() => {
-                          const days = Math.ceil(
-                            (new Date(formData.returnDate).getTime() -
-                              new Date(formData.departureDate).getTime()) /
-                            (1000 * 60 * 60 * 24)
-                          ) || 1;
-                          const pricePerDay = formData.pricePerDay || selectedVehicle.pricePerDay;
-                          return `${days * pricePerDay}€`;
-                        })()}
-                      </span>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      {formData.pricePerDay || selectedVehicle.pricePerDay}€/jour
-                      {formData.pricePerDay && formData.pricePerDay !== selectedVehicle.pricePerDay && (
-                        <span className="ml-1 text-orange-500">(prix modifié)</span>
-                      )}
-                    </p>
+                    {(() => {
+                      const units = computeRentalUnitsFromDateTime(
+                        formData.departureDate,
+                        formData.pickupTime,
+                        formData.returnDate,
+                        formData.returnTime
+                      );
+                      const pricePerDay = formData.pricePerDay || selectedVehicle.pricePerDay;
+                      const total = Math.round(computeVehicleSubtotal(pricePerDay, units));
+                      const durationLabel = formatRentalDuration(units) || '—';
+                      return (
+                        <>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-gray-600">Total estimé</span>
+                            <span className="text-lg font-bold text-primary">{total}€</span>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            {pricePerDay}€/jour · {durationLabel}
+                            {formData.pricePerDay && formData.pricePerDay !== selectedVehicle.pricePerDay && (
+                              <span className="ml-1 text-orange-500">(prix modifié)</span>
+                            )}
+                          </p>
+                        </>
+                      );
+                    })()}
                   </div>
                 )}
               </div>
@@ -325,7 +346,7 @@ export function QuickAddModal({
               {/* Submit Button - Fixed at bottom */}
               <div className="p-3 sm:p-4 border-t border-gray-200 flex-shrink-0 bg-white">
                 {(() => {
-                  const isValid = formData.clientName && formData.vehicleId && formData.departureDate && formData.returnDate;
+                  const isValid = formData.clientName && formData.vehicleId && formData.departureDate && formData.returnDate && formData.pickupTime && formData.returnTime;
                   return (
                     <button
                       type="submit"

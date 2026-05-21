@@ -1,4 +1,5 @@
 import type { BookingSubmission } from './bookingService';
+import { EXTRA_HOUR_RATE, formatRentalDuration } from './pricing';
 
 /**
  * Generate customer confirmation email HTML
@@ -7,7 +8,8 @@ export function generateCustomerEmailHTML(
   bookingReference: string,
   submission: BookingSubmission
 ): string {
-  const { clientInfo, selectedVehicle, departureDate, returnDate, rentalDays, totalPrice } = submission;
+  const { clientInfo, selectedVehicle, departureDate, returnDate, rentalDays, extraHours, totalPrice } = submission;
+  const durationLabel = formatRentalDuration({ fullDays: rentalDays, extraHours });
 
   return `
 <!DOCTYPE html>
@@ -69,7 +71,7 @@ export function generateCustomerEmailHTML(
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666666; font-size: 14px;">⏱️ Durée :</td>
-                  <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${rentalDays} jour(s)</td>
+                  <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${durationLabel}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666666; font-size: 14px;">🚗 Véhicule :</td>
@@ -153,7 +155,8 @@ export function generateAdminEmailHTML(
   bookingReference: string,
   submission: BookingSubmission
 ): string {
-  const { clientInfo, selectedVehicle, departureDate, returnDate, rentalDays, totalPrice, supplements, additionalDriver } = submission;
+  const { clientInfo, selectedVehicle, departureDate, returnDate, rentalDays, extraHours, totalPrice, supplements, additionalDriver } = submission;
+  const durationLabel = formatRentalDuration({ fullDays: rentalDays, extraHours });
 
   const supplementsList = supplements.length > 0
     ? supplements.map(s => `<li>${s.name} (x${s.quantity || 1}): ${s.pricePerDay * (s.quantity || 1)}€/jour</li>`).join('')
@@ -225,7 +228,7 @@ export function generateAdminEmailHTML(
                 </tr>
                 <tr>
                   <td style="color: #666666; font-size: 14px;">Durée :</td>
-                  <td style="color: #333333; font-size: 14px; font-weight: 600;">${rentalDays} jour(s)</td>
+                  <td style="color: #333333; font-size: 14px; font-weight: 600;">${durationLabel}</td>
                 </tr>
                 <tr>
                   <td style="color: #666666; font-size: 14px;">Véhicule :</td>
@@ -263,6 +266,12 @@ export function generateAdminEmailHTML(
                         <td style="color: #666666; font-size: 14px;">Véhicule (${rentalDays} jours × ${selectedVehicle.pricePerDay}€) :</td>
                         <td align="right" style="color: #333333; font-size: 14px;">${selectedVehicle.pricePerDay * rentalDays}€</td>
                       </tr>
+                      ${extraHours > 0 ? `
+                      <tr>
+                        <td style="color: #666666; font-size: 14px;">Heures supplémentaires (${extraHours}h × ${EXTRA_HOUR_RATE}€) :</td>
+                        <td align="right" style="color: #333333; font-size: 14px;">${extraHours * EXTRA_HOUR_RATE}€</td>
+                      </tr>
+                      ` : ''}
                       <tr>
                         <td style="color: #666666; font-size: 14px;">Suppléments :</td>
                         <td align="right" style="color: #333333; font-size: 14px;">${submission.supplementsTotal}€</td>
@@ -338,6 +347,7 @@ export interface ManualBookingData {
   pickupTime?: string;
   returnTime?: string;
   rentalDays: number;
+  extraHours?: number;
   totalPrice: number;
 }
 
@@ -407,7 +417,7 @@ export function generateManualBookingCustomerEmailHTML(data: ManualBookingData):
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666666; font-size: 14px;">⏱️ Durée :</td>
-                  <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${data.rentalDays} jour(s)</td>
+                  <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${formatRentalDuration({ fullDays: data.rentalDays, extraHours: data.extraHours || 0 })}</td>
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666666; font-size: 14px;">🚗 Véhicule :</td>
@@ -546,7 +556,7 @@ export function generateManualBookingAdminEmailHTML(data: ManualBookingData): st
                 </tr>
                 <tr>
                   <td style="color: #666666; font-size: 14px;">Durée :</td>
-                  <td style="color: #333333; font-size: 14px; font-weight: 600;">${data.rentalDays} jour(s)</td>
+                  <td style="color: #333333; font-size: 14px; font-weight: 600;">${formatRentalDuration({ fullDays: data.rentalDays, extraHours: data.extraHours || 0 })}</td>
                 </tr>
                 <tr>
                   <td style="color: #666666; font-size: 14px;">Véhicule :</td>
