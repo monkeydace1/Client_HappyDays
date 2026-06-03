@@ -1,0 +1,7 @@
+{
+  "buildCommand": "cd Client_HappyDays && npm run build",
+  "devCommand": "cd Client_HappyDays && npm run dev",
+  "outputDirectory": "Client_HappyDays/dist",
+  "installCommand": "cd Client_HappyDays && npm install",
+  "framework": "vite"
+}
