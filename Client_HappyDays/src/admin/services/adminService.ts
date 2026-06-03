@@ -1,0 +1,434 @@
+import { supabase } from '../../lib/supabase';
+import type { AdminVehicle, AdminBooking, BookingStatus, FullBookingDetails } from '../types/admin';
+
+// ============================================
+// VEHICLE OPERATIONS
+// ============================================
+
+export async function fetchVehicles(): Promise<AdminVehicle[]> {
+  const { data, error } = await supabase
+    .from('vehicles')
+    .select('*')
+    .order('id', { ascending: true });
+
+  if (error) {
+    console.error('Error fetching vehicles:', error);
+    throw error;
+  }
+
+  return (data || []).map(mapVehicleFromDb);
+}
+
+export async function updateVehicleStatus(
+  vehicleId: number,
+  status: AdminVehicle['status']
+): Promise<void> {
+  const { error } = await supabase
+    .from('vehicles')
+    .update({ status })
+    .eq('id', vehicleId);
+
+  if (error) {
+    console.error('Error updating vehicle status:', error);
+    throw error;
+  }
+}
+
+export async function createVehicle(
+  vehicle: Omit<AdminVehicle, 'id'>
+): Promise<AdminVehicle> {
+  const dbVehicle = {
+    name: vehicle.name,
+    brand: vehicle.brand,
+    model: vehicle.model,
+    year: vehicle.year,
+    category: vehicle.category,
+    transmission: vehicle.transmission,
+    fuel: vehicle.fuel,
+    seats: vehicle.seats,
+    price_per_day: vehicle.pricePerDay,
+    image: vehicle.image,
+    status: vehicle.status || 'available',
+    license_plate: vehicle.licensePlate,
+    notes: vehicle.notes,
+  };
+
+  const { data, error } = await supabase
+    .from('vehicles')
+    .insert(dbVehicle)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating vehicle:', error);
+    throw error;
+  }
+
+  return mapVehicleFromDb(data);
+}
+
+export async function deleteVehicle(vehicleId: number): Promise<void> {
+  const { error } = await supabase
+    .from('vehicles')
+    .delete()
+    .eq('id', vehicleId);
+
+  if (error) {
+    console.error('Error deleting vehicle:', error);
+    throw error;
+  }
+}
+
+// ============================================
+// BOOKING OPERATIONS
+// ============================================
+
+export async function fetchBookings(): Promise<AdminBooking[]> {
+  const { data, error } = await supabase
+    .from('admin_bookings')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching bookings:', error);
+    throw error;
+  }
+
+  return (data || []).map(mapBookingFromDb);
+}
+
+export async function createBooking(
+  booking: Omit<AdminBooking, 'id' | 'createdAt' | 'updatedAt'>
+): Promise<AdminBooking> {
+  console.log('[createBooking] Creating new booking:', {
+    ref: booking.bookingReference,
+    vehicleId: booking.vehicleId,
+    dates: `${booking.departureDate} to ${booking.returnDate}`,
+    client: booking.clientName,
+  });
+
+  const dbBooking = {
+    booking_reference: booking.bookingReference,
+    status: booking.status,
+    source: booking.source,
+    departure_date: booking.departureDate,
+    return_date: booking.returnDate,
+    rental_days: booking.rentalDays,
+    extra_hours: booking.extraHours ?? 0,
+    pickup_time: booking.pickupTime,
+    return_time: booking.returnTime,
+    pickup_location: booking.pickupLocation,
+    vehicle_id: booking.vehicleId,
+    vehicle_name: booking.vehicleName,
+    assigned_vehicle_id: booking.assignedVehicleId || booking.vehicleId,
+    client_name: booking.clientName,
+    client_phone: booking.clientPhone,
+    client_email: booking.clientEmail,
+    total_price: booking.totalPrice,
+  };
+
+  const { data, error } = await supabase
+    .from('admin_bookings')
+    .insert(dbBooking)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[createBooking] Error:', error);
+    throw error;
+  }
+
+  console.log('[createBooking] Success! ID:', data.id);
+  return mapBookingFromDb(data);
+}
+
+export async function updateBookingStatus(
+  bookingId: string,
+  status: BookingStatus
+): Promise<void> {
+  const { error } = await supabase
+    .from('admin_bookings')
+    .update({ status })
+    .eq('id', bookingId);
+
+  if (error) {
+    console.error('Error updating booking status:', error);
+    throw error;
+  }
+}
+
+export async function assignVehicleToBooking(
+  bookingId: string,
+  vehicleId: number
+): Promise<void> {
+  const { error } = await supabase
+    .from('admin_bookings')
+    .update({ assigned_vehicle_id: vehicleId })
+    .eq('id', bookingId);
+
+  if (error) {
+    console.error('Error assigning vehicle:', error);
+    throw error;
+  }
+}
+
+export async function updateBooking(
+  bookingId: string,
+  updates: Partial<AdminBooking>
+): Promise<void> {
+  const dbUpdates: Record<string, unknown> = {};
+
+  if (updates.clientName) dbUpdates.client_name = updates.clientName;
+  if (updates.clientPhone) dbUpdates.client_phone = updates.clientPhone;
+  if (updates.clientEmail !== undefined) dbUpdates.client_email = updates.clientEmail;
+  if (updates.departureDate) dbUpdates.departure_date = updates.departureDate;
+  if (updates.returnDate) dbUpdates.return_date = updates.returnDate;
+  if ('pickupTime' in updates) dbUpdates.pickup_time = updates.pickupTime ?? null;
+  if ('returnTime' in updates) dbUpdates.return_time = updates.returnTime ?? null;
+  if (updates.rentalDays) dbUpdates.rental_days = updates.rentalDays;
+  if ('extraHours' in updates) dbUpdates.extra_hours = updates.extraHours ?? 0;
+  if (updates.totalPrice) dbUpdates.total_price = updates.totalPrice;
+  if (updates.status) dbUpdates.status = updates.status;
+  if (updates.assignedVehicleId) dbUpdates.assigned_vehicle_id = updates.assignedVehicleId;
+  if (updates.vehicleId) dbUpdates.vehicle_id = updates.vehicleId;
+  if (updates.vehicleName) dbUpdates.vehicle_name = updates.vehicleName;
+
+  const { error } = await supabase
+    .from('admin_bookings')
+    .update(dbUpdates)
+    .eq('id', bookingId);
+
+  if (error) {
+    console.error('Error updating booking:', error);
+    throw error;
+  }
+}
+
+export async function deleteBooking(bookingId: string): Promise<void> {
+  // First, get the booking to find its reference
+  const { data: booking, error: fetchError } = await supabase
+    .from('admin_bookings')
+    .select('booking_reference')
+    .eq('id', bookingId)
+    .single();
+
+  if (fetchError) {
+    console.error('Error fetching booking for deletion:', fetchError);
+    throw fetchError;
+  }
+
+  // Delete from admin_bookings
+  const { error: deleteAdminError } = await supabase
+    .from('admin_bookings')
+    .delete()
+    .eq('id', bookingId);
+
+  if (deleteAdminError) {
+    console.error('Error deleting from admin_bookings:', deleteAdminError);
+    throw deleteAdminError;
+  }
+
+  // Also delete from bookings table (web bookings) if exists
+  if (booking?.booking_reference) {
+    const { error: deleteBookingsError } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('booking_reference', booking.booking_reference);
+
+    if (deleteBookingsError) {
+      // Log but don't throw - the booking might not exist in web bookings table
+      console.warn('Note: Could not delete from bookings table:', deleteBookingsError);
+    }
+  }
+}
+
+/**
+ * Fetch full booking details from the bookings table (web bookings only)
+ * Returns null if booking is not found (e.g., walk-in/phone bookings)
+ */
+export async function fetchFullBookingDetails(
+  bookingReference: string
+): Promise<FullBookingDetails | null> {
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .eq('booking_reference', bookingReference)
+    .single();
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      // No rows returned - booking not found in full bookings table
+      return null;
+    }
+    console.error('Error fetching full booking details:', error);
+    return null;
+  }
+
+  if (!data) return null;
+
+  return {
+    // Personal info
+    firstName: data.first_name,
+    lastName: data.last_name,
+    email: data.email,
+    phone: data.phone,
+    country: data.country,
+    city: data.city,
+    address: data.address || '',
+    dateOfBirth: data.date_of_birth || '',
+
+    // Driver's license
+    licenseNumber: data.license_number || '',
+    licenseIssueDate: data.license_issue_date || '',
+    licenseExpirationDate: data.license_expiration_date || '',
+    licensePhotoUrl: data.license_photo_url || undefined,
+
+    // Vehicle details
+    vehicleBrand: data.vehicle_brand,
+    vehicleModel: data.vehicle_model,
+    vehicleCategory: data.vehicle_category,
+    vehiclePricePerDay: data.vehicle_price_per_day,
+
+    // Supplements
+    supplements: data.supplements || [],
+    additionalDriver: data.additional_driver || false,
+
+    // Pricing breakdown
+    vehicleTotal: data.vehicle_total,
+    supplementsTotal: data.supplements_total,
+    totalPrice: data.total_price,
+    extraHours: (data.extra_hours as number | null) ?? 0,
+
+    // Payment & notes
+    paymentMethod: data.payment_method || 'cash',
+    extraInformation: data.extra_information || undefined,
+    notes: data.notes || undefined,
+
+    // Meta
+    createdAt: data.created_at,
+  };
+}
+
+// ============================================
+// REAL-TIME SUBSCRIPTIONS
+// ============================================
+
+export function subscribeToBookings(
+  onInsert: (booking: AdminBooking) => void,
+  onUpdate: (booking: AdminBooking) => void,
+  onDelete: (bookingId: string) => void
+) {
+  const channel = supabase
+    .channel('admin_bookings_changes')
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'admin_bookings' },
+      (payload) => onInsert(mapBookingFromDb(payload.new))
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'admin_bookings' },
+      (payload) => onUpdate(mapBookingFromDb(payload.new))
+    )
+    .on(
+      'postgres_changes',
+      { event: 'DELETE', schema: 'public', table: 'admin_bookings' },
+      (payload) => onDelete(payload.old.id)
+    )
+    .subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR') {
+        console.error('Bookings subscription error, retrying...', err);
+        setTimeout(() => {
+          supabase.removeChannel(channel);
+          subscribeToBookings(onInsert, onUpdate, onDelete);
+        }, 5000);
+      }
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+export function subscribeToVehicles(
+  onUpdate: (vehicle: AdminVehicle) => void
+) {
+  const channel = supabase
+    .channel('vehicles_changes')
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'vehicles' },
+      (payload) => onUpdate(mapVehicleFromDb(payload.new))
+    )
+    .subscribe((status, err) => {
+      if (status === 'CHANNEL_ERROR') {
+        console.error('Vehicles subscription error, retrying...', err);
+        setTimeout(() => {
+          supabase.removeChannel(channel);
+          subscribeToVehicles(onUpdate);
+        }, 5000);
+      }
+    });
+
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}
+
+// ============================================
+// HELPERS
+// ============================================
+
+export function generateBookingReference(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `HD-${year}-${month}-${random}`;
+}
+
+// Map database row to AdminVehicle type
+function mapVehicleFromDb(row: Record<string, unknown>): AdminVehicle {
+  return {
+    id: row.id as number,
+    name: row.name as string,
+    brand: row.brand as string,
+    model: row.model as string,
+    year: (row.year as number) || 2020,
+    category: row.category as string,
+    transmission: row.transmission as 'Manuelle' | 'Automatique',
+    fuel: row.fuel as 'Essence' | 'Diesel' | 'Électrique' | 'Hybride',
+    seats: row.seats as number,
+    pricePerDay: row.price_per_day as number,
+    image: row.image as string,
+    status: row.status as AdminVehicle['status'],
+    licensePlate: row.license_plate as string | undefined,
+    notes: row.notes as string | undefined,
+  };
+}
+
+// Map database row to AdminBooking type
+function mapBookingFromDb(row: Record<string, unknown>): AdminBooking {
+  return {
+    id: row.id as string,
+    bookingReference: row.booking_reference as string,
+    status: row.status as BookingStatus,
+    source: row.source as AdminBooking['source'],
+    departureDate: row.departure_date as string,
+    returnDate: row.return_date as string,
+    rentalDays: row.rental_days as number,
+    extraHours: (row.extra_hours as number | null) ?? 0,
+    pickupTime: row.pickup_time as string | undefined,
+    returnTime: row.return_time as string | undefined,
+    pickupLocation: row.pickup_location as string,
+    vehicleId: row.vehicle_id as number,
+    vehicleName: row.vehicle_name as string,
+    assignedVehicleId: row.assigned_vehicle_id as number | undefined,
+    clientName: row.client_name as string,
+    clientPhone: row.client_phone as string,
+    clientEmail: row.client_email as string | undefined,
+    totalPrice: row.total_price as number,
+    createdAt: row.created_at as string,
+    updatedAt: row.updated_at as string,
+  };
+}

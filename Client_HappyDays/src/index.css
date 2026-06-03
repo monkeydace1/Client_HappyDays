@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", sans-serif;
+
+  /* Primary - Deep Blue from logo */
+  --color-primary: #1E3A5F;
+  --color-primary-hover: #152C4A;
+  --color-primary-light: #E8F0F8;
+
+  /* Accent - Orange/Yellow from logo sun */
+  --color-accent: #F59E0B;
+  --color-accent-hover: #D97706;
+  --color-accent-light: #FEF3C7;
+
+  /* Secondary - Text colors */
+  --color-secondary: #334155;
+  --color-secondary-dark: #1E293B;
+  --color-secondary-light: #94A3B8;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    @apply antialiased text-slate-900 bg-white;
+  }
+}
+
+/* React Day Picker Styles */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: #1E3A5F;
+  --rdp-background-color: #E8F0F8;
+}
+
+.rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: #E8F0F8;
+}
+
+.rdp-day_selected, .rdp-day_selected:focus-visible, .rdp-day_selected:hover {
+  background-color: #1E3A5F;
+  color: white;
+}
+
+.rdp-day_range_middle {
+  background-color: #E8F0F8 !important;
+  color: #1E3A5F !important;
+}
+
+.rdp-day_range_start, .rdp-day_range_end {
+  background-color: #1E3A5F !important;
+  color: white !important;
+}
+
+/* Hero Date Picker Green Theme */
+.hero-date-picker .rdp-day_selected,
+.hero-date-picker .rdp-day_range_start,
+.hero-date-picker .rdp-day_range_end {
+  background-color: #22c55e !important;
+  color: white !important;
+}
+
+.hero-date-picker .rdp-day_range_middle {
+  background-color: #dcfce7 !important;
+  color: #166534 !important;
+}
+
+.hero-date-picker .rdp-button:hover:not([disabled]):not(.rdp-day_selected) {
+  background-color: #dcfce7;
+}
+
+/* Mobile touch improvements */
+@media (max-width: 768px) {
+  .rdp-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  a, button {
+    -webkit-tap-highlight-color: transparent;
+  }
+}

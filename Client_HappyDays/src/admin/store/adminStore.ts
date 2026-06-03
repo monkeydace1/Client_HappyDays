@@ -1,0 +1,163 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import type { AdminTab, CalendarViewDays, ReservationFilters } from '../types/admin';
+
+interface AdminState {
+  // Authentication
+  isAuthenticated: boolean;
+  pinVerified: boolean;
+
+  // UI State
+  activeTab: AdminTab;
+  calendarViewDays: CalendarViewDays;
+  calendarStartDate: string; // ISO date string
+
+  // Modal State
+  quickAddModalOpen: boolean;
+  quickAddDate: string | null;
+  quickAddVehicleId: number | null;
+  bookingDetailsModalOpen: boolean;
+  selectedBookingId: string | null;
+
+  // Unassigned bookings panel
+  unassignedPanelExpanded: boolean;
+  selectedUnassignedBookingId: string | null; // For tap-to-assign flow
+
+  // Filters
+  reservationFilters: ReservationFilters;
+
+  // Actions - Auth
+  setAuthenticated: (value: boolean) => void;
+  setPinVerified: (value: boolean) => void;
+  logout: () => void;
+
+  // Actions - UI
+  setActiveTab: (tab: AdminTab) => void;
+  setCalendarViewDays: (days: CalendarViewDays) => void;
+  setCalendarStartDate: (date: string) => void;
+  navigateCalendar: (direction: 'prev' | 'next') => void;
+  goToToday: () => void;
+
+  // Actions - Modals
+  openQuickAdd: (date: string, vehicleId: number) => void;
+  closeQuickAdd: () => void;
+  openBookingDetails: (bookingId: string) => void;
+  closeBookingDetails: () => void;
+
+  // Actions - Unassigned panel
+  toggleUnassignedPanel: () => void;
+  selectUnassignedBooking: (bookingId: string | null) => void;
+
+  // Actions - Filters
+  setReservationFilters: (filters: Partial<ReservationFilters>) => void;
+  resetReservationFilters: () => void;
+}
+
+// Default to showing 'pending' status as an action queue
+// This helps admin focus on reservations that need attention
+const getDefaultFilters = (): ReservationFilters => ({
+  search: '',
+  status: 'pending', // Changed from 'all' to 'pending' to act as action queue
+  dateFrom: undefined,
+  dateTo: undefined,
+});
+
+// Start calendar 3 days before today for better context
+const getCalendarStartDate = () => {
+  const date = new Date();
+  date.setDate(date.getDate() - 3);
+  return date.toISOString().split('T')[0];
+};
+
+export const useAdminStore = create<AdminState>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      isAuthenticated: false,
+      pinVerified: false,
+      activeTab: 'calendar',
+      calendarViewDays: 14,
+      calendarStartDate: getCalendarStartDate(),
+      quickAddModalOpen: false,
+      quickAddDate: null,
+      quickAddVehicleId: null,
+      bookingDetailsModalOpen: false,
+      selectedBookingId: null,
+      unassignedPanelExpanded: false,
+      selectedUnassignedBookingId: null,
+      reservationFilters: getDefaultFilters(),
+
+      // Auth actions
+      setAuthenticated: (value) => set({ isAuthenticated: value }),
+      setPinVerified: (value) => set({ pinVerified: value }),
+      logout: () => set({
+        isAuthenticated: false,
+        pinVerified: false,
+        activeTab: 'calendar',
+      }),
+
+      // UI actions
+      setActiveTab: (tab) => set({ activeTab: tab }),
+      setCalendarViewDays: (days) => set({ calendarViewDays: days }),
+      setCalendarStartDate: (date) => set({ calendarStartDate: date }),
+
+      navigateCalendar: (direction) => {
+        const { calendarStartDate, calendarViewDays } = get();
+        const current = new Date(calendarStartDate);
+        // Move by half the view days for overlap (minimum 3 days)
+        const stepDays = Math.max(3, Math.floor(calendarViewDays / 2));
+        const offset = direction === 'next' ? stepDays : -stepDays;
+        current.setDate(current.getDate() + offset);
+        set({ calendarStartDate: current.toISOString().split('T')[0] });
+      },
+
+      goToToday: () => set({ calendarStartDate: getCalendarStartDate() }),
+
+      // Modal actions
+      openQuickAdd: (date, vehicleId) => set({
+        quickAddModalOpen: true,
+        quickAddDate: date,
+        quickAddVehicleId: vehicleId,
+      }),
+      closeQuickAdd: () => set({
+        quickAddModalOpen: false,
+        quickAddDate: null,
+        quickAddVehicleId: null,
+      }),
+      openBookingDetails: (bookingId) => set({
+        bookingDetailsModalOpen: true,
+        selectedBookingId: bookingId,
+      }),
+      closeBookingDetails: () => set({
+        bookingDetailsModalOpen: false,
+        selectedBookingId: null,
+      }),
+
+      // Unassigned panel actions
+      toggleUnassignedPanel: () => set((state) => ({
+        unassignedPanelExpanded: !state.unassignedPanelExpanded,
+        // Clear selection when closing the panel
+        selectedUnassignedBookingId: state.unassignedPanelExpanded ? null : state.selectedUnassignedBookingId,
+      })),
+      selectUnassignedBooking: (bookingId) => set({
+        selectedUnassignedBookingId: bookingId,
+      }),
+
+      // Filter actions
+      setReservationFilters: (filters) => set((state) => ({
+        reservationFilters: { ...state.reservationFilters, ...filters },
+      })),
+      resetReservationFilters: () => set({
+        reservationFilters: getDefaultFilters(),
+      }),
+    }),
+    {
+      name: 'happy-days-admin',
+      partialize: (state) => ({
+        // Only persist these fields
+        calendarViewDays: state.calendarViewDays,
+        // Don't persist auth state for security - require login each time
+      }),
+    }
+  )
+);
