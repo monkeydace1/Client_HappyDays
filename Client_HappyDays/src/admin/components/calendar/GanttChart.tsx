@@ -1,7 +1,7 @@
-import { useMemo, useState, useRef, useEffect } from 'react';
+import { useMemo, useState, useRef, useEffect, useCallback, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, AlertCircle, Sparkles, Clock, Car, Check, XCircle, Trash2 } from 'lucide-react';
-import { format, addDays, isSameDay, isWithinInterval, parseISO } from 'date-fns';
+import { format, addDays, isSameDay, parseISO, differenceInCalendarDays } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAdminStore } from '../../store/adminStore';
 import type { AdminVehicle, AdminBooking, CalendarViewDays, BookingStatus } from '../../types/admin';
@@ -17,6 +17,21 @@ interface GanttChartProps {
   onDeleteBooking?: (bookingId: string) => void;
 }
 
+// A booking bar rendered from a given cell, spanning `span` visible columns
+interface BookingBar {
+  booking: AdminBooking;
+  span: number;
+}
+
+// Precomputed content of one vehicle × day cell
+interface CellData {
+  all: AdminBooking[];   // every booking covering this day (for "is the cell busy")
+  bars: BookingBar[];    // bookings whose bar starts rendering in this cell
+}
+
+const EMPTY_CELL: CellData = { all: [], bars: [] };
+const VEHICLE_COLUMN_WIDTH = 40;
+
 // Generate date range from start date
 function generateDates(startDate: string, days: number): Date[] {
   const dates: Date[] = [];
@@ -27,31 +42,52 @@ function generateDates(startDate: string, days: number): Date[] {
   return dates;
 }
 
-// Get ALL bookings for a specific vehicle and date (supports overlapping bookings)
-function getBookingsForCell(
-  bookings: AdminBooking[],
-  vehicleId: number,
-  date: Date
-): AdminBooking[] {
-  return bookings.filter((booking) => {
-    if (booking.assignedVehicleId !== vehicleId && booking.vehicleId !== vehicleId) return false;
-    const start = parseISO(booking.departureDate);
-    const end = parseISO(booking.returnDate);
-    return isWithinInterval(date, { start, end }) || isSameDay(date, start) || isSameDay(date, end);
-  });
-}
+/**
+ * Build the vehicle → day-index → bookings index ONCE per (bookings, visible range).
+ *
+ * The previous implementation scanned and date-parsed every booking for every
+ * vehicle × day cell on every render (21 vehicles × 180 days × 564 bookings ≈ 2M
+ * scans, ~1 s of pure date math per render in the 6-month view). This does one
+ * pass over the bookings instead.
+ */
+function buildCellIndex(bookings: AdminBooking[], viewStart: Date, days: number): Map<number, CellData[]> {
+  const index = new Map<number, CellData[]>();
 
-// Calculate booking span in days
-function getBookingSpan(booking: AdminBooking, startDate: Date, totalDays: number): number {
-  const bookingStart = parseISO(booking.departureDate);
-  const bookingEnd = parseISO(booking.returnDate);
-  const viewEnd = addDays(startDate, totalDays);
+  const getRow = (vehicleId: number): CellData[] => {
+    let row = index.get(vehicleId);
+    if (!row) {
+      row = Array.from({ length: days }, () => ({ all: [], bars: [] }));
+      index.set(vehicleId, row);
+    }
+    return row;
+  };
 
-  const effectiveStart = bookingStart < startDate ? startDate : bookingStart;
-  const effectiveEnd = bookingEnd > viewEnd ? viewEnd : bookingEnd;
+  for (const booking of bookings) {
+    const startOffset = differenceInCalendarDays(parseISO(booking.departureDate), viewStart);
+    const endOffset = differenceInCalendarDays(parseISO(booking.returnDate), viewStart);
+    if (!Number.isFinite(startOffset) || !Number.isFinite(endOffset)) continue; // malformed dates
 
-  const diffTime = effectiveEnd.getTime() - effectiveStart.getTime();
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    // Clip to the visible window. A booking that started before the view renders
+    // its bar on the first visible day (same behaviour as before).
+    const firstIdx = Math.max(0, startOffset);
+    const lastIdx = Math.min(days - 1, endOffset);
+    if (firstIdx > lastIdx) continue; // not visible in this range
+
+    // As before, a booking shows on its assigned vehicle row AND on the row of the
+    // vehicle originally requested, when those differ.
+    const rowIds = booking.assignedVehicleId && booking.assignedVehicleId !== booking.vehicleId
+      ? [booking.assignedVehicleId, booking.vehicleId]
+      : [booking.assignedVehicleId || booking.vehicleId];
+
+    for (const vehicleId of rowIds) {
+      if (!vehicleId) continue;
+      const row = getRow(vehicleId);
+      for (let i = firstIdx; i <= lastIdx; i++) row[i].all.push(booking);
+      row[firstIdx].bars.push({ booking, span: lastIdx - firstIdx + 1 });
+    }
+  }
+
+  return index;
 }
 
 // Status color mapping
@@ -94,6 +130,164 @@ const statusOptions: { value: BookingStatus; label: string; color: string; bgCol
   { value: 'cancelled', label: 'Annulée', color: 'text-red-600', bgColor: 'bg-red-500', icon: <XCircle className="w-4 h-4" /> },
 ];
 
+// ============================================
+// ROW (memoized: only re-renders when its own inputs change, so a drag-over on
+// one cell no longer re-renders the whole grid)
+// ============================================
+
+interface GanttRowProps {
+  vehicle: AdminVehicle;
+  dates: Date[];
+  dateStrs: string[];
+  cells: CellData[];
+  cellWidth: number;
+  isSelecting: boolean;
+  canDrag: boolean;
+  draggedBookingId: string | null;
+  isDragSourceRow: boolean;
+  dropTargetIndex: number | null;
+  statusMenuBookingId: string | null;
+  onCellClick: (date: string, vehicleId: number) => void;
+  onBookingClick: (bookingId: string) => void;
+  onVehicleRowClick: (vehicleId: number) => void;
+  onBookingContextMenu: (e: React.MouseEvent, booking: AdminBooking) => void;
+  onDragStart: (e: React.DragEvent, booking: AdminBooking) => void;
+  onDragEnd: () => void;
+  onDragOver: (e: React.DragEvent, dateIndex: number, vehicleId: number) => void;
+  onDragLeave: () => void;
+  onDrop: (e: React.DragEvent, dateStr: string, vehicleId: number) => void;
+}
+
+const GanttRow = memo(function GanttRow({
+  vehicle,
+  dates,
+  dateStrs,
+  cells,
+  cellWidth,
+  isSelecting,
+  canDrag,
+  draggedBookingId,
+  isDragSourceRow,
+  dropTargetIndex,
+  statusMenuBookingId,
+  onCellClick,
+  onBookingClick,
+  onVehicleRowClick,
+  onBookingContextMenu,
+  onDragStart,
+  onDragEnd,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: GanttRowProps) {
+  const isInMaintenance = vehicle.status === 'maintenance';
+
+  return (
+    <tr>
+      {/* Vehicle Cell - Sticky (ID only, compact V1 design) */}
+      <td
+        className={`sticky left-0 z-10 border-b border-r border-gray-300 p-0
+          ${getVehicleStatusBg(vehicle.status)}
+          ${isSelecting ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+        onClick={() => isSelecting && onVehicleRowClick(vehicle.id)}
+        style={{ width: VEHICLE_COLUMN_WIDTH, minWidth: VEHICLE_COLUMN_WIDTH }}
+      >
+        <div className="h-12 flex items-center justify-center">
+          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
+            ${isInMaintenance ? 'bg-gray-400 text-white' : 'bg-primary text-white'}`}>
+            {vehicle.id}
+          </span>
+        </div>
+      </td>
+
+      {/* Date Cells */}
+      {dates.map((date, dateIndex) => {
+        const cell = cells[dateIndex] ?? EMPTY_CELL;
+        const isOddMonth = date.getMonth() % 2 === 1; // Feb, Apr, Jun, Aug, Oct, Dec = gray
+        const dateStr = dateStrs[dateIndex];
+        const hasBookings = cell.all.length > 0;
+        const isDropTarget = dropTargetIndex === dateIndex;
+
+        return (
+          <td
+            key={dateIndex}
+            className={`relative border-b border-r border-gray-100 p-0
+              ${isOddMonth ? 'bg-gray-100' : 'bg-white'}
+              ${isInMaintenance ? 'bg-gray-200' : ''}
+              ${isDropTarget ? 'bg-blue-200 ring-2 ring-blue-400 ring-inset' : ''}`}
+            style={{ width: cellWidth, minWidth: cellWidth }}
+            onDragOver={(e) => !isInMaintenance && onDragOver(e, dateIndex, vehicle.id)}
+            onDragLeave={onDragLeave}
+            onDrop={(e) => !isInMaintenance && onDrop(e, dateStr, vehicle.id)}
+          >
+            <div className="h-12 relative overflow-visible">
+              {cell.bars.length > 0 ? (
+                // Render each booking whose bar starts in this cell
+                cell.bars.map(({ booking, span }, bookingIndex) => {
+                  const count = cell.bars.length;
+                  const height = count > 1 ? `${Math.floor(44 / count) - 1}px` : '44px';
+                  const top = count > 1 ? `${bookingIndex * (44 / count) + 2}px` : '2px';
+                  const isDragging = draggedBookingId === booking.id;
+                  const isMenuTarget = statusMenuBookingId === booking.id;
+
+                  return (
+                    <div
+                      key={booking.id}
+                      draggable={canDrag}
+                      onDragStart={(e) => onDragStart(e, booking)}
+                      onDragEnd={onDragEnd}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onBookingClick(booking.id);
+                      }}
+                      onContextMenu={(e) => onBookingContextMenu(e, booking)}
+                      className={`absolute left-0.5 rounded ${getStatusColor(booking.status)}
+                        text-white font-medium px-1.5 overflow-hidden text-[9px]
+                        hover:opacity-90 transition-opacity touch-manipulation cursor-grab active:cursor-grabbing
+                        ${isMenuTarget ? 'ring-2 ring-white ring-offset-1' : ''}
+                        ${isDragging ? 'opacity-50 ring-2 ring-white' : ''}`}
+                      style={{
+                        width: `${span * cellWidth - 4}px`,
+                        height,
+                        top,
+                        zIndex: isMenuTarget ? 10 : 5 + bookingIndex,
+                      }}
+                    >
+                      <div className="truncate leading-tight">{booking.clientName.split(' ')[0]}</div>
+                    </div>
+                  );
+                })
+              ) : !hasBookings && !isInMaintenance && !isSelecting && !draggedBookingId ? (
+                <button
+                  onClick={() => onCellClick(dateStr, vehicle.id)}
+                  className="w-full h-full hover:bg-green-100 transition-colors touch-manipulation"
+                />
+              ) : null}
+
+              {/* Drop zone indicator when dragging - only on same vehicle row */}
+              {isDragSourceRow && !hasBookings && !isInMaintenance && (
+                <div className="absolute inset-0 pointer-events-none">
+                  {isDropTarget ? (
+                    <div className="w-full h-full bg-blue-300/50 rounded flex items-center justify-center">
+                      <span className="text-[8px] text-blue-700 font-medium">Déposer</span>
+                    </div>
+                  ) : (
+                    <div className="w-full h-full bg-blue-100/30 rounded" />
+                  )}
+                </div>
+              )}
+            </div>
+          </td>
+        );
+      })}
+    </tr>
+  );
+});
+
+// ============================================
+// CHART
+// ============================================
+
 export function GanttChart({
   vehicles,
   bookings,
@@ -116,9 +310,11 @@ export function GanttChart({
     selectUnassignedBooking,
   } = useAdminStore();
 
-  // Drag and drop state
+  // Drag and drop state. The ref mirrors the state so the drag handlers stay
+  // referentially stable (they read the ref) while rows still re-render on change.
   const [draggedBooking, setDraggedBooking] = useState<AdminBooking | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ date: string; vehicleId: number } | null>(null);
+  const draggedBookingRef = useRef<AdminBooking | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ vehicleId: number; dateIndex: number } | null>(null);
 
   // Status menu state
   const [statusMenuBooking, setStatusMenuBooking] = useState<AdminBooking | null>(null);
@@ -141,12 +337,12 @@ export function GanttChart({
   }, [statusMenuBooking]);
 
   // Handle booking right-click or long-press for status menu
-  const handleBookingContextMenu = (e: React.MouseEvent, booking: AdminBooking) => {
+  const handleBookingContextMenu = useCallback((e: React.MouseEvent, booking: AdminBooking) => {
     e.preventDefault();
     e.stopPropagation();
     setStatusMenuBooking(booking);
     setStatusMenuPosition({ x: e.clientX, y: e.clientY });
-  };
+  }, []);
 
   // Handle status change from menu
   const handleStatusChange = (newStatus: BookingStatus) => {
@@ -158,21 +354,24 @@ export function GanttChart({
   };
 
   // Drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, booking: AdminBooking) => {
+  const handleDragStart = useCallback((e: React.DragEvent, booking: AdminBooking) => {
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', booking.id);
+    draggedBookingRef.current = booking;
     setDraggedBooking(booking);
-  };
+  }, []);
 
-  const handleDragEnd = () => {
+  const clearDrag = useCallback(() => {
+    draggedBookingRef.current = null;
     setDraggedBooking(null);
     setDropTarget(null);
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent, date: string, vehicleId: number) => {
+  const handleDragOver = useCallback((e: React.DragEvent, dateIndex: number, vehicleId: number) => {
     // Only allow dropping on the same vehicle row
-    if (draggedBooking) {
-      const currentVehicleId = draggedBooking.assignedVehicleId || draggedBooking.vehicleId;
+    const dragged = draggedBookingRef.current;
+    if (dragged) {
+      const currentVehicleId = dragged.assignedVehicleId || dragged.vehicleId;
       if (vehicleId !== currentVehicleId) {
         e.dataTransfer.dropEffect = 'none';
         return;
@@ -180,54 +379,64 @@ export function GanttChart({
     }
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDropTarget({ date, vehicleId });
-  };
+    // dragover fires continuously; only update state when the target cell changes
+    setDropTarget((prev) =>
+      prev && prev.vehicleId === vehicleId && prev.dateIndex === dateIndex ? prev : { vehicleId, dateIndex }
+    );
+  }, []);
 
-  const handleDragLeave = () => {
+  const handleDragLeave = useCallback(() => {
     setDropTarget(null);
-  };
+  }, []);
 
-  const handleDrop = (e: React.DragEvent, targetDate: string, targetVehicleId: number) => {
+  const handleDrop = useCallback((e: React.DragEvent, targetDate: string, targetVehicleId: number) => {
     e.preventDefault();
-    if (!draggedBooking || !onBookingMove) {
-      setDraggedBooking(null);
-      setDropTarget(null);
+    const dragged = draggedBookingRef.current;
+    if (!dragged || !onBookingMove) {
+      clearDrag();
       return;
     }
 
     // Only allow dropping on the same vehicle row
-    const currentVehicleId = draggedBooking.assignedVehicleId || draggedBooking.vehicleId;
+    const currentVehicleId = dragged.assignedVehicleId || dragged.vehicleId;
     if (targetVehicleId !== currentVehicleId) {
-      setDraggedBooking(null);
-      setDropTarget(null);
+      clearDrag();
       return;
     }
 
     // Calculate new dates based on the drop position
     // Use the exact day difference to preserve the booking's original duration
-    const originalStart = parseISO(draggedBooking.departureDate);
-    const originalEnd = parseISO(draggedBooking.returnDate);
+    const originalStart = parseISO(dragged.departureDate);
+    const originalEnd = parseISO(dragged.returnDate);
     const daysDiff = Math.round((originalEnd.getTime() - originalStart.getTime()) / (1000 * 60 * 60 * 24));
 
     const newStart = parseISO(targetDate);
     const newEnd = addDays(newStart, daysDiff);
 
-    const newDepartureDate = format(newStart, 'yyyy-MM-dd');
-    const newReturnDate = format(newEnd, 'yyyy-MM-dd');
-
     onBookingMove(
-      draggedBooking.id,
-      newDepartureDate,
-      newReturnDate
+      dragged.id,
+      format(newStart, 'yyyy-MM-dd'),
+      format(newEnd, 'yyyy-MM-dd')
     );
 
-    setDraggedBooking(null);
-    setDropTarget(null);
-  };
+    clearDrag();
+  }, [onBookingMove, clearDrag]);
 
   const dates = useMemo(
     () => generateDates(calendarStartDate, calendarViewDays),
     [calendarStartDate, calendarViewDays]
+  );
+
+  const dateStrs = useMemo(() => dates.map((d) => format(d, 'yyyy-MM-dd')), [dates]);
+
+  // vehicle → day-index → bookings, rebuilt only when the data or the visible range changes
+  const cellIndex = useMemo(
+    () => buildCellIndex(bookings, parseISO(calendarStartDate), calendarViewDays),
+    [bookings, calendarStartDate, calendarViewDays]
+  );
+  const emptyRow = useMemo<CellData[]>(
+    () => Array.from({ length: calendarViewDays }, () => EMPTY_CELL),
+    [calendarViewDays]
   );
 
   const unassignedBookings = useMemo(
@@ -243,16 +452,18 @@ export function GanttChart({
     { value: 180, label: '6 mois' },
   ];
 
-  const handleVehicleRowClick = (vehicleId: number) => {
+  const handleVehicleRowClick = useCallback((vehicleId: number) => {
     if (selectedUnassignedBookingId && onAssignVehicle) {
       onAssignVehicle(selectedUnassignedBookingId, vehicleId);
       selectUnassignedBooking(null);
     }
-  };
+  }, [selectedUnassignedBookingId, onAssignVehicle, selectUnassignedBooking]);
 
   // Compact cell sizing (V1 design - mobile-first, works on all screens)
   const cellWidth = calendarViewDays <= 7 ? 48 : calendarViewDays <= 14 ? 42 : calendarViewDays <= 30 ? 36 : 28;
-  const vehicleColumnWidth = 40;
+  const isSelecting = !!selectedUnassignedBookingId;
+  const dragSourceVehicleId = draggedBooking ? (draggedBooking.assignedVehicleId || draggedBooking.vehicleId) : null;
+  const today = new Date();
 
   return (
     <div className="flex flex-col h-full bg-gray-100">
@@ -356,20 +567,20 @@ export function GanttChart({
       <div className="flex-1 overflow-auto min-h-0">
         <table
           className="border-collapse"
-          style={{ minWidth: `${vehicleColumnWidth + calendarViewDays * cellWidth}px` }}
+          style={{ minWidth: `${VEHICLE_COLUMN_WIDTH + calendarViewDays * cellWidth}px` }}
         >
           <thead>
             <tr>
               {/* Empty corner cell */}
               <th
                 className="sticky left-0 top-0 z-30 bg-gray-100 border-b border-r border-gray-300"
-                style={{ width: vehicleColumnWidth, minWidth: vehicleColumnWidth }}
+                style={{ width: VEHICLE_COLUMN_WIDTH, minWidth: VEHICLE_COLUMN_WIDTH }}
               >
                 <div className="h-10" />
               </th>
               {/* Date headers */}
               {dates.map((date, index) => {
-                const isToday = isSameDay(date, new Date());
+                const isToday = isSameDay(date, today);
                 const monthIndex = date.getMonth();
                 const isOddMonth = monthIndex % 2 === 1; // Feb, Apr, Jun, Aug, Oct, Dec = gray
                 const dayOfMonth = date.getDate();
@@ -410,130 +621,31 @@ export function GanttChart({
             </tr>
           </thead>
           <tbody>
-            {vehicles.map((vehicle) => {
-              const isInMaintenance = vehicle.status === 'maintenance';
-              const isSelecting = !!selectedUnassignedBookingId;
-
-              return (
-                <tr key={vehicle.id}>
-                  {/* Vehicle Cell - Sticky (ID only, compact V1 design) */}
-                  <td
-                    className={`sticky left-0 z-10 border-b border-r border-gray-300 p-0
-                      ${getVehicleStatusBg(vehicle.status)}
-                      ${isSelecting ? 'cursor-pointer hover:bg-blue-50' : ''}`}
-                    onClick={() => isSelecting && handleVehicleRowClick(vehicle.id)}
-                    style={{ width: vehicleColumnWidth, minWidth: vehicleColumnWidth }}
-                  >
-                    <div className="h-12 flex items-center justify-center">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold
-                        ${isInMaintenance ? 'bg-gray-400 text-white' : 'bg-primary text-white'}`}>
-                        {vehicle.id}
-                      </span>
-                    </div>
-                  </td>
-
-                  {/* Date Cells */}
-                  {dates.map((date, dateIndex) => {
-                    const cellBookings = getBookingsForCell(bookings, vehicle.id, date);
-                    const monthIndex = date.getMonth();
-                    const isOddMonth = monthIndex % 2 === 1; // Feb, Apr, Jun, Aug, Oct, Dec = gray
-                    const dateStr = format(date, 'yyyy-MM-dd');
-
-                    // Get bookings that should render their bar starting on this date
-                    // This includes bookings that actually start on this date OR
-                    // bookings that started before the visible range (render on first visible date)
-                    const viewStart = parseISO(calendarStartDate);
-                    const startingBookings = cellBookings.filter(b => {
-                      const bookingStart = parseISO(b.departureDate);
-                      if (isSameDay(bookingStart, date)) return true;
-                      // For bookings that started before the view, render on the first visible date
-                      if (bookingStart < viewStart && isSameDay(date, viewStart)) return true;
-                      return false;
-                    });
-                    const hasBookings = cellBookings.length > 0;
-
-                    // Check if this cell is the current drop target
-                    const isDropTarget = dropTarget?.date === dateStr && dropTarget?.vehicleId === vehicle.id;
-
-                    return (
-                      <td
-                        key={dateIndex}
-                        className={`relative border-b border-r border-gray-100 p-0
-                          ${isOddMonth ? 'bg-gray-100' : 'bg-white'}
-                          ${isInMaintenance ? 'bg-gray-200' : ''}
-                          ${isDropTarget ? 'bg-blue-200 ring-2 ring-blue-400 ring-inset' : ''}`}
-                        style={{ width: cellWidth, minWidth: cellWidth }}
-                        onDragOver={(e) => !isInMaintenance && handleDragOver(e, dateStr, vehicle.id)}
-                        onDragLeave={handleDragLeave}
-                        onDrop={(e) => !isInMaintenance && handleDrop(e, dateStr, vehicle.id)}
-                      >
-                        <div className="h-12 relative overflow-visible">
-                          {startingBookings.length > 0 ? (
-                            // Render each booking that starts on this date
-                            startingBookings.map((booking, bookingIndex) => {
-                              const span = getBookingSpan(booking, parseISO(calendarStartDate), calendarViewDays);
-                              const height = startingBookings.length > 1
-                                ? `${Math.floor(44 / startingBookings.length) - 1}px`
-                                : '44px';
-                              const top = startingBookings.length > 1
-                                ? `${bookingIndex * (44 / startingBookings.length) + 2}px`
-                                : '2px';
-                              const isDragging = draggedBooking?.id === booking.id;
-
-                              return (
-                                <div
-                                  key={booking.id}
-                                  draggable={!!onBookingMove}
-                                  onDragStart={(e) => handleDragStart(e, booking)}
-                                  onDragEnd={handleDragEnd}
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    onBookingClick(booking.id);
-                                  }}
-                                  onContextMenu={(e) => handleBookingContextMenu(e, booking)}
-                                  className={`absolute left-0.5 rounded ${getStatusColor(booking.status)}
-                                    text-white font-medium px-1.5 overflow-hidden text-[9px]
-                                    hover:opacity-90 transition-opacity touch-manipulation cursor-grab active:cursor-grabbing
-                                    ${statusMenuBooking?.id === booking.id ? 'ring-2 ring-white ring-offset-1' : ''}
-                                    ${isDragging ? 'opacity-50 ring-2 ring-white' : ''}`}
-                                  style={{
-                                    width: `${Math.min(span, calendarViewDays - dateIndex) * cellWidth - 4}px`,
-                                    height,
-                                    top,
-                                    zIndex: statusMenuBooking?.id === booking.id ? 10 : 5 + bookingIndex,
-                                  }}
-                                >
-                                  <div className="truncate leading-tight">{booking.clientName.split(' ')[0]}</div>
-                                </div>
-                              );
-                            })
-                          ) : !hasBookings && !isInMaintenance && !isSelecting && !draggedBooking ? (
-                            <button
-                              onClick={() => onCellClick(format(date, 'yyyy-MM-dd'), vehicle.id)}
-                              className="w-full h-full hover:bg-green-100 transition-colors touch-manipulation"
-                            />
-                          ) : null}
-
-                          {/* Drop zone indicator when dragging - only on same vehicle row */}
-                          {draggedBooking && !hasBookings && !isInMaintenance && (draggedBooking.assignedVehicleId || draggedBooking.vehicleId) === vehicle.id && (
-                            <div className="absolute inset-0 pointer-events-none">
-                              {isDropTarget ? (
-                                <div className="w-full h-full bg-blue-300/50 rounded flex items-center justify-center">
-                                  <span className="text-[8px] text-blue-700 font-medium">Déposer</span>
-                                </div>
-                              ) : (
-                                <div className="w-full h-full bg-blue-100/30 rounded" />
-                              )}
-                            </div>
-                          )}
-
-                        </div>
-                      </td>
-                    );
-                  })}
-                </tr>
-              );
-            })}
+            {vehicles.map((vehicle) => (
+              <GanttRow
+                key={vehicle.id}
+                vehicle={vehicle}
+                dates={dates}
+                dateStrs={dateStrs}
+                cells={cellIndex.get(vehicle.id) ?? emptyRow}
+                cellWidth={cellWidth}
+                isSelecting={isSelecting}
+                canDrag={!!onBookingMove}
+                draggedBookingId={draggedBooking?.id ?? null}
+                isDragSourceRow={dragSourceVehicleId === vehicle.id}
+                dropTargetIndex={dropTarget?.vehicleId === vehicle.id ? dropTarget.dateIndex : null}
+                statusMenuBookingId={statusMenuBooking?.id ?? null}
+                onCellClick={onCellClick}
+                onBookingClick={onBookingClick}
+                onVehicleRowClick={handleVehicleRowClick}
+                onBookingContextMenu={handleBookingContextMenu}
+                onDragStart={handleDragStart}
+                onDragEnd={clearDrag}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              />
+            ))}
           </tbody>
         </table>
       </div>

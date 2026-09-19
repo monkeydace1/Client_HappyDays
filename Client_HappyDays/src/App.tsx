@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { Navbar } from './components/Navbar';
 import { Hero } from './components/Hero';
 import { Features } from './components/Features';
@@ -18,10 +19,25 @@ import { TopBanner } from './components/TopBanner';
 import { captureUTMParams } from './lib/utmTracking';
 import { useSEO } from './lib/seo';
 
-// Admin imports
-import { AdminLoginPage } from './admin/pages/AdminLoginPage';
-import { AdminPinPage } from './admin/pages/AdminPinPage';
-import { AdminDashboardPage } from './admin/pages/AdminDashboardPage';
+// Admin pages are code-split: public visitors no longer download the dashboard,
+// and the admin only downloads it once it navigates to /admin.
+const AdminLoginPage = lazy(() =>
+  import('./admin/pages/AdminLoginPage').then((m) => ({ default: m.AdminLoginPage }))
+);
+const AdminPinPage = lazy(() =>
+  import('./admin/pages/AdminPinPage').then((m) => ({ default: m.AdminPinPage }))
+);
+const AdminDashboardPage = lazy(() =>
+  import('./admin/pages/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage }))
+);
+
+function AdminChunkFallback() {
+  return (
+    <div className="h-screen flex items-center justify-center bg-gray-100">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>
+  );
+}
 
 function HomePage() {
   useSEO({
@@ -72,12 +88,14 @@ function AppRoutes() {
   if (isAdminRoute) {
     return (
       <AdminLayout>
-        <Routes>
-          <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
-          <Route path="/admin/login" element={<AdminLoginPage />} />
-          <Route path="/admin/pin" element={<AdminPinPage />} />
-          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-        </Routes>
+        <Suspense fallback={<AdminChunkFallback />}>
+          <Routes>
+            <Route path="/admin" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin/pin" element={<AdminPinPage />} />
+            <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          </Routes>
+        </Suspense>
       </AdminLayout>
     );
   }

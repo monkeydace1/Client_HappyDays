@@ -479,28 +479,11 @@ export async function getBookedVehicleIds(
     const normalizedDeparture = extractDateOnly(departureDate);
     const normalizedReturn = extractDateOnly(returnDate);
 
-    console.log('[getBookedVehicleIds] =================================');
-    console.log('[getBookedVehicleIds] Customer dates:', {
-      raw: { departureDate, returnDate },
-      normalized: { normalizedDeparture, normalizedReturn },
-    });
-
-    // First, let's fetch ALL active bookings to debug
-    const { data: allBookings, error: allError } = await supabase
-      .from('admin_bookings')
-      .select('id, assigned_vehicle_id, vehicle_id, departure_date, return_date, status, booking_reference')
-      .in('status', ['new', 'pending', 'active']);
-
-    console.log('[getBookedVehicleIds] ALL active/pending/new bookings in DB:', allBookings);
-    if (allError) {
-      console.error('[getBookedVehicleIds] Error fetching all bookings:', allError);
-    }
-
-    // Now apply date filtering
     // Date overlap logic: booking.departure <= customer.return AND booking.return >= customer.departure
+    // (a second "fetch everything" debug query and per-booking console logging were removed here)
     const { data, error } = await supabase
       .from('admin_bookings')
-      .select('assigned_vehicle_id, vehicle_id, departure_date, return_date, status, booking_reference')
+      .select('assigned_vehicle_id, vehicle_id')
       .in('status', ['new', 'pending', 'active'])
       .lte('departure_date', normalizedReturn)
       .gte('return_date', normalizedDeparture);
@@ -508,19 +491,6 @@ export async function getBookedVehicleIds(
     if (error) {
       console.error('[getBookedVehicleIds] Error fetching overlapping bookings:', error);
       return [];
-    }
-
-    console.log('[getBookedVehicleIds] Overlapping bookings (after date filter):', data);
-
-    // If no data from query but we have bookings, manually check overlap
-    if ((!data || data.length === 0) && allBookings && allBookings.length > 0) {
-      console.log('[getBookedVehicleIds] Query returned empty, checking overlap manually...');
-      allBookings.forEach(b => {
-        const bookingStart = b.departure_date;
-        const bookingEnd = b.return_date;
-        const overlaps = bookingStart <= normalizedReturn && bookingEnd >= normalizedDeparture;
-        console.log(`[getBookedVehicleIds] Booking ${b.booking_reference}: ${bookingStart} to ${bookingEnd}, overlaps=${overlaps}`);
-      });
     }
 
     // Collect unique vehicle IDs - mark BOTH assigned and original vehicle as booked
@@ -534,11 +504,7 @@ export async function getBookedVehicleIds(
       }
     });
 
-    const result = Array.from(vehicleIds);
-    console.log('[getBookedVehicleIds] Final booked vehicle IDs:', result);
-    console.log('[getBookedVehicleIds] =================================');
-
-    return result;
+    return Array.from(vehicleIds);
   } catch (error) {
     console.error('[getBookedVehicleIds] Error:', error);
     return [];

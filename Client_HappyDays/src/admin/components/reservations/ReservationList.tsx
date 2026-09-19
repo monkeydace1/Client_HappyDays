@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Calendar, Car, Phone, Clock, Check, XCircle, Sparkles, Plus, Trash2, CheckSquare, Square, MinusSquare } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
@@ -50,6 +50,8 @@ const statusConfig: Record<BookingStatus, { label: string; color: string; bgColo
   },
 };
 
+const PAGE_SIZE = 100;
+
 export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDelete, onBulkStatusChange, onStatusChange }: ReservationListProps) {
   const [filters, setFilters] = useState<ReservationFilters>({
     search: '',
@@ -59,6 +61,13 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+
+  // Render the list in pages: with 500+ historical bookings, mounting every
+  // animated card at once blocked the main thread for seconds on phones.
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [filters]);
 
   // Filter bookings
   const filteredBookings = useMemo(() => {
@@ -366,7 +375,7 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
             <p className="text-gray-500">Aucune réservation trouvée</p>
           </div>
         ) : (
-          sortedBookings.map((booking, index) => {
+          sortedBookings.slice(0, visibleCount).map((booking, index) => {
             const status = statusConfig[booking.status] || statusConfig['active'];
             const isSelected = selectedIds.has(booking.id);
 
@@ -375,7 +384,7 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
                 key={booking.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
+                transition={{ delay: Math.min(index, 10) * 0.03 }}
                 className={`relative bg-white rounded-xl shadow-sm border transition-all
                   ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-gray-100 hover:shadow-md'}`}
               >
@@ -478,6 +487,15 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
               </motion.div>
             );
           })
+        )}
+        {sortedBookings.length > visibleCount && (
+          <button
+            onClick={() => setVisibleCount((count) => count + PAGE_SIZE)}
+            className="w-full py-3 bg-white border border-gray-200 rounded-xl text-sm font-medium
+                     text-primary hover:bg-gray-50 transition-colors touch-manipulation"
+          >
+            Afficher plus ({sortedBookings.length - visibleCount} restantes)
+          </button>
         )}
       </div>
     </div>

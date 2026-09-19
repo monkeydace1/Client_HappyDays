@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { AdminVehicle, AdminBooking, BookingStatus, QuickAddData } from '../types/admin';
 import {
   fetchVehicles,
@@ -209,6 +209,14 @@ export function useAdminData(): UseAdminDataReturn {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Action callbacks read the latest data through these refs instead of closing
+  // over `bookings` / `vehicles`, so they keep a stable identity across updates
+  // (previously every change recreated every handler and re-rendered every child).
+  const bookingsRef = useRef(bookings);
+  const vehiclesRef = useRef(vehicles);
+  useEffect(() => { bookingsRef.current = bookings; }, [bookings]);
+  useEffect(() => { vehiclesRef.current = vehicles; }, [vehicles]);
+
   // Initial data fetch with fallback to sample data
   const loadData = useCallback(async (showRefreshing = false) => {
     try {
@@ -254,27 +262,23 @@ export function useAdminData(): UseAdminDataReturn {
     const unsubscribeBookings = subscribeToBookings(
       // On insert
       (newBooking) => {
-        console.log('[REALTIME] New booking inserted:', newBooking.bookingReference, newBooking);
+        console.log('[REALTIME] booking inserted:', newBooking.bookingReference);
         setBookings((prev) => {
-          // Prevent duplicate if already exists
-          if (prev.some(b => b.id === newBooking.id)) {
-            console.log('[REALTIME] Booking already exists, skipping insert');
-            return prev;
-          }
+          // Prevent duplicate if already exists (e.g. created from this tab)
+          if (prev.some(b => b.id === newBooking.id)) return prev;
           return [newBooking, ...prev];
         });
       },
       // On update
       (updatedBooking) => {
-        console.log('[REALTIME] Booking updated:', updatedBooking.bookingReference, updatedBooking);
+        console.log('[REALTIME] booking updated:', updatedBooking.bookingReference);
         setBookings((prev) =>
           prev.map((b) => (b.id === updatedBooking.id ? updatedBooking : b))
         );
       },
       // On delete
       (deletedId) => {
-        console.log('[REALTIME] Booking DELETED! ID:', deletedId);
-        console.trace('[REALTIME] Delete stack trace:');
+        console.log('[REALTIME] booking deleted:', deletedId);
         setBookings((prev) => prev.filter((b) => b.id !== deletedId));
       }
     );
@@ -298,7 +302,7 @@ export function useAdminData(): UseAdminDataReturn {
 
   // Toggle vehicle maintenance
   const toggleVehicleMaintenance = useCallback(async (vehicleId: number) => {
-    const vehicle = vehicles.find((v) => v.id === vehicleId);
+    const vehicle = vehiclesRef.current.find((v) => v.id === vehicleId);
     if (!vehicle) return;
 
     const newStatus = vehicle.status === 'maintenance' ? 'available' : 'maintenance';
@@ -317,11 +321,11 @@ export function useAdminData(): UseAdminDataReturn {
       );
       console.error('Error toggling maintenance:', err);
     }
-  }, [vehicles]);
+  }, []);
 
   // Change booking status
   const changeBookingStatus = useCallback(async (bookingId: string, status: BookingStatus) => {
-    const booking = bookings.find((b) => b.id === bookingId);
+    const booking = bookingsRef.current.find((b) => b.id === bookingId);
     if (!booking) return;
 
     // Optimistic update
@@ -343,11 +347,11 @@ export function useAdminData(): UseAdminDataReturn {
       );
       console.error('Error changing status:', err);
     }
-  }, [bookings]);
+  }, []);
 
   // Assign vehicle to booking
   const assignVehicle = useCallback(async (bookingId: string, vehicleId: number) => {
-    const booking = bookings.find((b) => b.id === bookingId);
+    const booking = bookingsRef.current.find((b) => b.id === bookingId);
     if (!booking) return;
 
     // Optimistic update
@@ -364,11 +368,11 @@ export function useAdminData(): UseAdminDataReturn {
       );
       console.error('Error assigning vehicle:', err);
     }
-  }, [bookings]);
+  }, []);
 
   // Update booking details
   const updateBookingDetails = useCallback(async (bookingId: string, updates: Partial<AdminBooking>) => {
-    const booking = bookings.find((b) => b.id === bookingId);
+    const booking = bookingsRef.current.find((b) => b.id === bookingId);
     if (!booking) return;
 
     // Optimistic update
@@ -385,7 +389,7 @@ export function useAdminData(): UseAdminDataReturn {
       );
       console.error('Error updating booking:', err);
     }
-  }, [bookings]);
+  }, []);
 
   // Add new vehicle
   const addVehicle = useCallback(async (vehicle: Omit<AdminVehicle, 'id'>) => {
@@ -400,7 +404,7 @@ export function useAdminData(): UseAdminDataReturn {
 
   // Delete vehicle
   const deleteVehicle = useCallback(async (vehicleId: number) => {
-    const vehicle = vehicles.find((v) => v.id === vehicleId);
+    const vehicle = vehiclesRef.current.find((v) => v.id === vehicleId);
     if (!vehicle) return;
 
     // Optimistic update - remove from state
@@ -414,7 +418,7 @@ export function useAdminData(): UseAdminDataReturn {
       console.error('Error deleting vehicle:', err);
       throw err;
     }
-  }, [vehicles]);
+  }, []);
 
   // Add walk-in booking
   const addWalkInBooking = useCallback(async (data: QuickAddData, vehiclesList: AdminVehicle[]) => {
@@ -479,7 +483,7 @@ export function useAdminData(): UseAdminDataReturn {
   // Bulk delete bookings
   const bulkDeleteBookings = useCallback(async (bookingIds: string[]) => {
     // Optimistic update - remove from state
-    const deletedBookings = bookings.filter((b) => bookingIds.includes(b.id));
+    const deletedBookings = bookingsRef.current.filter((b) => bookingIds.includes(b.id));
     setBookings((prev) => prev.filter((b) => !bookingIds.includes(b.id)));
 
     try {
@@ -491,12 +495,12 @@ export function useAdminData(): UseAdminDataReturn {
       console.error('Error bulk deleting bookings:', err);
       throw err;
     }
-  }, [bookings]);
+  }, []);
 
   // Bulk change status
   const bulkChangeStatus = useCallback(async (bookingIds: string[], status: BookingStatus) => {
     // Store original statuses for rollback
-    const originalStatuses = bookings
+    const originalStatuses = bookingsRef.current
       .filter((b) => bookingIds.includes(b.id))
       .reduce((acc, b) => ({ ...acc, [b.id]: b.status }), {} as Record<string, BookingStatus>);
 
@@ -518,7 +522,7 @@ export function useAdminData(): UseAdminDataReturn {
       console.error('Error bulk changing status:', err);
       throw err;
     }
-  }, [bookings]);
+  }, []);
 
   return {
     vehicles,

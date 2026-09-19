@@ -42,6 +42,8 @@ export const ImageCarousel: React.FC<ImageCarouselProps> = ({ images, alt, class
             <img
                 src={currentImage}
                 alt={`${alt} - ${displayIndex + 1}`}
+                loading="lazy"
+                decoding="async"
                 className="w-full h-full object-cover transition-opacity duration-300"
                 onError={() => handleImageError(images.indexOf(currentImage))}
             />

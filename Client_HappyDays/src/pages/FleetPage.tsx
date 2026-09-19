@@ -90,6 +90,8 @@ export const FleetPage = () => {
                                 <img
                                     src={car.image}
                                     alt={car.name}
+                                    loading={index < 4 ? 'eager' : 'lazy'}
+                                    decoding="async"
                                     className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
                                 />
                                 <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-accent text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-bold shadow-lg">

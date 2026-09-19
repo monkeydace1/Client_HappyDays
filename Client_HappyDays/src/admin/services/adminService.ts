@@ -336,12 +336,13 @@ export function subscribeToBookings(
       (payload) => onDelete(payload.old.id)
     )
     .subscribe((status, err) => {
-      if (status === 'CHANNEL_ERROR') {
-        console.error('Bookings subscription error, retrying...', err);
-        setTimeout(() => {
-          supabase.removeChannel(channel);
-          subscribeToBookings(onInsert, onUpdate, onDelete);
-        }, 5000);
+      // realtime-js reconnects on its own with backoff. The previous manual
+      // re-subscribe loop stacked on top of it and produced ~35 websocket
+      // handshakes per minute per open tab whenever the connection failed.
+      if (status === 'SUBSCRIBED') {
+        console.log('[REALTIME] bookings channel subscribed');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.warn('[REALTIME] bookings channel:', status, err?.message ?? '');
       }
     });
 
@@ -361,12 +362,8 @@ export function subscribeToVehicles(
       (payload) => onUpdate(mapVehicleFromDb(payload.new))
     )
     .subscribe((status, err) => {
-      if (status === 'CHANNEL_ERROR') {
-        console.error('Vehicles subscription error, retrying...', err);
-        setTimeout(() => {
-          supabase.removeChannel(channel);
-          subscribeToVehicles(onUpdate);
-        }, 5000);
+      if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        console.warn('[REALTIME] vehicles channel:', status, err?.message ?? '');
       }
     });
 
