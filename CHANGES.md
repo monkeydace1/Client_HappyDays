@@ -131,7 +131,13 @@ Root causes, by impact:
 - Vercel: `Cache-Control: public, max-age=0, must-revalidate` on everything, including the hashed `/assets/*.js` and the vehicle images → browsers revalidate on every visit. Add `headers` in the root `vercel.json`.
 - Region: Supabase is in us-east-2; REST origin time ~300 ms from Oran before any DB work. Free plan = shared Nano compute.
 
-**Status:** implemented and verified from the CLI, awaiting local browser test by user. Then: fix the Vercel env vars, commit, deploy.
+**Deployed 2026-09-20**
+- `main` fast-forwarded to `756504a`, pushed. Vercel's GitHub integration built it but did **not** promote it; the user promoted it by hand in the dashboard. Enable "Auto-assign Custom Domains" (project Settings → Environments → Production) to avoid this on every push.
+- **Incident right after promotion:** every deep URL (`/admin/login`, `/booking`, `/fleet`, …) returned 404. Cause: Git-based builds read the **root** `vercel.json`, which had the build settings but not the SPA catch-all rewrite that only lived in `Client_HappyDays/vercel.json` (used by the old CLI deploys). Fixed in `89d82d2` (rewrite + immutable cache headers for `/assets/*` in the root config), built and promoted. All routes verified 200.
+- Verified in production: main bundle 711 kB, admin chunk 105 kB loaded only on `/admin`, favicon 90 kB, `.trim()` present around the inlined URL/key in the shipped JS.
+- Deploy path from now on: push to `main` → Vercel builds → promote (or auto-assign). The old `npx vercel --prod --force` path only works with the Vercel account that owns the `ams-projects` team; the CLI on this PC is logged in as another account.
+
+**Status:** live in production since 2026-09-20 ~11:40 UTC. Remaining: user re-enters the two Vercel env vars without the trailing newline (cleanup only), and the "Further findings" above are the next items.
 
 ---
 
