@@ -141,6 +141,118 @@ Root causes, by impact:
 
 ---
 
+## 6. [~] Fleet update: Seat Leon price/photos, Arona photos, Geely #22, Livan ×2 replacing #11 and #19
+
+**Scope** (user notes 2026-10-01)
+- #21 Seat Leon: 50 € → 45 €; new photos, front view first; visible on the site and in the admin.
+- #16 Seat Arona: new photos, front view first.
+- #22 Geely: new vehicle (`vehicleData.ts` + `vehicles` row).
+- #11 Toyota Yaris → Livan (gris): **same ID reused** (user decision); name/specs/photos replaced, DB row updated, status back to `available`.
+- #19 Ford Fiesta → Livan (noir): same.
+
+**Notes**
+- Vehicles live in two places that must stay in sync: `src/data/vehicleData.ts` (site + admin dropdowns/years) and the `vehicles` table (admin grid, QuickAdd, maintenance/hidden filter). Both at 21 and matching on 2026-10-01.
+- Live data: #11 8 bookings / 0 open (status `maintenance`), #19 19 / 0 open (`maintenance`), #16 25 / 1 open, #21 17 / 1 open. Reusing IDs: old Yaris/Fiesta bookings keep their saved `vehicle_name`, but the `#11` / `#19` badge and the year shown in the modal now map to the Livan.
+- `/vehicles/*` has no long cache header on Vercel (only `/assets/*`), but new photos for 16/21 go in **new folders** anyway so no CDN/browser cache can serve the old picture.
+- The `vehicles` table is the production project (local dev uses the same one): code + images first → user tests locally → DB UPDATE/INSERT at deploy time.
+- Photo drop folders: `photos-vehicules/<id>-<car>/` at repo root (temporary, deleted after import). Front view = filename containing "face". Resize with ffmpeg (~1200 px, ≤ 250 kB) → `main.jpg`, `1.jpg`, `2.jpg`…
+
+**Implemented (2026-10-01)**
+- Photos processed with Pillow (4:3 crop, ≤ 1200×900, q82, EXIF stripped) into new folders `seat-leon-2021/`, `seat-arona/`, `geely-coolray/`, `livan-x3-pro-gris/`, `livan-x3-pro-noir/`; old folders `seat-leon/`, `seat-arona-2019/`, `toyota-yaris/`, `ford-fiesta/` removed. Portrait phone photos (Livans) were band-cropped around the car. Note: the client chose a **rear** view as `main.jpg` for the Livan noir.
+- `vehicleData.ts`: #11 Livan X3 Pro Gris, #19 Livan X3 Pro Noir, #16 new folder, #21 45 € + new folder, #22 Geely Coolray 2026. Models identified from the photos (Coolray badge/grille, "X3 PRO" badge; Coolray plate `… 126 31` → 2026). All three: SUV, automatique, essence, 5 places, not featured on home.
+- **Prices to confirm with the client** (placeholders, marked `TODO` in `vehicleData.ts` and `009`): Livan 38 €, Livan 38 €, Coolray 50 €. Years 2025 for the Livans are assumed.
+- Admin fallback data (`useAdminData.ts` SAMPLE_VEHICLES), `public/vehicles/README.md`, `CLAUDE.md`, `src/data/CLAUDE.md` updated (the doc wrongly said the admin auto-syncs from `vehicleData.ts`).
+- DB changes written to [009_fleet_update_oct2026.sql](Client_HappyDays/supabase/migrations/009_fleet_update_oct2026.sql) — **not run**: must go live together with the frontend (see deploy-day checklist below).
+
+**Status:** implemented, `npm run build` OK; pending user local test (site only — the admin keeps showing Yaris / Fiesta and no #22 until 009 runs) + price confirmation.
+
+---
+
+## 7. [x] Conducteur supplémentaire: 8 € → 3 €/jour
+
+`additionalDriverSupplement.pricePerDay` in `src/data/supplementData.ts` is now the single source. Readers: `bookingStore.getSupplementsTotal`, `OrderSummary`, WhatsApp message (`bookingService`), admin email template (`emailTemplates`), admin `BookingDetailsModal`. The modal derives the rate of older web bookings from the stored `supplements_total` so they keep showing the 8 € the client actually paid.
+
+**Status:** implemented 2026-10-01, `npm run build` OK; pending user local test.
+
+---
+
+## 8. [x] Home page "Nos Véhicules": price badge removed
+
+Removed the `€/jour` badge on the 4 featured cards in `src/components/Fleet.tsx`. `/fleet` and booking step 2 keep their prices (user decision).
+
+**Status:** implemented 2026-10-01; pending user local test.
+
+---
+
+## 9. [x] Pickup / return location: "Autre" message, admin sync, editable in admin, frais de déplacement
+
+**Problem**
+- Site: return location is a checkbox + free text; nothing tells the client that a custom address has an extra (to-be-agreed) fee.
+- Admin sync bug: `admin_bookings.return_location` exists but is never written by `syncToAdminBookings`; for "Autre (préciser)" the admin only receives the literal label, not the address (9 bookings so far).
+- Admin: locations are read-only; nowhere to record the one-time delivery fee.
+
+**To do**
+- Site: pickup select unchanged; return becomes the same select (default = same place as pickup); on "Autre" show the address field + info line (wording TBC with user); repeat the line in the summary panel, WhatsApp message and both emails.
+- Sync pickup (label + address) and return to `admin_bookings`.
+- Admin modal: show + edit pickup/return; "Frais de déplacement" one-time amount included in the total (uses the total helper from #11); warning badge when the location is custom and the fee is still 0. QuickAdd: optional location fields (default stays "Direct").
+
+**Implemented (2026-10-01)** — wording approved by the user:
+> 📍 Frais de déplacement à voir avec l'équipe Happy Days — ils seront confirmés avec vous avant la location.
+- Constants `OTHER_LOCATION`, `isCustomLocation()`, `LOCATION_FEE_NOTICE` in `src/types/index.ts`; `LocationFeeNotice` component.
+- [DateSelection.tsx](Client_HappyDays/src/components/booking/DateSelection.tsx): return location is now a select (default "Même lieu que le départ"), "Autre" opens an address field; the notice shows under both address fields. Store gets `customReturnLocation`.
+- Summary panel, WhatsApp message, customer email and admin email show pickup/return + address + notice.
+- `bookings.custom_return_location` (new column) saved; `syncToAdminBookings` now writes `custom_pickup_location`, `return_location`, `custom_return_location`, `price_per_day`, `extras` (client supplements), `delivery_fee = 0`.
+- Admin modal: pickup/return shown with address, editable in edit mode (selects incl. "Direct (agence)" + address fields); **Frais de déplacement** inline field (saves on blur, added to the total); "frais à définir" badge when a location is custom and the fee is 0. QuickAdd unchanged (still "Direct"; fix it in the modal afterwards).
+
+**Status:** implemented, build OK; pending user local test.
+
+---
+
+## 10. [x] Admin: Passeport / Caution toggles
+
+Two independent toggle buttons in the client block of the reservation modal (web + walk-in), saved immediately like the status buttons; "Caution" reveals an optional amount (saved on blur / Enter). Chips on the cards in the Réservations list. Columns `passport_kept`, `deposit_kept`, `deposit_amount` on `admin_bookings` (migration 008).
+
+**Status:** implemented 2026-10-01, build OK; pending user local test.
+
+---
+
+## 11. [x] Admin: upsells / extras on reservations
+
+**Problem**
+`admin_bookings` only stores `total_price`; web supplements are read-only (from `bookings.supplements`); every admin recomputation (edit save, drag-drop, +1/+3/+7 days) does `price × days + 3 €×h` and would wipe any add-on. The daily rate is reverse-engineered from the total (`total / days`).
+
+**To do** (migration `008_admin_booking_extras.sql`)
+- Columns: `price_per_day INT` (backfilled from `(total_price − extra_hours×3) / rental_days`), `extras JSONB DEFAULT '[]'` (items `{id, name, mode: 'per_day' | 'one_time', price, quantity}`), `delivery_fee INT DEFAULT 0`, `custom_pickup_location TEXT`, plus the #10 columns.
+- One `computeBookingTotal()` in `src/lib/pricing.ts` used by the site, the modal (save + preview), drag-drop, extend buttons and QuickAdd: `vehicle + per-day extras × days + one-time extras + delivery fee`.
+- Modal "Suppléments" section with "+ Ajouter": Conducteur supplémentaire 3 €/j, Siège bébé 3 €/j, Assurance standard 12 €/j, Assurance premium 20 €/j, Frais de déplacement (one-time), Autre (free name + price, per-day or one-time); quantity, remove, live total. Web supplements are copied into `extras` at sync time.
+
+**Implemented (2026-10-01)**
+- [008_admin_booking_extras.sql](Client_HappyDays/supabase/migrations/008_admin_booking_extras.sql) **applied to the live DB** (additive, old frontend unaffected). Backfill: 604 rows, 0 without `price_per_day`, 44 with extras (web supplements + extra driver at the 8 € they paid), 9 custom pickup addresses recovered, 25 return locations. 31 web rows had been re-priced/re-dated by the old admin code (which dropped the supplements): their parts were made to reproduce the stored total (step 3 of the migration). Two walk-ins (`HD-2026-03-0013`, `HD-2026-09-0031`) share their random reference with a web booking and had picked up the web order through the join → step 1 now filters on `source = 'web'`, step 4 cleans them. Result: 0 rows where `total_price ≠ rate × days + 3 €×h + extras`. Side effect: `updated_at` bumped on all rows (not displayed anywhere).
+- `pricing.ts`: `BookingExtra`, `computeExtrasSubtotal`, `computeBookingTotal`, `deriveDailyRate`. Used by the modal (save, preview, extend +1/+3/+7, inline saves), drag-drop in `AdminDashboardPage`, and the web sync.
+- `AdminBooking` gained `pricePerDay`, `extras`, `deliveryFee`, `passportKept`, `depositKept`, `depositAmount`, `customReturnLocation`; service create/update/map handle them (presence checks so 0/false save).
+- Modal: Suppléments section on every booking (list with qty ±, remove, "+ Ajouter" with presets + "Autre (libre)" name/price/per-day|one-time), total breakdown Véhicule / Suppléments / Frais de déplacement; the rate is no longer reverse-engineered from the total. Pre-008 web rows (created by the old frontend after the migration) fall back to the read-only client order until the backfill is re-run.
+- Frais de déplacement is a dedicated column (`delivery_fee`), not an extra, so the "Autre" preset was not needed.
+
+**Status:** implemented, build OK; pending user local test.
+
+---
+
+## 12. [–] Discount shown when a vehicle is chosen — DROPPED
+
+User decision 2026-10-01: not for now.
+
+---
+
+## Deploy-day checklist (items 6–11)
+
+1. Confirm the three vehicle prices (Livan ×2, Coolray) in `vehicleData.ts` and `009`.
+2. Re-run the **BACKFILL** section of `008` (idempotent) for bookings created by the old frontend in between.
+3. Run `009_fleet_update_oct2026.sql` (sets #11/#19 to `available` → must not happen before the new frontend is live, or the old Yaris/Fiesta reappear on the site).
+4. Push `main`, let Vercel build, promote (or auto-assign). Verify `/`, `/fleet`, `/booking`, `/admin`.
+5. Check one web booking end-to-end: "Autre" pickup → address + notice in summary/emails → admin shows address + "frais à définir" → enter the fee → total updates.
+
+---
+
 ## Workflow
 
 1. Pick the next item.

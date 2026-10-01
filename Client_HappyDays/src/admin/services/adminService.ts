@@ -1,5 +1,6 @@
 import { supabase } from '../../lib/supabase';
 import type { AdminVehicle, AdminBooking, BookingStatus, FullBookingDetails } from '../types/admin';
+import type { BookingExtra } from '../../lib/pricing';
 
 // ============================================
 // VEHICLE OPERATIONS
@@ -118,13 +119,22 @@ export async function createBooking(
     pickup_time: booking.pickupTime,
     return_time: booking.returnTime,
     pickup_location: booking.pickupLocation,
+    custom_pickup_location: booking.customPickupLocation ?? null,
+    return_location: booking.returnLocation ?? null,
+    custom_return_location: booking.customReturnLocation ?? null,
     vehicle_id: booking.vehicleId,
     vehicle_name: booking.vehicleName,
     assigned_vehicle_id: booking.assignedVehicleId || booking.vehicleId,
     client_name: booking.clientName,
     client_phone: booking.clientPhone,
     client_email: booking.clientEmail,
+    price_per_day: booking.pricePerDay ?? null,
+    extras: booking.extras ?? [],
+    delivery_fee: booking.deliveryFee ?? 0,
     total_price: booking.totalPrice,
+    passport_kept: booking.passportKept ?? false,
+    deposit_kept: booking.depositKept ?? false,
+    deposit_amount: booking.depositAmount ?? null,
   };
 
   const { data, error } = await supabase
@@ -187,11 +197,23 @@ export async function updateBooking(
   if ('returnTime' in updates) dbUpdates.return_time = updates.returnTime ?? null;
   if (updates.rentalDays) dbUpdates.rental_days = updates.rentalDays;
   if ('extraHours' in updates) dbUpdates.extra_hours = updates.extraHours ?? 0;
-  if (updates.totalPrice) dbUpdates.total_price = updates.totalPrice;
+  if (updates.totalPrice !== undefined) dbUpdates.total_price = updates.totalPrice;
   if (updates.status) dbUpdates.status = updates.status;
   if (updates.assignedVehicleId) dbUpdates.assigned_vehicle_id = updates.assignedVehicleId;
   if (updates.vehicleId) dbUpdates.vehicle_id = updates.vehicleId;
   if (updates.vehicleName) dbUpdates.vehicle_name = updates.vehicleName;
+  // Locations — empty string / undefined → NULL (no address / same place as pickup)
+  if (updates.pickupLocation) dbUpdates.pickup_location = updates.pickupLocation;
+  if ('customPickupLocation' in updates) dbUpdates.custom_pickup_location = updates.customPickupLocation || null;
+  if ('returnLocation' in updates) dbUpdates.return_location = updates.returnLocation || null;
+  if ('customReturnLocation' in updates) dbUpdates.custom_return_location = updates.customReturnLocation || null;
+  // Pricing parts and deposit flags — 0 / false are valid values, so test presence, not truthiness
+  if ('pricePerDay' in updates) dbUpdates.price_per_day = updates.pricePerDay ?? null;
+  if ('extras' in updates) dbUpdates.extras = updates.extras ?? [];
+  if ('deliveryFee' in updates) dbUpdates.delivery_fee = updates.deliveryFee ?? 0;
+  if ('passportKept' in updates) dbUpdates.passport_kept = updates.passportKept ?? false;
+  if ('depositKept' in updates) dbUpdates.deposit_kept = updates.depositKept ?? false;
+  if ('depositAmount' in updates) dbUpdates.deposit_amount = updates.depositAmount ?? null;
 
   const { error } = await supabase
     .from('admin_bookings')
@@ -418,13 +440,22 @@ function mapBookingFromDb(row: Record<string, unknown>): AdminBooking {
     pickupTime: row.pickup_time as string | undefined,
     returnTime: row.return_time as string | undefined,
     pickupLocation: row.pickup_location as string,
+    customPickupLocation: (row.custom_pickup_location as string | null) ?? undefined,
+    returnLocation: (row.return_location as string | null) ?? undefined,
+    customReturnLocation: (row.custom_return_location as string | null) ?? undefined,
     vehicleId: row.vehicle_id as number,
     vehicleName: row.vehicle_name as string,
     assignedVehicleId: row.assigned_vehicle_id as number | undefined,
     clientName: row.client_name as string,
     clientPhone: row.client_phone as string,
     clientEmail: row.client_email as string | undefined,
+    pricePerDay: (row.price_per_day as number | null) ?? null,
+    extras: Array.isArray(row.extras) ? (row.extras as BookingExtra[]) : [],
+    deliveryFee: (row.delivery_fee as number | null) ?? 0,
     totalPrice: row.total_price as number,
+    passportKept: Boolean(row.passport_kept),
+    depositKept: Boolean(row.deposit_kept),
+    depositAmount: (row.deposit_amount as number | null) ?? null,
     createdAt: row.created_at as string,
     updatedAt: row.updated_at as string,
   };

@@ -3,18 +3,24 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   X, User, Phone, Calendar, Car, MapPin, MessageCircle, Check, Clock, XCircle,
   Edit3, Save, Mail, CreditCard, FileText, Image, Shield, Baby, Users, ChevronRight,
-  Globe, MapPinned, Cake, Sparkles, RefreshCw, Euro, Trash2
+  Globe, MapPinned, Cake, Sparkles, RefreshCw, Euro, Trash2,
+  IdCard, Wallet, Plus, Minus, Truck, AlertTriangle
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { AdminBooking, BookingStatus, FullBookingDetails } from '../../types/admin';
 import { fetchFullBookingDetails } from '../../services/adminService';
 import { vehicles as vehicleData } from '../../../data/vehicleData';
+import { additionalDriverSupplement, childSeats, insuranceOptions } from '../../../data/supplementData';
+import { PICKUP_LOCATIONS, OTHER_LOCATION, isCustomLocation } from '../../../types';
 import {
   computeRentalUnitsFromDateTime,
   computeVehicleSubtotal,
+  computeExtrasSubtotal,
+  computeBookingTotal,
+  deriveDailyRate,
   formatRentalDuration,
-  EXTRA_HOUR_RATE,
+  type BookingExtra,
 } from '../../../lib/pricing';
 import { formatTime24h } from '../../../utils/timeFormat';
 
@@ -71,6 +77,72 @@ const paymentMethodLabels: Record<string, string> = {
   transfer: 'Virement bancaire',
 };
 
+// Upsell presets of the "Suppléments" section (same rates as the website) + a free-form entry
+const EXTRA_PRESETS: Array<Omit<BookingExtra, 'quantity'>> = [
+  { id: additionalDriverSupplement.id, name: additionalDriverSupplement.name, mode: 'per_day', price: additionalDriverSupplement.pricePerDay },
+  ...childSeats.map((s) => ({ id: s.id, name: s.name, mode: 'per_day' as const, price: s.pricePerDay })),
+  ...insuranceOptions.filter((i) => i.pricePerDay > 0).map((i) => ({ id: i.id, name: i.name, mode: 'per_day' as const, price: i.pricePerDay })),
+];
+const CUSTOM_PRESET_ID = 'custom';
+
+function extraIcon(extra: BookingExtra) {
+  if (extra.id === additionalDriverSupplement.id) return <Users className="w-5 h-5 text-gray-400 flex-shrink-0" />;
+  if (extra.id.startsWith('child_seat')) return <Baby className="w-5 h-5 text-gray-400 flex-shrink-0" />;
+  if (extra.id.startsWith('insurance')) return <Shield className="w-5 h-5 text-gray-400 flex-shrink-0" />;
+  return <Sparkles className="w-5 h-5 text-gray-400 flex-shrink-0" />;
+}
+
+// Walk-ins are stored with pickup_location = 'Direct'; web bookings use PICKUP_LOCATIONS
+const BASE_LOCATION_OPTIONS: string[] = ['Direct', ...PICKUP_LOCATIONS];
+function locationOptions(current: string): string[] {
+  return current && !BASE_LOCATION_OPTIONS.includes(current)
+    ? [...BASE_LOCATION_OPTIONS, current]
+    : BASE_LOCATION_OPTIONS;
+}
+
+type EditData = {
+  clientName: string;
+  clientPhone: string;
+  clientEmail: string;
+  departureDate: string;
+  returnDate: string;
+  pickupTime: string;
+  returnTime: string;
+  vehicleId: number;
+  vehicleName: string;
+  pricePerDay: number;
+  pickupLocation: string;
+  customPickupLocation: string;
+  returnLocation: string;        // '' = same place as pickup
+  customReturnLocation: string;
+};
+
+// Daily rate of a booking: stored since migration 008, derived from the total before that
+function bookingDailyRate(booking: AdminBooking): number {
+  return booking.pricePerDay ?? deriveDailyRate(booking.totalPrice, booking.rentalDays, booking.extraHours || 0);
+}
+
+function buildEditData(booking: AdminBooking): EditData {
+  return {
+    clientName: booking.clientName,
+    clientPhone: booking.clientPhone || '',
+    clientEmail: booking.clientEmail || '',
+    departureDate: booking.departureDate,
+    returnDate: booking.returnDate,
+    pickupTime: booking.pickupTime || '',
+    returnTime: booking.returnTime || '',
+    vehicleId: booking.vehicleId,
+    vehicleName: booking.vehicleName,
+    pricePerDay: bookingDailyRate(booking),
+    pickupLocation: booking.pickupLocation,
+    customPickupLocation: booking.customPickupLocation || '',
+    returnLocation: booking.returnLocation || '',
+    customReturnLocation: booking.customReturnLocation || '',
+  };
+}
+
+const inputClass = 'w-full px-3 py-2 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none text-sm bg-white';
+
 export function BookingDetailsModal({
   isOpen,
   onClose,
@@ -84,7 +156,7 @@ export function BookingDetailsModal({
   const [fullDetails, setFullDetails] = useState<FullBookingDetails | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
   const [imageModalOpen, setImageModalOpen] = useState(false);
-  const [editData, setEditData] = useState({
+  const [editData, setEditData] = useState<EditData>({
     clientName: '',
     clientPhone: '',
     clientEmail: '',
@@ -95,6 +167,21 @@ export function BookingDetailsModal({
     vehicleId: 0,
     vehicleName: '',
     pricePerDay: 0,
+    pickupLocation: PICKUP_LOCATIONS[0],
+    customPickupLocation: '',
+    returnLocation: '',
+    customReturnLocation: '',
+  });
+  // Fields edited inline (outside edit mode) and saved on blur
+  const [deliveryFeeDraft, setDeliveryFeeDraft] = useState('');
+  const [depositAmountDraft, setDepositAmountDraft] = useState('');
+  // "+ Ajouter" form of the Suppléments section
+  const [addingExtra, setAddingExtra] = useState(false);
+  const [newExtra, setNewExtra] = useState<{ presetId: string; name: string; price: string; mode: BookingExtra['mode'] }>({
+    presetId: EXTRA_PRESETS[0].id,
+    name: '',
+    price: '',
+    mode: 'per_day',
   });
 
   // Fetch full details when booking changes and it's a web booking
@@ -113,28 +200,16 @@ export function BookingDetailsModal({
     }
   }, [booking]);
 
-  // Reset edit state when booking changes
+  // Reset edit state when booking changes (also runs after every inline save,
+  // which is what closes the "+ Ajouter" form and re-syncs the drafts)
   useEffect(() => {
     if (booking) {
-      // Back out the daily rate from total (subtract the hourly surcharge first)
-      const hoursPortion = (booking.extraHours || 0) * EXTRA_HOUR_RATE;
-      const actualPricePerDay = booking.rentalDays > 0
-        ? Math.round((booking.totalPrice - hoursPortion) / booking.rentalDays)
-        : 0;
-      setEditData({
-        clientName: booking.clientName,
-        clientPhone: booking.clientPhone || '',
-        clientEmail: booking.clientEmail || '',
-        departureDate: booking.departureDate,
-        returnDate: booking.returnDate,
-        pickupTime: booking.pickupTime || '',
-        returnTime: booking.returnTime || '',
-        vehicleId: booking.vehicleId,
-        vehicleName: booking.vehicleName,
-        pricePerDay: actualPricePerDay,
-      });
+      setEditData(buildEditData(booking));
+      setDeliveryFeeDraft(booking.deliveryFee ? String(booking.deliveryFee) : '');
+      setDepositAmountDraft(booking.depositAmount ? String(booking.depositAmount) : '');
       setIsEditing(false);
       setActiveTab('overview');
+      setAddingExtra(false);
     }
   }, [booking]);
 
@@ -143,6 +218,101 @@ export function BookingDetailsModal({
   // Get status config with fallback for legacy 'confirmed' status
   const status = statusConfig[booking.status] || statusConfig['active'];
   const isWebBooking = booking.source === 'web';
+
+  // The web flow stores the extra-driver flag but not its rate, and the rate changed
+  // (8€ → 3€/day on 2026-10-01). Back it out of the stored supplements subtotal so
+  // older bookings keep showing what the client actually paid.
+  const additionalDriverRate = (() => {
+    if (!fullDetails?.additionalDriver || booking.rentalDays <= 0) {
+      return additionalDriverSupplement.pricePerDay;
+    }
+    const otherPerDay = fullDetails.supplements.reduce(
+      (sum, s) => sum + s.pricePerDay * (s.quantity || 1),
+      0
+    );
+    const derived = fullDetails.supplementsTotal / booking.rentalDays - otherPerDay;
+    return Number.isInteger(derived) && derived > 0 ? derived : additionalDriverSupplement.pricePerDay;
+  })();
+
+  const bookingUnits = { fullDays: booking.rentalDays, extraHours: booking.extraHours || 0 };
+  const dailyRate = bookingDailyRate(booking);
+  const durationLabel = formatRentalDuration(bookingUnits) || `${booking.rentalDays} jours`;
+  const extrasSubtotal = computeExtrasSubtotal(booking.extras, bookingUnits);
+  const hasCustomLocation = isCustomLocation(booking.pickupLocation) || isCustomLocation(booking.returnLocation);
+  // Web bookings written by the pre-008 frontend: their supplements only exist in `bookings`
+  const isLegacyWeb = booking.pricePerDay == null && !!fullDetails;
+  const legacyWebSupplements = isLegacyWeb && fullDetails
+    ? [
+        ...(fullDetails.additionalDriver
+          ? [{ label: 'Conducteur additionnel', rate: additionalDriverRate, icon: <Users className="w-5 h-5 text-gray-400" /> }]
+          : []),
+        ...fullDetails.supplements.map((supp) => ({
+          label: `${supp.name}${supp.quantity && supp.quantity > 1 ? ` (x${supp.quantity})` : ''}`,
+          rate: supp.pricePerDay,
+          icon: supp.name.toLowerCase().includes('siège') || supp.name.toLowerCase().includes('bébé')
+            ? <Baby className="w-5 h-5 text-gray-400" />
+            : <Shield className="w-5 h-5 text-gray-400" />,
+        })),
+      ]
+    : [];
+
+  // --- inline saves (outside edit mode): extras, delivery fee, deposit ---
+  const saveExtras = (nextExtras: BookingExtra[]) => {
+    onBookingUpdate(booking.id, {
+      extras: nextExtras,
+      pricePerDay: dailyRate,
+      totalPrice: computeBookingTotal({ pricePerDay: dailyRate, units: bookingUnits, extras: nextExtras, deliveryFee: booking.deliveryFee }),
+    });
+  };
+  const removeExtra = (index: number) => saveExtras(booking.extras.filter((_, i) => i !== index));
+  const updateExtraQuantity = (index: number, quantity: number) => {
+    if (quantity <= 0) {
+      removeExtra(index);
+      return;
+    }
+    saveExtras(booking.extras.map((e, i) => (i === index ? { ...e, quantity } : e)));
+  };
+  const handlePresetChange = (presetId: string) => {
+    const preset = EXTRA_PRESETS.find((p) => p.id === presetId);
+    setNewExtra({
+      presetId,
+      name: preset?.name ?? '',
+      price: preset ? String(preset.price) : '',
+      mode: preset?.mode ?? 'per_day',
+    });
+  };
+  const addExtra = () => {
+    const preset = EXTRA_PRESETS.find((p) => p.id === newExtra.presetId);
+    const name = preset ? preset.name : newExtra.name.trim();
+    const price = preset ? preset.price : Number(newExtra.price);
+    const mode = preset ? preset.mode : newExtra.mode;
+    if (!name || !Number.isFinite(price) || price < 0) {
+      alert('Indiquez un nom et un prix pour le supplément');
+      return;
+    }
+    const existingIndex = preset ? booking.extras.findIndex((e) => e.id === preset.id) : -1;
+    // Free-form items get a deterministic id (list keys also include the index, so duplicates are fine)
+    const customId = `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${mode}-${price}`;
+    const nextExtras = existingIndex >= 0
+      ? booking.extras.map((e, i) => (i === existingIndex ? { ...e, quantity: e.quantity + 1 } : e))
+      : [...booking.extras, { id: preset?.id ?? customId, name, mode, price, quantity: 1 }];
+    saveExtras(nextExtras);
+    setAddingExtra(false);
+  };
+  const saveDeliveryFee = () => {
+    const fee = deliveryFeeDraft === '' ? 0 : Math.max(0, Math.round(Number(deliveryFeeDraft) || 0));
+    if (fee === (booking.deliveryFee || 0)) return;
+    onBookingUpdate(booking.id, {
+      deliveryFee: fee,
+      pricePerDay: dailyRate,
+      totalPrice: computeBookingTotal({ pricePerDay: dailyRate, units: bookingUnits, extras: booking.extras, deliveryFee: fee }),
+    });
+  };
+  const saveDepositAmount = () => {
+    const amount = depositAmountDraft === '' ? null : Math.max(0, Math.round(Number(depositAmountDraft) || 0));
+    if (amount === (booking.depositAmount ?? null)) return;
+    onBookingUpdate(booking.id, { depositAmount: amount });
+  };
 
   const handleWhatsApp = () => {
     const message = encodeURIComponent(
@@ -170,7 +340,17 @@ export function BookingDetailsModal({
       return;
     }
 
-    const totalPrice = Math.round(computeVehicleSubtotal(editData.pricePerDay, units));
+    if (editData.pickupLocation === OTHER_LOCATION && !editData.customPickupLocation.trim()) {
+      alert("Précisez l'adresse de prise en charge");
+      return;
+    }
+
+    const totalPrice = computeBookingTotal({
+      pricePerDay: editData.pricePerDay,
+      units,
+      extras: booking.extras,
+      deliveryFee: booking.deliveryFee,
+    });
 
     onBookingUpdate(booking.id, {
       clientName: editData.clientName,
@@ -185,6 +365,11 @@ export function BookingDetailsModal({
       vehicleId: editData.vehicleId,
       assignedVehicleId: editData.vehicleId,
       vehicleName: editData.vehicleName,
+      pricePerDay: editData.pricePerDay,
+      pickupLocation: editData.pickupLocation,
+      customPickupLocation: editData.pickupLocation === OTHER_LOCATION ? editData.customPickupLocation.trim() : undefined,
+      returnLocation: editData.returnLocation || undefined,
+      customReturnLocation: editData.returnLocation === OTHER_LOCATION ? editData.customReturnLocation.trim() : undefined,
       totalPrice,
     });
     setIsEditing(false);
@@ -204,20 +389,7 @@ export function BookingDetailsModal({
   };
 
   const handleCancel = () => {
-    // Calculate actual price per day from the booking's total (preserves custom prices)
-    const actualPricePerDay = Math.round(booking.totalPrice / booking.rentalDays);
-    setEditData({
-      clientName: booking.clientName,
-      clientPhone: booking.clientPhone || '',
-      clientEmail: booking.clientEmail || '',
-      departureDate: booking.departureDate,
-      returnDate: booking.returnDate,
-      pickupTime: booking.pickupTime || '',
-      returnTime: booking.returnTime || '',
-      vehicleId: booking.vehicleId,
-      vehicleName: booking.vehicleName,
-      pricePerDay: actualPricePerDay,
-    });
+    setEditData(buildEditData(booking));
     setIsEditing(false);
   };
 
@@ -278,6 +450,57 @@ export function BookingDetailsModal({
               <span className="text-gray-400">Non renseigné</span>
             )}
           </div>
+          {/* Passport / deposit held during the rental — toggles save immediately */}
+          {!isEditing && (
+            <div className="pt-3 border-t border-gray-200">
+              <p className="text-xs text-gray-500 mb-2">Gardé pendant la location</p>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onBookingUpdate(booking.id, { passportKept: !booking.passportKept })}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors touch-manipulation active:scale-95
+                    ${booking.passportKept
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : 'bg-white border-gray-300 text-gray-600 hover:border-blue-400'}`}
+                >
+                  <IdCard className="w-4 h-4" />
+                  Passeport
+                  {booking.passportKept && <Check className="w-3.5 h-3.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onBookingUpdate(booking.id, {
+                    depositKept: !booking.depositKept,
+                    ...(booking.depositKept ? { depositAmount: null } : {}),
+                  })}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors touch-manipulation active:scale-95
+                    ${booking.depositKept
+                      ? 'bg-amber-500 border-amber-500 text-white'
+                      : 'bg-white border-gray-300 text-gray-600 hover:border-amber-400'}`}
+                >
+                  <Wallet className="w-4 h-4" />
+                  Caution
+                  {booking.depositKept && <Check className="w-3.5 h-3.5" />}
+                </button>
+                {booking.depositKept && (
+                  <div className="flex items-center gap-1">
+                    <input
+                      type="number"
+                      min="0"
+                      inputMode="numeric"
+                      value={depositAmountDraft}
+                      onChange={(e) => setDepositAmountDraft(e.target.value)}
+                      onBlur={saveDepositAmount}
+                      onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                      placeholder="Montant"
+                      className="w-24 px-2 py-1.5 rounded-lg border border-gray-300 text-sm outline-none focus:border-primary bg-white"
+                    />
+                    <span className="text-sm text-gray-500">€</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
           {/* Show link to full details if web booking */}
           {isWebBooking && fullDetails && !isEditing && (
             <button
@@ -387,9 +610,102 @@ export function BookingDetailsModal({
               </div>
             )}
           </div>
+          {/* Pickup / return locations */}
+          <div className="flex items-start gap-3">
+            <MapPin className="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" />
+            {isEditing ? (
+              <div className="flex-1 space-y-2">
+                <div>
+                  <label className="text-xs text-gray-500">Prise en charge</label>
+                  <select
+                    value={editData.pickupLocation}
+                    onChange={(e) => setEditData({ ...editData, pickupLocation: e.target.value })}
+                    className={`${inputClass} appearance-none`}
+                  >
+                    {locationOptions(editData.pickupLocation).map((loc) => (
+                      <option key={loc} value={loc}>{loc === 'Direct' ? 'Direct (agence)' : loc}</option>
+                    ))}
+                  </select>
+                  {editData.pickupLocation === OTHER_LOCATION && (
+                    <input
+                      type="text"
+                      value={editData.customPickupLocation}
+                      onChange={(e) => setEditData({ ...editData, customPickupLocation: e.target.value })}
+                      placeholder="Adresse de prise en charge"
+                      className={`${inputClass} mt-1`}
+                    />
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs text-gray-500">Retour</label>
+                  <select
+                    value={editData.returnLocation}
+                    onChange={(e) => setEditData({ ...editData, returnLocation: e.target.value })}
+                    className={`${inputClass} appearance-none`}
+                  >
+                    <option value="">Même lieu que la prise en charge</option>
+                    {locationOptions(editData.returnLocation).map((loc) => (
+                      <option key={loc} value={loc}>{loc === 'Direct' ? 'Direct (agence)' : loc}</option>
+                    ))}
+                  </select>
+                  {editData.returnLocation === OTHER_LOCATION && (
+                    <input
+                      type="text"
+                      value={editData.customReturnLocation}
+                      onChange={(e) => setEditData({ ...editData, customReturnLocation: e.target.value })}
+                      placeholder="Adresse de retour"
+                      className={`${inputClass} mt-1`}
+                    />
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="flex-1 text-sm">
+                <p className="text-gray-900">
+                  {booking.pickupLocation}
+                  {booking.customPickupLocation && (
+                    <span className="text-gray-600"> — {booking.customPickupLocation}</span>
+                  )}
+                </p>
+                {booking.returnLocation && (
+                  <p className="text-gray-600 mt-0.5">
+                    Retour : {booking.returnLocation}
+                    {booking.customReturnLocation && ` — ${booking.customReturnLocation}`}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+          {/* One-time delivery fee for custom locations — saved on blur */}
           <div className="flex items-center gap-3">
-            <MapPin className="w-5 h-5 text-gray-400" />
-            <span className="text-gray-900">{booking.pickupLocation}</span>
+            <Truck className="w-5 h-5 text-gray-400 flex-shrink-0" />
+            <div className="flex-1 flex items-center gap-2 flex-wrap">
+              <span className="text-sm text-gray-700">Frais de déplacement</span>
+              {isEditing ? (
+                <span className="text-sm text-gray-900">{booking.deliveryFee || 0}€</span>
+              ) : (
+                <>
+                  <input
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={deliveryFeeDraft}
+                    onChange={(e) => setDeliveryFeeDraft(e.target.value)}
+                    onBlur={saveDeliveryFee}
+                    onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
+                    placeholder="0"
+                    className="w-20 px-2 py-1 rounded-lg border border-gray-300 text-sm text-right outline-none focus:border-primary bg-white"
+                  />
+                  <span className="text-sm text-gray-500">€</span>
+                </>
+              )}
+              {hasCustomLocation && !booking.deliveryFee && (
+                <span className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                  <AlertTriangle className="w-3 h-3" />
+                  frais à définir
+                </span>
+              )}
+            </div>
           </div>
           {/* Price per day - Editable */}
           <div className="flex items-center gap-3">
@@ -422,12 +738,11 @@ export function BookingDetailsModal({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="text-gray-900">{Math.round(booking.totalPrice / booking.rentalDays)}€/jour</span>
+                <span className="text-gray-900">{dailyRate}€/jour</span>
                 {(() => {
                   const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
                   const defaultPrice = vehicleInfo?.pricePerDay || 0;
-                  const currentPrice = Math.round(booking.totalPrice / booking.rentalDays);
-                  if (currentPrice !== defaultPrice) {
+                  if (dailyRate !== defaultPrice) {
                     return (
                       <span className="text-xs text-orange-500 bg-orange-50 px-2 py-0.5 rounded">
                         prix modifié
@@ -442,32 +757,118 @@ export function BookingDetailsModal({
         </div>
       </div>
 
-      {/* Supplements (if web booking) */}
-      {isWebBooking && fullDetails && (fullDetails.supplements.length > 0 || fullDetails.additionalDriver) && (
-        <div className="bg-gray-50 rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">Suppléments</h3>
-          <div className="space-y-2">
-            {fullDetails.additionalDriver && (
-              <div className="flex items-center gap-3 text-gray-700">
-                <Users className="w-5 h-5 text-gray-400" />
-                <span>Conducteur additionnel</span>
-                <span className="ml-auto text-sm text-gray-500">8€/jour</span>
-              </div>
-            )}
-            {fullDetails.supplements.map((supp, idx) => (
-              <div key={idx} className="flex items-center gap-3 text-gray-700">
-                {supp.name.toLowerCase().includes('siège') || supp.name.toLowerCase().includes('bébé') ? (
-                  <Baby className="w-5 h-5 text-gray-400" />
-                ) : (
-                  <Shield className="w-5 h-5 text-gray-400" />
-                )}
-                <span>{supp.name} {supp.quantity && supp.quantity > 1 ? `(x${supp.quantity})` : ''}</span>
-                <span className="ml-auto text-sm text-gray-500">{supp.pricePerDay}€/jour</span>
-              </div>
-            ))}
-          </div>
+      {/* Suppléments — editable on every booking, each change saves immediately */}
+      <div className="bg-gray-50 rounded-xl p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="font-semibold text-gray-900">Suppléments</h3>
+          {!isEditing && !addingExtra && (
+            <button
+              type="button"
+              onClick={() => setAddingExtra(true)}
+              className="flex items-center gap-1 text-sm text-primary font-medium hover:underline touch-manipulation"
+            >
+              <Plus className="w-4 h-4" />
+              Ajouter
+            </button>
+          )}
         </div>
-      )}
+        <div className="space-y-2">
+          {booking.extras.length === 0 && legacyWebSupplements.length === 0 && !addingExtra && (
+            <p className="text-sm text-gray-400">Aucun supplément</p>
+          )}
+          {booking.extras.map((extra, idx) => (
+            <div key={`${extra.id}-${idx}`} className="flex items-center gap-2 text-gray-700">
+              {extraIcon(extra)}
+              <div className="flex-1 min-w-0">
+                <p className="text-sm truncate">{extra.name}</p>
+                <p className="text-xs text-gray-500">
+                  {extra.price}€{extra.mode === 'per_day' ? '/jour' : ' (une fois)'}
+                  {extra.quantity > 1 && ` × ${extra.quantity}`}
+                </p>
+              </div>
+              <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
+                {computeExtrasSubtotal([extra], bookingUnits)}€
+              </span>
+              {!isEditing && (
+                <div className="flex items-center gap-1 ml-1">
+                  <button type="button" onClick={() => updateExtraQuantity(idx, extra.quantity - 1)} aria-label="Moins"
+                    className="w-7 h-7 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center touch-manipulation">
+                    <Minus className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onClick={() => updateExtraQuantity(idx, extra.quantity + 1)} aria-label="Plus"
+                    className="w-7 h-7 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center touch-manipulation">
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" onClick={() => removeExtra(idx)} aria-label="Supprimer"
+                    className="w-7 h-7 rounded-md bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center touch-manipulation">
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+          {/* Pre-008 web bookings: the client's order, read-only (re-run the 008 backfill to make it editable) */}
+          {legacyWebSupplements.map((supp, idx) => (
+            <div key={`legacy-${idx}`} className="flex items-center gap-3 text-gray-700">
+              {supp.icon}
+              <span className="text-sm">{supp.label}</span>
+              <span className="ml-auto text-sm text-gray-500">{supp.rate}€/jour</span>
+            </div>
+          ))}
+          {addingExtra && (
+            <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200 space-y-2">
+              <select
+                value={newExtra.presetId}
+                onChange={(e) => handlePresetChange(e.target.value)}
+                className={`${inputClass} appearance-none`}
+              >
+                {EXTRA_PRESETS.map((p) => (
+                  <option key={p.id} value={p.id}>{p.name} — {p.price}€/jour</option>
+                ))}
+                <option value={CUSTOM_PRESET_ID}>Autre (libre)…</option>
+              </select>
+              {newExtra.presetId === CUSTOM_PRESET_ID && (
+                <div className="grid grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    value={newExtra.name}
+                    onChange={(e) => setNewExtra({ ...newExtra, name: e.target.value })}
+                    placeholder="Nom (ex. GPS, livraison hôtel…)"
+                    className={`${inputClass} col-span-3`}
+                  />
+                  <input
+                    type="number"
+                    min="0"
+                    inputMode="numeric"
+                    value={newExtra.price}
+                    onChange={(e) => setNewExtra({ ...newExtra, price: e.target.value })}
+                    placeholder="Prix €"
+                    className={inputClass}
+                  />
+                  <select
+                    value={newExtra.mode}
+                    onChange={(e) => setNewExtra({ ...newExtra, mode: e.target.value as BookingExtra['mode'] })}
+                    className={`${inputClass} col-span-2 appearance-none`}
+                  >
+                    <option value="per_day">par jour</option>
+                    <option value="one_time">une seule fois</option>
+                  </select>
+                </div>
+              )}
+              <div className="flex gap-2">
+                <button type="button" onClick={() => setAddingExtra(false)}
+                  className="flex-1 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 touch-manipulation">
+                  Annuler
+                </button>
+                <button type="button" onClick={addExtra}
+                  className="flex-1 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary-hover touch-manipulation">
+                  Ajouter
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
 
       {/* Payment Method (if web booking) */}
       {isWebBooking && fullDetails && (
@@ -480,7 +881,7 @@ export function BookingDetailsModal({
         </div>
       )}
 
-      {/* Price - Use fullDetails.totalPrice for web bookings (more accurate) */}
+      {/* Total = vehicle + extras + delivery fee (computeBookingTotal) */}
       <div className="bg-primary-light rounded-xl p-4">
         <div className="flex justify-between items-center">
           <span className="font-medium text-gray-700">Total</span>
@@ -493,9 +894,12 @@ export function BookingDetailsModal({
                   editData.returnDate,
                   editData.returnTime
                 );
-                const previewTotal = Math.round(
-                  computeVehicleSubtotal(editData.pricePerDay, units)
-                );
+                const previewTotal = computeBookingTotal({
+                  pricePerDay: editData.pricePerDay,
+                  units,
+                  extras: booking.extras,
+                  deliveryFee: booking.deliveryFee,
+                });
                 return (
                   <>
                     <span className="text-2xl font-bold text-primary">{previewTotal}€</span>
@@ -516,27 +920,29 @@ export function BookingDetailsModal({
               })()
             ) : (
               <>
-                <span className="text-2xl font-bold text-primary">
-                  {isWebBooking && fullDetails ? fullDetails.totalPrice : booking.totalPrice}€
-                </span>
-                <p className="text-xs text-gray-500">
-                  {formatRentalDuration({ fullDays: booking.rentalDays, extraHours: booking.extraHours || 0 }) || `${booking.rentalDays} jours`}
-                </p>
+                <span className="text-2xl font-bold text-primary">{booking.totalPrice}€</span>
+                <p className="text-xs text-gray-500">{durationLabel}</p>
               </>
             )}
           </div>
         </div>
-        {/* Price breakdown for web bookings */}
-        {isWebBooking && fullDetails && !isEditing && (
+        {/* Breakdown (pre-008 web bookings fall back to the client's original order) */}
+        {!isEditing && (
           <div className="mt-3 pt-3 border-t border-primary/20 text-sm text-gray-600 space-y-1">
             <div className="flex justify-between">
-              <span>Véhicule ({formatRentalDuration({ fullDays: booking.rentalDays, extraHours: booking.extraHours || 0 }) || `${booking.rentalDays} jours`})</span>
-              <span>{fullDetails.vehicleTotal}€</span>
+              <span>Véhicule ({durationLabel})</span>
+              <span>{isLegacyWeb && fullDetails ? fullDetails.vehicleTotal : computeVehicleSubtotal(dailyRate, bookingUnits)}€</span>
             </div>
-            {fullDetails.supplementsTotal > 0 && (
+            {(isLegacyWeb && fullDetails ? fullDetails.supplementsTotal : extrasSubtotal) > 0 && (
               <div className="flex justify-between">
                 <span>Suppléments</span>
-                <span>{fullDetails.supplementsTotal}€</span>
+                <span>{isLegacyWeb && fullDetails ? fullDetails.supplementsTotal : extrasSubtotal}€</span>
+              </div>
+            )}
+            {booking.deliveryFee > 0 && (
+              <div className="flex justify-between">
+                <span>Frais de déplacement</span>
+                <span>{booking.deliveryFee}€</span>
               </div>
             )}
           </div>
@@ -608,20 +1014,19 @@ export function BookingDetailsModal({
                   const currentReturn = new Date(booking.returnDate);
                   currentReturn.setDate(currentReturn.getDate() + addDaysCount);
                   const newReturnDate = currentReturn.toISOString().split('T')[0];
-                  const vehicleInfo = vehicleData.find(v => v.id === booking.vehicleId);
-                  const hoursPortion = (booking.extraHours || 0) * EXTRA_HOUR_RATE;
-                  const dailyRate = vehicleInfo?.pricePerDay
-                    ?? (booking.rentalDays > 0
-                      ? (booking.totalPrice - hoursPortion) / booking.rentalDays
-                      : booking.totalPrice);
+                  // Same rate as the rest of the booking; extras and delivery fee are re-billed on the new length
                   const newDays = booking.rentalDays + addDaysCount;
-                  const newTotal = Math.round(
-                    computeVehicleSubtotal(dailyRate, { fullDays: newDays, extraHours: booking.extraHours || 0 })
-                  );
+                  const newTotal = computeBookingTotal({
+                    pricePerDay: dailyRate,
+                    units: { fullDays: newDays, extraHours: booking.extraHours || 0 },
+                    extras: booking.extras,
+                    deliveryFee: booking.deliveryFee,
+                  });
                   onBookingUpdate(booking.id, {
                     returnDate: newReturnDate,
                     rentalDays: newDays,
                     extraHours: booking.extraHours || 0,
+                    pricePerDay: dailyRate,
                     totalPrice: newTotal,
                   });
                 }}

@@ -10,11 +10,11 @@ import { VehicleGrid } from '../components/vehicles/VehicleGrid';
 import { VehicleAddModal } from '../components/vehicles/VehicleAddModal';
 import { useAdminStore } from '../store/adminStore';
 import { useAdminData } from '../hooks/useAdminData';
-import type { DashboardKPIs, QuickAddData, BookingStatus, AdminVehicle } from '../types/admin';
+import type { DashboardKPIs, QuickAddData, BookingStatus, AdminVehicle, AdminBooking } from '../types/admin';
 import {
   computeRentalUnitsFromDateTime,
-  computeVehicleSubtotal,
-  EXTRA_HOUR_RATE,
+  computeBookingTotal,
+  deriveDailyRate,
 } from '../../lib/pricing';
 
 export function AdminDashboardPage() {
@@ -113,7 +113,7 @@ export function AdminDashboardPage() {
     await deleteVehicle(vehicleId);
   }, [deleteVehicle]);
 
-  const handleBookingUpdate = useCallback(async (bookingId: string, updates: Partial<{ clientName: string; clientPhone: string; clientEmail: string; departureDate: string; returnDate: string; pickupTime: string; returnTime: string; rentalDays: number; extraHours: number; vehicleId: number; assignedVehicleId: number; vehicleName: string; totalPrice: number }>) => {
+  const handleBookingUpdate = useCallback(async (bookingId: string, updates: Partial<AdminBooking>) => {
     await updateBookingDetails(bookingId, updates);
   }, [updateBookingDetails]);
 
@@ -135,12 +135,16 @@ export function AdminDashboardPage() {
       booking.returnTime
     );
 
-    // Back out the daily rate from the old total (subtract previous hourly portion)
-    const oldHoursPortion = (booking.extraHours || 0) * EXTRA_HOUR_RATE;
-    const dailyRate = booking.rentalDays > 0
-      ? Math.round((booking.totalPrice - oldHoursPortion) / booking.rentalDays)
-      : booking.totalPrice;
-    const newTotalPrice = Math.round(computeVehicleSubtotal(dailyRate, units));
+    // Keep the booking's own rate (stored since migration 008, derived from the old
+    // total for older rows) and re-bill extras / delivery fee on the new duration.
+    const dailyRate = booking.pricePerDay
+      ?? deriveDailyRate(booking.totalPrice, booking.rentalDays, booking.extraHours || 0);
+    const newTotalPrice = computeBookingTotal({
+      pricePerDay: dailyRate,
+      units,
+      extras: booking.extras,
+      deliveryFee: booking.deliveryFee,
+    });
 
     // Prepare updates
     const updates: Partial<typeof booking> = {
@@ -148,6 +152,7 @@ export function AdminDashboardPage() {
       returnDate: newReturnDate,
       rentalDays: units.fullDays,
       extraHours: units.extraHours,
+      pricePerDay: dailyRate,
       totalPrice: newTotalPrice,
     };
 

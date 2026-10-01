@@ -1,4 +1,5 @@
 import type { Vehicle } from '../../types';
+import type { BookingExtra } from '../../lib/pricing';
 
 // Admin Vehicle extends base Vehicle with admin-specific fields
 export interface AdminVehicle extends Vehicle {
@@ -29,10 +30,11 @@ export interface AdminBooking {
   pickupTime?: string;  // Format: "HH:MM" (stored 24h)
   returnTime?: string;  // Format: "HH:MM"
 
-  // Location
+  // Location — "Autre (préciser)" comes with a custom address; returnLocation undefined = same as pickup
   pickupLocation: string;
   customPickupLocation?: string;
   returnLocation?: string;
+  customReturnLocation?: string;
 
   // Vehicle
   vehicleId: number;
@@ -44,8 +46,16 @@ export interface AdminBooking {
   clientPhone: string;
   clientEmail?: string;
 
-  // Pricing
+  // Pricing — totalPrice = pricePerDay × rentalDays + 3 €/h × extraHours + extras + deliveryFee
+  pricePerDay?: number | null; // null only on rows written before migration 008 (derive from total)
+  extras: BookingExtra[];
+  deliveryFee: number;         // one-time fee for a custom pickup / return location
   totalPrice: number;
+
+  // Documents / deposit held by the agency during the rental
+  passportKept: boolean;
+  depositKept: boolean;
+  depositAmount?: number | null;
 
   // Meta
   createdAt: string;

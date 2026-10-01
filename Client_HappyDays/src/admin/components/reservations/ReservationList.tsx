@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Calendar, Car, Phone, Clock, Check, XCircle, Sparkles, Plus, Trash2, CheckSquare, Square, MinusSquare } from 'lucide-react';
+import { Search, Filter, Calendar, Car, Phone, Clock, Check, XCircle, Sparkles, Plus, Trash2, CheckSquare, Square, MinusSquare, IdCard, Wallet } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { AdminBooking, BookingStatus, ReservationFilters } from '../../types/admin';
@@ -414,6 +414,22 @@ export function ReservationList({ bookings, onBookingClick, onAddClick, onBulkDe
                       <div>
                         <span className="text-xs font-mono text-gray-400">{booking.bookingReference}</span>
                         <h3 className="font-semibold text-gray-900">{booking.clientName}</h3>
+                        {(booking.passportKept || booking.depositKept) && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {booking.passportKept && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-medium">
+                                <IdCard className="w-3 h-3" />
+                                Passeport
+                              </span>
+                            )}
+                            {booking.depositKept && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 text-[10px] font-medium">
+                                <Wallet className="w-3 h-3" />
+                                Caution{booking.depositAmount ? ` ${booking.depositAmount}€` : ''}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${status.bgColor} ${status.color}`}>
                         {status.icon}
