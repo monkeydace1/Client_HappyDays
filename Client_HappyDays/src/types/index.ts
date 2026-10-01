@@ -72,6 +72,7 @@ export interface BookingData {
     pickupLocation: string;
     customPickupLocation?: string;
     returnLocation?: string;
+    customReturnLocation?: string;
     differentReturnLocation: boolean;
 
     // Step 2
@@ -99,3 +100,10 @@ export const PICKUP_LOCATIONS = [
 ] as const;
 
 export type PickupLocation = typeof PICKUP_LOCATIONS[number];
+
+// "Autre (préciser)" = a custom address: the delivery fee is not priced online, the team
+// confirms it with the client (admin enters it as "Frais de déplacement" on the booking).
+export const OTHER_LOCATION: PickupLocation = 'Autre (préciser)';
+export const isCustomLocation = (location?: string | null): boolean => location === OTHER_LOCATION;
+export const LOCATION_FEE_NOTICE =
+    "Frais de déplacement à voir avec l'équipe Happy Days — ils seront confirmés avec vous avant la location.";

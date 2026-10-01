@@ -95,6 +95,54 @@ export function computeSupplementSubtotal(
 }
 
 /**
+ * An add-on attached to a booking (admin "Suppléments", plus the web supplements
+ * copied at sync time). per_day items bill on fullDays like supplements; one_time
+ * items bill once.
+ */
+export interface BookingExtra {
+  id: string;
+  name: string;
+  mode: 'per_day' | 'one_time';
+  price: number;
+  quantity: number;
+}
+
+export function computeExtrasSubtotal(extras: BookingExtra[], units: RentalUnits): number {
+  return extras.reduce((sum, extra) => {
+    const qty = extra.quantity || 1;
+    return sum + (extra.mode === 'per_day'
+      ? computeSupplementSubtotal(extra.price, qty, units)
+      : extra.price * qty);
+  }, 0);
+}
+
+/**
+ * Single source of truth for a booking total (admin edit / drag-drop / extend, QuickAdd):
+ *   vehicle (rate × days + 3 €/h) + extras + one-time delivery fee.
+ */
+export function computeBookingTotal(input: {
+  pricePerDay: number;
+  units: RentalUnits;
+  extras?: BookingExtra[];
+  deliveryFee?: number;
+}): number {
+  return Math.round(
+    computeVehicleSubtotal(input.pricePerDay, input.units) +
+      computeExtrasSubtotal(input.extras ?? [], input.units) +
+      (input.deliveryFee ?? 0)
+  );
+}
+
+/**
+ * Daily rate for bookings saved before price_per_day existed (migration 008):
+ * back it out of the stored total, which then only held rate × days + 3 €/h.
+ */
+export function deriveDailyRate(totalPrice: number, fullDays: number, extraHours: number): number {
+  if (fullDays <= 0) return totalPrice;
+  return Math.max(0, Math.round((totalPrice - EXTRA_HOUR_RATE * extraHours) / fullDays));
+}
+
+/**
  * French label for a duration, e.g. "1 jour + 1h", "2 jours", "1 jour".
  */
 export function formatRentalDuration(units: RentalUnits): string {

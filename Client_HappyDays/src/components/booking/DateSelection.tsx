@@ -2,8 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Calendar, MapPin, ArrowRight, AlertCircle, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
-import { PICKUP_LOCATIONS } from '../../types';
+import { PICKUP_LOCATIONS, OTHER_LOCATION } from '../../types';
 import { formatRentalDuration } from '../../lib/pricing';
+import { LocationFeeNotice } from './LocationFeeNotice';
 
 export const DateSelection: React.FC = () => {
     const {
@@ -12,6 +13,7 @@ export const DateSelection: React.FC = () => {
         pickupLocation,
         customPickupLocation,
         returnLocation,
+        customReturnLocation,
         differentReturnLocation,
         rentalDays,
         extraHours,
@@ -20,9 +22,25 @@ export const DateSelection: React.FC = () => {
         setPickupLocation,
         setCustomPickupLocation,
         setReturnLocation,
+        setCustomReturnLocation,
         setDifferentReturnLocation,
         nextStep
     } = useBookingStore();
+
+    // Return select: '' = same place as the pickup, otherwise one of PICKUP_LOCATIONS
+    const handleReturnLocationChange = (value: string) => {
+        if (!value) {
+            setDifferentReturnLocation(false);
+            setReturnLocation('');
+            setCustomReturnLocation('');
+            return;
+        }
+        setDifferentReturnLocation(true);
+        setReturnLocation(value);
+        if (value !== OTHER_LOCATION) {
+            setCustomReturnLocation('');
+        }
+    };
 
     // Split date and time for better control
     const [departureDay, setDepartureDay] = useState('');
@@ -69,6 +87,10 @@ export const DateSelection: React.FC = () => {
 
         if (differentReturnLocation && !returnLocation) {
             newErrors.returnLocation = 'Veuillez préciser le lieu de retour';
+        }
+
+        if (differentReturnLocation && returnLocation === OTHER_LOCATION && !customReturnLocation.trim()) {
+            newErrors.customReturnLocation = 'Veuillez préciser le lieu de retour';
         }
 
         if (departureDay && returnDay) {
@@ -309,50 +331,64 @@ export const DateSelection: React.FC = () => {
                                 <span>{errors.customPickupLocation}</span>
                             </div>
                         )}
+                        <LocationFeeNotice />
                     </motion.div>
                 )}
 
-                {/* Different Return Location */}
-                <div className="space-y-4">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <input
-                            type="checkbox"
-                            checked={differentReturnLocation}
-                            onChange={(e) => setDifferentReturnLocation(e.target.checked)}
-                            className="w-5 h-5 text-primary rounded focus:ring-primary"
-                        />
-                        <span className="text-sm text-gray-700 font-medium">
-                            Retourner le véhicule à un autre endroit
-                        </span>
+                {/* Return Location — same choices as the pickup, default = same place */}
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+                        <MapPin size={18} className="text-primary" />
+                        Lieu de retour
                     </label>
-
-                    {differentReturnLocation && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            className="space-y-2"
-                        >
-                            <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-                                <MapPin size={18} className="text-primary" />
-                                Lieu de retour
-                            </label>
-                            <input
-                                type="text"
-                                value={returnLocation}
-                                onChange={(e) => setReturnLocation(e.target.value)}
-                                placeholder="Entrez le lieu de retour"
-                                className={`w-full px-4 py-3 rounded-lg border ${errors.returnLocation ? 'border-red-500' : 'border-gray-200'
-                                    } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`}
-                            />
-                            {errors.returnLocation && (
-                                <div className="flex items-center gap-2 text-red-500 text-sm">
-                                    <AlertCircle size={16} />
-                                    <span>{errors.returnLocation}</span>
-                                </div>
-                            )}
-                        </motion.div>
+                    <select
+                        value={differentReturnLocation ? returnLocation : ''}
+                        onChange={(e) => handleReturnLocationChange(e.target.value)}
+                        className={`w-full px-3 sm:px-4 py-3 rounded-lg border ${errors.returnLocation ? 'border-red-500' : 'border-gray-200'
+                            } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all text-sm sm:text-base bg-white`}
+                    >
+                        <option value="">Même lieu que le départ</option>
+                        {PICKUP_LOCATIONS.map((location) => (
+                            <option key={location} value={location}>
+                                {location}
+                            </option>
+                        ))}
+                    </select>
+                    {errors.returnLocation && (
+                        <div className="flex items-center gap-2 text-red-500 text-sm">
+                            <AlertCircle size={16} />
+                            <span>{errors.returnLocation}</span>
+                        </div>
                     )}
                 </div>
+
+                {/* Custom Return Location */}
+                {differentReturnLocation && returnLocation === OTHER_LOCATION && (
+                    <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        className="space-y-2"
+                    >
+                        <label className="block text-sm font-medium text-gray-700">
+                            Précisez le lieu de retour
+                        </label>
+                        <input
+                            type="text"
+                            value={customReturnLocation}
+                            onChange={(e) => setCustomReturnLocation(e.target.value)}
+                            placeholder="Entrez l'adresse complète"
+                            className={`w-full px-4 py-3 rounded-lg border ${errors.customReturnLocation ? 'border-red-500' : 'border-gray-200'
+                                } focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all`}
+                        />
+                        {errors.customReturnLocation && (
+                            <div className="flex items-center gap-2 text-red-500 text-sm">
+                                <AlertCircle size={16} />
+                                <span>{errors.customReturnLocation}</span>
+                            </div>
+                        )}
+                        <LocationFeeNotice />
+                    </motion.div>
+                )}
 
                 {/* Summary */}
                 {departureDate && returnDate && rentalDays > 0 && (

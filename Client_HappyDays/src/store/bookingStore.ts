@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { Vehicle, Supplement, ClientInfo } from '../types';
 import { PICKUP_LOCATIONS } from '../types';
+import { additionalDriverSupplement } from '../data/supplementData';
 import {
   computeRentalUnits,
   computeVehicleSubtotal,
@@ -14,6 +15,7 @@ interface BookingState {
     pickupLocation: string;
     customPickupLocation: string;
     returnLocation: string;
+    customReturnLocation: string;
     differentReturnLocation: boolean;
 
     // Step 2: Vehicle Selection
@@ -39,6 +41,7 @@ interface BookingState {
     setPickupLocation: (location: string) => void;
     setCustomPickupLocation: (location: string) => void;
     setReturnLocation: (location: string) => void;
+    setCustomReturnLocation: (location: string) => void;
     setDifferentReturnLocation: (value: boolean) => void;
 
     // Actions - Step 2
@@ -72,6 +75,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     pickupLocation: PICKUP_LOCATIONS[0], // Default to Airport
     customPickupLocation: '',
     returnLocation: '',
+    customReturnLocation: '',
     differentReturnLocation: false,
     selectedVehicle: null,
     supplements: [],
@@ -95,6 +99,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
     setPickupLocation: (location) => set({ pickupLocation: location }),
     setCustomPickupLocation: (location) => set({ customPickupLocation: location }),
     setReturnLocation: (location) => set({ returnLocation: location }),
+    setCustomReturnLocation: (location) => set({ customReturnLocation: location }),
     setDifferentReturnLocation: (value) => set({ differentReturnLocation: value }),
 
     // Step 2 actions
@@ -160,9 +165,9 @@ export const useBookingStore = create<BookingState>((set, get) => ({
             total += computeSupplementSubtotal(supplement.pricePerDay, quantity, units);
         });
 
-        // Additional driver (8€/day, full days only)
+        // Additional driver (per-day rate from supplementData, full days only)
         if (state.additionalDriver) {
-            total += computeSupplementSubtotal(8, 1, units);
+            total += computeSupplementSubtotal(additionalDriverSupplement.pricePerDay, 1, units);
         }
 
         return total;
@@ -191,6 +196,7 @@ export const useBookingStore = create<BookingState>((set, get) => ({
         pickupLocation: PICKUP_LOCATIONS[0], // Default to Airport
         customPickupLocation: '',
         returnLocation: '',
+        customReturnLocation: '',
         differentReturnLocation: false,
         selectedVehicle: null,
         supplements: [],

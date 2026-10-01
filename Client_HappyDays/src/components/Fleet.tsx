@@ -34,9 +34,6 @@ export const Fleet = () => {
                                     images={car.images || [car.image]}
                                     alt={car.name}
                                 />
-                                <div className="absolute top-2 right-2 sm:top-3 sm:right-3 bg-accent text-white px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[10px] sm:text-sm font-bold shadow-lg z-20">
-                                    {car.pricePerDay}€/jour
-                                </div>
                             </div>
 
                             <div className="p-3 sm:p-4 md:p-5">

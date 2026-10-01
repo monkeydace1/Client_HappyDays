@@ -63,5 +63,5 @@ export const additionalDriverSupplement: Supplement = {
     type: 'additional_driver',
     name: 'Conducteur supplémentaire',
     description: 'Autorisation pour un deuxième conducteur',
-    pricePerDay: 8
+    pricePerDay: 3
 };

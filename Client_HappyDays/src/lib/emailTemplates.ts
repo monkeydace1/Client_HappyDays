@@ -1,5 +1,13 @@
 import type { BookingSubmission } from './bookingService';
 import { EXTRA_HOUR_RATE, formatRentalDuration } from './pricing';
+import { additionalDriverSupplement } from '../data/supplementData';
+import { isCustomLocation, LOCATION_FEE_NOTICE } from '../types';
+
+// "Autre (préciser)" on the pickup or the return → the delivery fee is agreed offline
+function hasCustomLocation(submission: BookingSubmission): boolean {
+  return isCustomLocation(submission.pickupLocation)
+    || (submission.differentReturnLocation && isCustomLocation(submission.returnLocation));
+}
 
 /**
  * Generate customer confirmation email HTML
@@ -79,8 +87,19 @@ export function generateCustomerEmailHTML(
                 </tr>
                 <tr>
                   <td style="padding: 8px 0; color: #666666; font-size: 14px;">📍 Prise en charge :</td>
-                  <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${submission.pickupLocation}</td>
+                  <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${submission.pickupLocation}${submission.customPickupLocation ? ` — ${submission.customPickupLocation}` : ''}</td>
                 </tr>
+                ${submission.differentReturnLocation && submission.returnLocation ? `
+                <tr>
+                  <td style="padding: 8px 0; color: #666666; font-size: 14px;">📍 Retour :</td>
+                  <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${submission.returnLocation}${submission.customReturnLocation ? ` — ${submission.customReturnLocation}` : ''}</td>
+                </tr>
+                ` : ''}
+                ${hasCustomLocation(submission) ? `
+                <tr>
+                  <td colspan="2" style="padding: 8px 0; color: #92400e; font-size: 13px; background-color: #fffbeb; border-radius: 6px;">⚠️ ${LOCATION_FEE_NOTICE}</td>
+                </tr>
+                ` : ''}
                 <tr>
                   <td colspan="2" style="padding-top: 15px; border-top: 1px solid #e2e8f0; margin-top: 10px;">
                     <table width="100%" cellpadding="0" cellspacing="0">
@@ -241,7 +260,12 @@ export function generateAdminEmailHTML(
                 ${submission.differentReturnLocation ? `
                 <tr>
                   <td style="color: #666666; font-size: 14px;">Retour :</td>
-                  <td style="color: #333333; font-size: 14px;">${submission.returnLocation}</td>
+                  <td style="color: #333333; font-size: 14px;">${submission.returnLocation}${submission.customReturnLocation ? ` - ${submission.customReturnLocation}` : ''}</td>
+                </tr>
+                ` : ''}
+                ${hasCustomLocation(submission) ? `
+                <tr>
+                  <td colspan="2" style="color: #92400e; font-size: 13px; font-weight: 600;">⚠️ Lieu personnalisé — frais de déplacement à fixer avec le client et à saisir dans l'admin.</td>
                 </tr>
                 ` : ''}
                 <tr>
@@ -254,7 +278,7 @@ export function generateAdminEmailHTML(
               <h2 style="margin: 0 0 15px 0; font-size: 18px; color: #333333; border-bottom: 2px solid #0ea5e9; padding-bottom: 10px;">🎁 Suppléments</h2>
               <ul style="margin: 0 0 30px 0; padding-left: 20px; color: #666666; line-height: 1.8;">
                 ${supplementsList}
-                ${additionalDriver ? '<li><strong>Conducteur additionnel : 8€/jour</strong></li>' : ''}
+                ${additionalDriver ? `<li><strong>Conducteur additionnel : ${additionalDriverSupplement.pricePerDay}€/jour</strong></li>` : ''}
               </ul>
 
               <!-- Pricing -->

@@ -2,7 +2,9 @@ import { supabase } from './supabase';
 import type { Vehicle, Supplement, ClientInfo } from '../types';
 import { generateCustomerEmailHTML, generateAdminEmailHTML } from './emailTemplates';
 import { getUTMParamsForDatabase, clearUTMParams } from './utmTracking';
-import { formatRentalDuration } from './pricing';
+import { formatRentalDuration, type BookingExtra } from './pricing';
+import { additionalDriverSupplement } from '../data/supplementData';
+import { isCustomLocation, LOCATION_FEE_NOTICE } from '../types';
 
 // Types for booking submission
 export interface BookingSubmission {
@@ -14,6 +16,7 @@ export interface BookingSubmission {
   pickupLocation: string;
   customPickupLocation?: string;
   returnLocation?: string;
+  customReturnLocation?: string;
   differentReturnLocation: boolean;
 
   // Step 2: Vehicle
@@ -176,6 +179,7 @@ export async function saveBooking(
       pickup_location: submission.pickupLocation,
       custom_pickup_location: submission.customPickupLocation || null,
       return_location: submission.returnLocation || null,
+      custom_return_location: submission.customReturnLocation || null,
       different_return_location: submission.differentReturnLocation,
 
       // Vehicle
@@ -329,6 +333,17 @@ async function syncToAdminBookings(
     const pickupTime = extractTimeFromDateString(submission.departureDate);
     const returnTime = extractTimeFromDateString(submission.returnDate);
 
+    // The client's supplements become admin "extras" so the agency can see and
+    // complete them in one place (admin_bookings.extras, see migration 008).
+    const extras: BookingExtra[] = [
+      ...submission.supplements
+        .filter((s) => s.pricePerDay > 0)
+        .map((s) => ({ id: s.id, name: s.name, mode: 'per_day' as const, price: s.pricePerDay, quantity: s.quantity || 1 })),
+      ...(submission.additionalDriver
+        ? [{ id: additionalDriverSupplement.id, name: additionalDriverSupplement.name, mode: 'per_day' as const, price: additionalDriverSupplement.pricePerDay, quantity: 1 }]
+        : []),
+    ];
+
     const adminBookingData = {
       booking_reference: bookingReference,
       status: 'pending',
@@ -340,12 +355,20 @@ async function syncToAdminBookings(
       rental_days: submission.rentalDays,
       extra_hours: submission.extraHours,
       pickup_location: submission.pickupLocation,
+      custom_pickup_location: isCustomLocation(submission.pickupLocation) ? submission.customPickupLocation || null : null,
+      return_location: submission.differentReturnLocation ? submission.returnLocation || null : null,
+      custom_return_location: submission.differentReturnLocation && isCustomLocation(submission.returnLocation)
+        ? submission.customReturnLocation || null
+        : null,
       vehicle_id: submission.selectedVehicle.id,
       vehicle_name: submission.selectedVehicle.name,
       assigned_vehicle_id: submission.selectedVehicle.id, // Auto-assign the selected vehicle
       client_name: `${submission.clientInfo.firstName} ${submission.clientInfo.lastName}`,
       client_phone: submission.clientInfo.phone,
       client_email: submission.clientInfo.email,
+      price_per_day: submission.selectedVehicle.pricePerDay,
+      extras,
+      delivery_fee: 0, // agreed with the client afterwards, entered by the admin
       total_price: submission.totalPrice,
     };
 
@@ -392,7 +415,7 @@ export function formatWhatsAppMessage(
       .join('\n');
   }
   if (additionalDriver) {
-    supplementsList += '\n  - Conducteur additionnel: 8€/jour';
+    supplementsList += `\n  - Conducteur additionnel: ${additionalDriverSupplement.pricePerDay}€/jour`;
   }
 
   const message = `
@@ -404,7 +427,7 @@ Retour: ${returnDate.toLocaleDateString('fr-FR', dateOptions)}
 Durée: ${formatRentalDuration({ fullDays: submission.rentalDays, extraHours: submission.extraHours })}
 
 📍 *LIEU*
-Prise en charge: ${submission.pickupLocation}${submission.customPickupLocation ? ` (${submission.customPickupLocation})` : ''}${submission.differentReturnLocation ? `\nRetour: ${submission.returnLocation}` : ''}
+Prise en charge: ${submission.pickupLocation}${submission.customPickupLocation ? ` (${submission.customPickupLocation})` : ''}${submission.differentReturnLocation ? `\nRetour: ${submission.returnLocation}${submission.customReturnLocation ? ` (${submission.customReturnLocation})` : ''}` : ''}${isCustomLocation(submission.pickupLocation) || (submission.differentReturnLocation && isCustomLocation(submission.returnLocation)) ? `\n⚠️ ${LOCATION_FEE_NOTICE}` : ''}
 
 🚙 *VÉHICULE*
 ${selectedVehicle.name} (${selectedVehicle.category})

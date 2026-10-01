@@ -4,12 +4,19 @@ import { motion } from 'framer-motion';
 import { useBookingStore } from '../../store/bookingStore';
 import type { Insurance } from '../../types';
 import { EXTRA_HOUR_RATE, formatRentalDuration } from '../../lib/pricing';
+import { additionalDriverSupplement } from '../../data/supplementData';
+import { isCustomLocation } from '../../types';
+import { LocationFeeNotice } from './LocationFeeNotice';
 
 export const OrderSummary: React.FC = () => {
     const {
         departureDate,
         returnDate,
         pickupLocation,
+        customPickupLocation,
+        returnLocation,
+        customReturnLocation,
+        differentReturnLocation,
         rentalDays,
         extraHours,
         selectedVehicle,
@@ -84,14 +91,34 @@ export const OrderSummary: React.FC = () => {
                 </div>
             )}
 
-            {/* Pickup Location */}
+            {/* Pickup / Return Location */}
             {pickupLocation && (
-                <div className="flex items-start gap-3 pt-3 border-t border-gray-100">
-                    <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
-                    <div className="flex-1 text-sm">
-                        <p className="text-gray-600">Lieu de ramassage</p>
-                        <p className="font-medium text-secondary">{pickupLocation}</p>
+                <div className="pt-3 border-t border-gray-100 space-y-2">
+                    <div className="flex items-start gap-3">
+                        <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
+                        <div className="flex-1 text-sm">
+                            <p className="text-gray-600">Lieu de ramassage</p>
+                            <p className="font-medium text-secondary">{pickupLocation}</p>
+                            {isCustomLocation(pickupLocation) && customPickupLocation && (
+                                <p className="text-xs text-gray-600">{customPickupLocation}</p>
+                            )}
+                        </div>
                     </div>
+                    {differentReturnLocation && returnLocation && (
+                        <div className="flex items-start gap-3">
+                            <MapPin size={18} className="text-primary mt-0.5 flex-shrink-0" />
+                            <div className="flex-1 text-sm">
+                                <p className="text-gray-600">Lieu de retour</p>
+                                <p className="font-medium text-secondary">{returnLocation}</p>
+                                {isCustomLocation(returnLocation) && customReturnLocation && (
+                                    <p className="text-xs text-gray-600">{customReturnLocation}</p>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                    {(isCustomLocation(pickupLocation) || (differentReturnLocation && isCustomLocation(returnLocation))) && (
+                        <LocationFeeNotice compact />
+                    )}
                 </div>
             )}
 
@@ -148,7 +175,7 @@ export const OrderSummary: React.FC = () => {
                                 <span className="text-gray-700">Conducteur sup.</span>
                             </div>
                             <span className="font-medium text-secondary">
-                                {8 * (rentalDays || 1)}€
+                                {additionalDriverSupplement.pricePerDay * (rentalDays || 1)}€
                             </span>
                         </div>
                     )}
