@@ -3,8 +3,9 @@ import { Search, Clock, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useBookingStore } from '../store/bookingStore';
-import { PICKUP_LOCATIONS } from '../types';
+import { PICKUP_LOCATIONS, OTHER_LOCATION } from '../types';
 import { HeroDatePicker } from './HeroDatePicker';
+import { LocationFeeNotice } from './booking/LocationFeeNotice';
 import { format } from 'date-fns';
 import heroBackground from '../assets/photo-1656978310683-d415ee895c2c.jpg';
 
@@ -122,12 +123,14 @@ export const Hero = () => {
                                     onChange={(e) => setLocation(e.target.value)}
                                     className="w-full px-3 py-2.5 md:py-3 rounded-lg border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all bg-white text-xs md:text-sm"
                                 >
-                                    {PICKUP_LOCATIONS.filter(loc => loc !== 'Autre (préciser)').map((loc) => (
+                                    {PICKUP_LOCATIONS.map((loc) => (
                                         <option key={loc} value={loc}>
                                             {loc}
                                         </option>
                                     ))}
                                 </select>
+                                {/* The address itself is asked on the booking page (step 1) */}
+                                {location === OTHER_LOCATION && <LocationFeeNotice compact />}
                             </div>
 
                             {/* Search Button */}

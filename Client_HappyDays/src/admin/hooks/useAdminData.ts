@@ -23,7 +23,7 @@ import {
 } from '../../lib/emailTemplates';
 import {
   computeRentalUnitsFromDateTime,
-  computeVehicleSubtotal,
+  computeBookingTotal,
 } from '../../lib/pricing';
 
 // Send confirmation email when status changes to 'active'
@@ -432,13 +432,14 @@ export function useAdminData(): UseAdminDataReturn {
     if (!vehicle) return;
 
     const pricePerDay = data.pricePerDay || vehicle.pricePerDay;
+    const extras = data.extras ?? [];
     const units = computeRentalUnitsFromDateTime(
       data.departureDate,
       data.pickupTime,
       data.returnDate,
       data.returnTime
     );
-    const totalPrice = Math.round(computeVehicleSubtotal(pricePerDay, units));
+    const totalPrice = computeBookingTotal({ pricePerDay, units, extras });
     const bookingReference = generateBookingReference();
 
     const newBooking: Omit<AdminBooking, 'id' | 'createdAt' | 'updatedAt'> = {
@@ -459,7 +460,7 @@ export function useAdminData(): UseAdminDataReturn {
       pickupTime: data.pickupTime,
       returnTime: data.returnTime,
       pricePerDay,
-      extras: [],
+      extras,
       deliveryFee: 0,
       totalPrice,
       passportKept: false,
@@ -483,6 +484,7 @@ export function useAdminData(): UseAdminDataReturn {
         returnTime: data.returnTime,
         rentalDays: units.fullDays,
         extraHours: units.extraHours,
+        extras,
         totalPrice,
       });
     } catch (err) {

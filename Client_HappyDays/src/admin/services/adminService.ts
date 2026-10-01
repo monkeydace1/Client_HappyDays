@@ -1,6 +1,7 @@
 import { supabase } from '../../lib/supabase';
 import type { AdminVehicle, AdminBooking, BookingStatus, FullBookingDetails } from '../types/admin';
 import type { BookingExtra } from '../../lib/pricing';
+import { vehicles as vehicleData } from '../../data/vehicleData';
 
 // ============================================
 // VEHICLE OPERATIONS
@@ -419,7 +420,10 @@ function mapVehicleFromDb(row: Record<string, unknown>): AdminVehicle {
     fuel: row.fuel as 'Essence' | 'Diesel' | 'Électrique' | 'Hybride',
     seats: row.seats as number,
     pricePerDay: row.price_per_day as number,
-    image: row.image as string,
+    // The bundle's photo for this ID wins (vehicleData.ts is the source of truth for images,
+    // so local/preview/prod each show their own files); the DB path only serves vehicles
+    // created from the admin that vehicleData.ts doesn't know.
+    image: vehicleData.find((v) => v.id === (row.id as number))?.image ?? (row.image as string),
     status: row.status as AdminVehicle['status'],
     licensePlate: row.license_plate as string | undefined,
     notes: row.notes as string | undefined,

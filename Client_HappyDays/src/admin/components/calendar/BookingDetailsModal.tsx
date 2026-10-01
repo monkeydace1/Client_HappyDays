@@ -4,14 +4,14 @@ import {
   X, User, Phone, Calendar, Car, MapPin, MessageCircle, Check, Clock, XCircle,
   Edit3, Save, Mail, CreditCard, FileText, Image, Shield, Baby, Users, ChevronRight,
   Globe, MapPinned, Cake, Sparkles, RefreshCw, Euro, Trash2,
-  IdCard, Wallet, Plus, Minus, Truck, AlertTriangle
+  IdCard, Wallet, Truck, AlertTriangle
 } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import type { AdminBooking, BookingStatus, FullBookingDetails } from '../../types/admin';
 import { fetchFullBookingDetails } from '../../services/adminService';
 import { vehicles as vehicleData } from '../../../data/vehicleData';
-import { additionalDriverSupplement, childSeats, insuranceOptions } from '../../../data/supplementData';
+import { additionalDriverSupplement } from '../../../data/supplementData';
 import { PICKUP_LOCATIONS, OTHER_LOCATION, isCustomLocation } from '../../../types';
 import {
   computeRentalUnitsFromDateTime,
@@ -22,6 +22,7 @@ import {
   formatRentalDuration,
   type BookingExtra,
 } from '../../../lib/pricing';
+import { ExtrasEditor } from './ExtrasEditor';
 import { formatTime24h } from '../../../utils/timeFormat';
 
 interface BookingDetailsModalProps {
@@ -76,21 +77,6 @@ const paymentMethodLabels: Record<string, string> = {
   card: 'Carte bancaire',
   transfer: 'Virement bancaire',
 };
-
-// Upsell presets of the "Suppléments" section (same rates as the website) + a free-form entry
-const EXTRA_PRESETS: Array<Omit<BookingExtra, 'quantity'>> = [
-  { id: additionalDriverSupplement.id, name: additionalDriverSupplement.name, mode: 'per_day', price: additionalDriverSupplement.pricePerDay },
-  ...childSeats.map((s) => ({ id: s.id, name: s.name, mode: 'per_day' as const, price: s.pricePerDay })),
-  ...insuranceOptions.filter((i) => i.pricePerDay > 0).map((i) => ({ id: i.id, name: i.name, mode: 'per_day' as const, price: i.pricePerDay })),
-];
-const CUSTOM_PRESET_ID = 'custom';
-
-function extraIcon(extra: BookingExtra) {
-  if (extra.id === additionalDriverSupplement.id) return <Users className="w-5 h-5 text-gray-400 flex-shrink-0" />;
-  if (extra.id.startsWith('child_seat')) return <Baby className="w-5 h-5 text-gray-400 flex-shrink-0" />;
-  if (extra.id.startsWith('insurance')) return <Shield className="w-5 h-5 text-gray-400 flex-shrink-0" />;
-  return <Sparkles className="w-5 h-5 text-gray-400 flex-shrink-0" />;
-}
 
 // Walk-ins are stored with pickup_location = 'Direct'; web bookings use PICKUP_LOCATIONS
 const BASE_LOCATION_OPTIONS: string[] = ['Direct', ...PICKUP_LOCATIONS];
@@ -175,14 +161,6 @@ export function BookingDetailsModal({
   // Fields edited inline (outside edit mode) and saved on blur
   const [deliveryFeeDraft, setDeliveryFeeDraft] = useState('');
   const [depositAmountDraft, setDepositAmountDraft] = useState('');
-  // "+ Ajouter" form of the Suppléments section
-  const [addingExtra, setAddingExtra] = useState(false);
-  const [newExtra, setNewExtra] = useState<{ presetId: string; name: string; price: string; mode: BookingExtra['mode'] }>({
-    presetId: EXTRA_PRESETS[0].id,
-    name: '',
-    price: '',
-    mode: 'per_day',
-  });
 
   // Fetch full details when booking changes and it's a web booking
   useEffect(() => {
@@ -200,8 +178,7 @@ export function BookingDetailsModal({
     }
   }, [booking]);
 
-  // Reset edit state when booking changes (also runs after every inline save,
-  // which is what closes the "+ Ajouter" form and re-syncs the drafts)
+  // Reset edit state when booking changes (also runs after every inline save and re-syncs the drafts)
   useEffect(() => {
     if (booking) {
       setEditData(buildEditData(booking));
@@ -209,7 +186,6 @@ export function BookingDetailsModal({
       setDepositAmountDraft(booking.depositAmount ? String(booking.depositAmount) : '');
       setIsEditing(false);
       setActiveTab('overview');
-      setAddingExtra(false);
     }
   }, [booking]);
 
@@ -263,41 +239,6 @@ export function BookingDetailsModal({
       pricePerDay: dailyRate,
       totalPrice: computeBookingTotal({ pricePerDay: dailyRate, units: bookingUnits, extras: nextExtras, deliveryFee: booking.deliveryFee }),
     });
-  };
-  const removeExtra = (index: number) => saveExtras(booking.extras.filter((_, i) => i !== index));
-  const updateExtraQuantity = (index: number, quantity: number) => {
-    if (quantity <= 0) {
-      removeExtra(index);
-      return;
-    }
-    saveExtras(booking.extras.map((e, i) => (i === index ? { ...e, quantity } : e)));
-  };
-  const handlePresetChange = (presetId: string) => {
-    const preset = EXTRA_PRESETS.find((p) => p.id === presetId);
-    setNewExtra({
-      presetId,
-      name: preset?.name ?? '',
-      price: preset ? String(preset.price) : '',
-      mode: preset?.mode ?? 'per_day',
-    });
-  };
-  const addExtra = () => {
-    const preset = EXTRA_PRESETS.find((p) => p.id === newExtra.presetId);
-    const name = preset ? preset.name : newExtra.name.trim();
-    const price = preset ? preset.price : Number(newExtra.price);
-    const mode = preset ? preset.mode : newExtra.mode;
-    if (!name || !Number.isFinite(price) || price < 0) {
-      alert('Indiquez un nom et un prix pour le supplément');
-      return;
-    }
-    const existingIndex = preset ? booking.extras.findIndex((e) => e.id === preset.id) : -1;
-    // Free-form items get a deterministic id (list keys also include the index, so duplicates are fine)
-    const customId = `custom-${name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${mode}-${price}`;
-    const nextExtras = existingIndex >= 0
-      ? booking.extras.map((e, i) => (i === existingIndex ? { ...e, quantity: e.quantity + 1 } : e))
-      : [...booking.extras, { id: preset?.id ?? customId, name, mode, price, quantity: 1 }];
-    saveExtras(nextExtras);
-    setAddingExtra(false);
   };
   const saveDeliveryFee = () => {
     const fee = deliveryFeeDraft === '' ? 0 : Math.max(0, Math.round(Number(deliveryFeeDraft) || 0));
@@ -758,117 +699,16 @@ export function BookingDetailsModal({
       </div>
 
       {/* Suppléments — editable on every booking, each change saves immediately */}
-      <div className="bg-gray-50 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-gray-900">Suppléments</h3>
-          {!isEditing && !addingExtra && (
-            <button
-              type="button"
-              onClick={() => setAddingExtra(true)}
-              className="flex items-center gap-1 text-sm text-primary font-medium hover:underline touch-manipulation"
-            >
-              <Plus className="w-4 h-4" />
-              Ajouter
-            </button>
-          )}
-        </div>
-        <div className="space-y-2">
-          {booking.extras.length === 0 && legacyWebSupplements.length === 0 && !addingExtra && (
-            <p className="text-sm text-gray-400">Aucun supplément</p>
-          )}
-          {booking.extras.map((extra, idx) => (
-            <div key={`${extra.id}-${idx}`} className="flex items-center gap-2 text-gray-700">
-              {extraIcon(extra)}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm truncate">{extra.name}</p>
-                <p className="text-xs text-gray-500">
-                  {extra.price}€{extra.mode === 'per_day' ? '/jour' : ' (une fois)'}
-                  {extra.quantity > 1 && ` × ${extra.quantity}`}
-                </p>
-              </div>
-              <span className="text-sm font-medium text-gray-900 whitespace-nowrap">
-                {computeExtrasSubtotal([extra], bookingUnits)}€
-              </span>
-              {!isEditing && (
-                <div className="flex items-center gap-1 ml-1">
-                  <button type="button" onClick={() => updateExtraQuantity(idx, extra.quantity - 1)} aria-label="Moins"
-                    className="w-7 h-7 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center touch-manipulation">
-                    <Minus className="w-3.5 h-3.5" />
-                  </button>
-                  <button type="button" onClick={() => updateExtraQuantity(idx, extra.quantity + 1)} aria-label="Plus"
-                    className="w-7 h-7 rounded-md bg-gray-200 hover:bg-gray-300 flex items-center justify-center touch-manipulation">
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                  <button type="button" onClick={() => removeExtra(idx)} aria-label="Supprimer"
-                    className="w-7 h-7 rounded-md bg-red-50 hover:bg-red-100 text-red-600 flex items-center justify-center touch-manipulation">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-          {/* Pre-008 web bookings: the client's order, read-only (re-run the 008 backfill to make it editable) */}
-          {legacyWebSupplements.map((supp, idx) => (
-            <div key={`legacy-${idx}`} className="flex items-center gap-3 text-gray-700">
-              {supp.icon}
-              <span className="text-sm">{supp.label}</span>
-              <span className="ml-auto text-sm text-gray-500">{supp.rate}€/jour</span>
-            </div>
-          ))}
-          {addingExtra && (
-            <div className="mt-2 p-3 bg-white rounded-lg border border-gray-200 space-y-2">
-              <select
-                value={newExtra.presetId}
-                onChange={(e) => handlePresetChange(e.target.value)}
-                className={`${inputClass} appearance-none`}
-              >
-                {EXTRA_PRESETS.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name} — {p.price}€/jour</option>
-                ))}
-                <option value={CUSTOM_PRESET_ID}>Autre (libre)…</option>
-              </select>
-              {newExtra.presetId === CUSTOM_PRESET_ID && (
-                <div className="grid grid-cols-3 gap-2">
-                  <input
-                    type="text"
-                    value={newExtra.name}
-                    onChange={(e) => setNewExtra({ ...newExtra, name: e.target.value })}
-                    placeholder="Nom (ex. GPS, livraison hôtel…)"
-                    className={`${inputClass} col-span-3`}
-                  />
-                  <input
-                    type="number"
-                    min="0"
-                    inputMode="numeric"
-                    value={newExtra.price}
-                    onChange={(e) => setNewExtra({ ...newExtra, price: e.target.value })}
-                    placeholder="Prix €"
-                    className={inputClass}
-                  />
-                  <select
-                    value={newExtra.mode}
-                    onChange={(e) => setNewExtra({ ...newExtra, mode: e.target.value as BookingExtra['mode'] })}
-                    className={`${inputClass} col-span-2 appearance-none`}
-                  >
-                    <option value="per_day">par jour</option>
-                    <option value="one_time">une seule fois</option>
-                  </select>
-                </div>
-              )}
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setAddingExtra(false)}
-                  className="flex-1 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 touch-manipulation">
-                  Annuler
-                </button>
-                <button type="button" onClick={addExtra}
-                  className="flex-1 py-2 text-sm font-medium rounded-lg bg-primary text-white hover:bg-primary-hover touch-manipulation">
-                  Ajouter
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      <ExtrasEditor extras={booking.extras} units={bookingUnits} onChange={saveExtras} disabled={isEditing}>
+        {/* Pre-008 web bookings: the client's order, read-only (re-run the 008 backfill to make it editable) */}
+        {legacyWebSupplements.length > 0 && legacyWebSupplements.map((supp, idx) => (
+          <div key={`legacy-${idx}`} className="flex items-center gap-3 text-gray-700">
+            {supp.icon}
+            <span className="text-sm">{supp.label}</span>
+            <span className="ml-auto text-sm text-gray-500">{supp.rate}€/jour</span>
+          </div>
+        ))}
+      </ExtrasEditor>
 
       {/* Payment Method (if web booking) */}
       {isWebBooking && fullDetails && (

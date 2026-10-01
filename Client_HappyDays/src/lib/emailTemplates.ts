@@ -1,5 +1,5 @@
 import type { BookingSubmission } from './bookingService';
-import { EXTRA_HOUR_RATE, formatRentalDuration } from './pricing';
+import { EXTRA_HOUR_RATE, formatRentalDuration, type BookingExtra } from './pricing';
 import { additionalDriverSupplement } from '../data/supplementData';
 import { isCustomLocation, LOCATION_FEE_NOTICE } from '../types';
 
@@ -372,7 +372,21 @@ export interface ManualBookingData {
   returnTime?: string;
   rentalDays: number;
   extraHours?: number;
+  extras?: BookingExtra[]; // upsells added in the admin, already included in totalPrice
   totalPrice: number;
+}
+
+// One line per supplement, e.g. "Siège bébé ×2 (3€/jour)"
+function manualExtrasRows(data: ManualBookingData, cellStyle: string): string {
+  if (!data.extras || data.extras.length === 0) return '';
+  const lines = data.extras
+    .map((e) => `${e.name}${e.quantity > 1 ? ` ×${e.quantity}` : ''} (${e.price}€${e.mode === 'per_day' ? '/jour' : ''})`)
+    .join('<br>');
+  return `
+                <tr>
+                  <td style="${cellStyle} color: #666666;">🎁 Suppléments :</td>
+                  <td style="${cellStyle} color: #333333;">${lines}</td>
+                </tr>`;
 }
 
 /**
@@ -442,7 +456,7 @@ export function generateManualBookingCustomerEmailHTML(data: ManualBookingData):
                 <tr>
                   <td style="padding: 8px 0; color: #666666; font-size: 14px;">⏱️ Durée :</td>
                   <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${formatRentalDuration({ fullDays: data.rentalDays, extraHours: data.extraHours || 0 })}</td>
-                </tr>
+                </tr>${manualExtrasRows(data, 'padding: 8px 0; font-size: 14px;')}
                 <tr>
                   <td style="padding: 8px 0; color: #666666; font-size: 14px;">🚗 Véhicule :</td>
                   <td style="padding: 8px 0; color: #333333; font-size: 14px; font-weight: 600;">${data.vehicleName}</td>
@@ -581,7 +595,7 @@ export function generateManualBookingAdminEmailHTML(data: ManualBookingData): st
                 <tr>
                   <td style="color: #666666; font-size: 14px;">Durée :</td>
                   <td style="color: #333333; font-size: 14px; font-weight: 600;">${formatRentalDuration({ fullDays: data.rentalDays, extraHours: data.extraHours || 0 })}</td>
-                </tr>
+                </tr>${manualExtrasRows(data, 'font-size: 14px;')}
                 <tr>
                   <td style="color: #666666; font-size: 14px;">Véhicule :</td>
                   <td style="color: #333333; font-size: 14px; font-weight: 600;">${data.vehicleName}</td>

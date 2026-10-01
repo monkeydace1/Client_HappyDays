@@ -74,6 +74,7 @@ export interface QuickAddData {
   returnTime?: string;
   notes?: string;
   pricePerDay?: number; // Custom price override for negotiations/discounts
+  extras?: BookingExtra[]; // Upsells added while creating the booking (billed in the total)
 }
 
 // KPI data

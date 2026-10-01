@@ -1,20 +1,29 @@
 -- Migration 009: fleet update October 2026 (CHANGES.md #6)
 --
--- RUN ON DEPLOY DAY, together with the frontend that ships the new vehicleData.ts.
--- Setting #11 / #19 back to 'available' earlier would un-hide the old Toyota Yaris /
--- Ford Fiesta on the live site (the public site hides vehicles whose DB status is
--- maintenance / retired, and the live code still knows them under those names).
+-- The admin grid / QuickAdd / maintenance filter read this table, the public site reads
+-- src/data/vehicleData.ts, so the two are updated in two steps:
 --
--- TODO before running: confirm the three prices marked "to confirm" (38 / 38 / 50 €)
--- and keep them identical to src/data/vehicleData.ts.
+--   PART A — run as soon as the code is ready (done 2026-10-01): names, specs, prices, #22.
+--            Statuses untouched: #11 / #19 stay 'maintenance', which keeps the old Toyota
+--            Yaris / Ford Fiesta hidden on the LIVE site (its bundle still knows them under
+--            those names). Image paths untouched for the same reason (the live admin reads
+--            them; the new frontend prefers the bundled photo per ID anyway).
+--   PART B — run on DEPLOY DAY together with the new frontend: make #11 / #19 available and
+--            point the image column at the new folders.
+--
+-- TODO before PART B: confirm the three prices marked "to confirm" (38 / 38 / 50 €) and
+-- keep them identical to src/data/vehicleData.ts.
+
+-- ============================================
+-- PART A (applied 2026-10-01)
+-- ============================================
 
 -- #11 Toyota Yaris → Livan X3 Pro Gris (same ID, admin numbering unchanged)
 UPDATE vehicles SET
   name = 'Livan X3 Pro Gris', brand = 'Livan', model = 'X3 Pro', year = 2025,
   category = 'SUV', transmission = 'Automatique', fuel = 'Essence', seats = 5,
   price_per_day = 38,                                   -- to confirm
-  image = '/vehicles/livan-x3-pro-gris/main.jpg',
-  status = 'available', featured = false,
+  featured = false,
   notes = 'Remplace la Toyota Yaris (octobre 2026)'
 WHERE id = 11;
 
@@ -23,16 +32,12 @@ UPDATE vehicles SET
   name = 'Livan X3 Pro Noir', brand = 'Livan', model = 'X3 Pro', year = 2025,
   category = 'SUV', transmission = 'Automatique', fuel = 'Essence', seats = 5,
   price_per_day = 38,                                   -- to confirm
-  image = '/vehicles/livan-x3-pro-noir/main.jpg',
-  status = 'available', featured = false,
+  featured = false,
   notes = 'Remplace la Ford Fiesta (octobre 2026)'
 WHERE id = 19;
 
--- #16 Seat Arona: new photos (new folder)
-UPDATE vehicles SET image = '/vehicles/seat-arona/main.jpg' WHERE id = 16;
-
--- #21 Seat Leon: 50 € → 45 €, new photos (new folder)
-UPDATE vehicles SET price_per_day = 45, image = '/vehicles/seat-leon-2021/main.jpg' WHERE id = 21;
+-- #21 Seat Leon: 50 € → 45 €
+UPDATE vehicles SET price_per_day = 45 WHERE id = 21;
 
 -- #22 Geely Coolray (new)
 INSERT INTO vehicles (id, name, brand, model, year, category, transmission, fuel, seats, price_per_day, image, status, featured, notes)
@@ -45,3 +50,12 @@ ON CONFLICT (id) DO UPDATE SET
   seats = EXCLUDED.seats, price_per_day = EXCLUDED.price_per_day, image = EXCLUDED.image;
 
 SELECT setval('vehicles_id_seq', GREATEST(22, (SELECT MAX(id) FROM vehicles)), true);
+
+-- ============================================
+-- PART B (deploy day — right after the new frontend is live)
+-- ============================================
+
+UPDATE vehicles SET status = 'available', image = '/vehicles/livan-x3-pro-gris/main.jpg' WHERE id = 11;
+UPDATE vehicles SET status = 'available', image = '/vehicles/livan-x3-pro-noir/main.jpg' WHERE id = 19;
+UPDATE vehicles SET image = '/vehicles/seat-arona/main.jpg'     WHERE id = 16;
+UPDATE vehicles SET image = '/vehicles/seat-leon-2021/main.jpg' WHERE id = 21;

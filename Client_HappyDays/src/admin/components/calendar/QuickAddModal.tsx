@@ -6,9 +6,11 @@ import type { AdminVehicle, QuickAddData } from '../../types/admin';
 import { vehicles as vehicleData } from '../../../data/vehicleData';
 import {
   computeRentalUnitsFromDateTime,
-  computeVehicleSubtotal,
+  computeBookingTotal,
+  computeExtrasSubtotal,
   formatRentalDuration,
 } from '../../../lib/pricing';
+import { ExtrasEditor } from './ExtrasEditor';
 
 interface QuickAddModalProps {
   isOpen: boolean;
@@ -38,6 +40,7 @@ export function QuickAddModal({
     returnTime: '09:00',
     notes: '',
     pricePerDay: undefined,
+    extras: [],
   });
 
   // Reset form when modal opens
@@ -55,6 +58,7 @@ export function QuickAddModal({
         returnTime: '09:00',
         notes: '',
         pricePerDay: undefined,
+        extras: [],
       });
     }
   }, [isOpen, initialDate, initialVehicleId]);
@@ -311,6 +315,14 @@ export function QuickAddModal({
                   </div>
                 </div>
 
+                {/* Suppléments (optional upsells, billed in the total below) */}
+                <ExtrasEditor
+                  compact
+                  extras={formData.extras ?? []}
+                  units={computeRentalUnitsFromDateTime(formData.departureDate, formData.pickupTime, formData.returnDate, formData.returnTime)}
+                  onChange={(extras) => setFormData({ ...formData, extras })}
+                />
+
                 {/* Price Preview */}
                 {selectedVehicle && formData.departureDate && formData.returnDate && (
                   <div className="bg-gray-50 rounded-lg p-3">
@@ -322,7 +334,9 @@ export function QuickAddModal({
                         formData.returnTime
                       );
                       const pricePerDay = formData.pricePerDay || selectedVehicle.pricePerDay;
-                      const total = Math.round(computeVehicleSubtotal(pricePerDay, units));
+                      const extras = formData.extras ?? [];
+                      const extrasTotal = computeExtrasSubtotal(extras, units);
+                      const total = computeBookingTotal({ pricePerDay, units, extras });
                       const durationLabel = formatRentalDuration(units) || '—';
                       return (
                         <>
@@ -332,6 +346,7 @@ export function QuickAddModal({
                           </div>
                           <p className="text-xs text-gray-500">
                             {pricePerDay}€/jour · {durationLabel}
+                            {extrasTotal > 0 && ` · suppléments ${extrasTotal}€`}
                             {formData.pricePerDay && formData.pricePerDay !== selectedVehicle.pricePerDay && (
                               <span className="ml-1 text-orange-500">(prix modifié)</span>
                             )}
