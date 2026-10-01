@@ -68,7 +68,7 @@ useAdminData hook → adminService.ts → Supabase (with real-time subscriptions
 ### Key Files
 | File | Purpose |
 |------|---------|
-| `src/data/vehicleData.ts` | All vehicle definitions (20 vehicles) |
+| `src/data/vehicleData.ts` | All vehicle definitions (22 vehicles) |
 | `src/admin/data/adminVehicleData.ts` | Admin vehicle data (auto-synced from vehicleData) |
 | `public/vehicles/` | Vehicle images (see README.md inside) |
 
@@ -77,19 +77,17 @@ useAdminData hook → adminService.ts → Supabase (with real-time subscriptions
 2. Add `main.jpg` (required) and `1.jpg`, `2.jpg`, etc. (optional)
 3. Add vehicle object in `src/data/vehicleData.ts` with new ID
 4. Set correct image count in `getVehicleImages(folder, count)` call
-5. Admin auto-syncs from vehicleData.ts - no extra steps needed
+5. Insert the matching row in the `vehicles` table — the admin grid, QuickAdd and the
+   maintenance/hidden filter read the DB, not `vehicleData.ts`
+   (pattern: `supabase/migrations/009_fleet_update_oct2026.sql`)
 
 ### Update Vehicle Images
-1. Navigate to `public/vehicles/{folder}/`
-2. Replace/add images (`main.jpg`, `1.jpg`, `2.jpg`, etc.)
-3. Update image count in `vehicleData.ts` if changed
-4. **Important: Force redeploy** after replacing images with same filenames:
-   ```bash
-   npx vercel --prod --force
-   ```
-   Vercel's CDN caches static assets by filename. A normal `git push` rebuilds the app but the CDN edge nodes still serve the old cached image. `--force` busts the CDN cache.
+1. Put the new photos in a **new folder** (e.g. `seat-leon-2021/`), 4:3, ≤ 1200×900, `main.jpg` + `1.jpg`…
+2. Update the folder name and image count in `vehicleData.ts`, and `vehicles.image` in the DB
+3. Never overwrite a photo under the same path: browsers and the CDN may keep serving the old
+   file (`npx vercel --prod --force` is no longer usable from this PC, see CHANGES.md #5)
 
-### Current Fleet: 20 vehicles
+### Current Fleet: 22 vehicles (IDs 1–22)
 See `public/vehicles/README.md` for complete list with folder paths and prices.
 
 ## Conventions

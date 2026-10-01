@@ -179,20 +179,21 @@ export const vehicles: Vehicle[] = [
         features: ['Hybride', '3 portes', 'Design italien']
     },
     {
+        // Replaced the Toyota Yaris in Oct 2026 (same ID so the admin numbering is unchanged)
         id: 11,
-        name: 'Toyota Yaris',
-        brand: 'Toyota',
-        model: 'Yaris',
-        year: 2020,
-        category: 'Citadine',
-        image: getVehicleImage('toyota-yaris'),
-        images: getVehicleImages('toyota-yaris', 2),
+        name: 'Livan X3 Pro Gris',
+        brand: 'Livan',
+        model: 'X3 Pro',
+        year: 2025,
+        category: 'SUV',
+        image: getVehicleImage('livan-x3-pro-gris'),
+        images: getVehicleImages('livan-x3-pro-gris', 2),
         transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
-        pricePerDay: 28,
+        pricePerDay: 38, // TODO: confirm with the client
         featured: false,
-        features: ['Écran tactile', 'Fiable']
+        features: ['Boîte automatique', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation', 'Feux LED']
     },
 
     // === ÉCONOMIQUES ===
@@ -267,8 +268,8 @@ export const vehicles: Vehicle[] = [
         model: 'Arona',
         year: 2019,
         category: 'SUV',
-        image: getVehicleImage('seat-arona-2019'),
-        images: getVehicleImages('seat-arona-2019', 1),
+        image: getVehicleImage('seat-arona'),
+        images: getVehicleImages('seat-arona', 2),
         transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
@@ -311,20 +312,21 @@ export const vehicles: Vehicle[] = [
         features: ['Compact', 'Économique']
     },
     {
+        // Replaced the Ford Fiesta in Oct 2026 (same ID so the admin numbering is unchanged)
         id: 19,
-        name: 'Ford Fiesta',
-        brand: 'Ford',
-        model: 'Fiesta',
-        year: 2014,
-        category: 'Citadine',
-        image: getVehicleImage('ford-fiesta'),
-        images: getVehicleImages('ford-fiesta', 1),
-        transmission: 'Manuelle',
+        name: 'Livan X3 Pro Noir',
+        brand: 'Livan',
+        model: 'X3 Pro',
+        year: 2025,
+        category: 'SUV',
+        image: getVehicleImage('livan-x3-pro-noir'),
+        images: getVehicleImages('livan-x3-pro-noir', 1),
+        transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
-        pricePerDay: 20,
+        pricePerDay: 38, // TODO: confirm with the client
         featured: false,
-        features: ['1.4L', 'Économique']
+        features: ['Boîte automatique', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation', 'Feux LED']
     },
 
     // === NEW VEHICLE ===
@@ -351,14 +353,32 @@ export const vehicles: Vehicle[] = [
         model: 'Leon 1.0 TSI',
         year: 2021,
         category: 'Compacte',
-        image: getVehicleImage('seat-leon'),
-        images: getVehicleImages('seat-leon', 0),
+        image: getVehicleImage('seat-leon-2021'),
+        images: getVehicleImages('seat-leon-2021', 2),
         transmission: 'Manuelle',
         fuel: 'Essence',
         seats: 5,
-        pricePerDay: 50,
+        pricePerDay: 45,
         featured: false,
         features: ['1.0L TSI', 'Écran tactile', 'Compact']
+    },
+
+    // === SUV AUTOMATIQUE 2026 ===
+    {
+        id: 22,
+        name: 'Geely Coolray',
+        brand: 'Geely',
+        model: 'Coolray',
+        year: 2026,
+        category: 'SUV',
+        image: getVehicleImage('geely-coolray'),
+        images: getVehicleImages('geely-coolray', 2),
+        transmission: 'Automatique',
+        fuel: 'Essence',
+        seats: 5,
+        pricePerDay: 50, // TODO: confirm with the client
+        featured: false,
+        features: ['Boîte automatique', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation auto', 'Feux LED', '1.5L Turbo']
     }
 ];
 

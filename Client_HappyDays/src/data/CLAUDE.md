@@ -2,12 +2,14 @@
 
 ## Vehicle Data (`vehicleData.ts`)
 
-Main source of truth for all vehicles. Admin data auto-syncs from here.
+Source of truth for the public site and the admin dropdowns. The admin grid, QuickAdd and the
+maintenance/hidden filter read the `vehicles` table in Supabase, which has to be kept in sync by
+hand (pattern: `supabase/migrations/009_fleet_update_oct2026.sql`).
 
 ### Vehicle Object Structure
 ```typescript
 {
-  id: number,              // Unique ID (1-20)
+  id: number,              // Unique ID (1-22)
   name: string,            // Display name
   brand: string,           // Manufacturer
   model: string,           // Model name
