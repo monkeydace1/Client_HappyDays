@@ -33,7 +33,7 @@ Both must be updated together when a vehicle is added, replaced or re-priced.
 | 8 | renault-clio4-limited | Clio 4 Limited 2019 | 32€ |
 | 9 | seat-ibiza-style | Seat Ibiza Style 2018 | 30€ |
 | 10 | fiat-500-dolcevita | Fiat 500 Dolce Vita 2025 | 30€ |
-| 11 | livan-x3-pro-gris | Livan X3 Pro Gris 2025 — replaced the Toyota Yaris (Oct 2026) | 35€ |
+| 11 | livan-x3-pro-gris | Livan X3 Pro Gris 2026 — replaced the Toyota Yaris (Oct 2026) | 35€ |
 | 12 | renault-symbol | Renault Symbol 2018 | 26€ |
 | 13 | seat-ibiza-sol | Seat Ibiza Sol 2017 | 27€ |
 | 14 | kia-picanto | Kia Picanto 2019 | 25€ |
@@ -41,7 +41,7 @@ Both must be updated together when a vehicle is added, replaced or re-priced.
 | 16 | seat-arona | Seat Arona 2019 — new photos (Oct 2026) | 36€ |
 | 17 | renault-clio4-2013 | Renault Clio 4 2013 | 22€ |
 | 18 | nissan-micra | Nissan Micra 2015 | 20€ |
-| 19 | livan-x3-pro-noir | Livan X3 Pro Noir 2025 — replaced the Ford Fiesta (Oct 2026) | 35€ |
+| 19 | livan-x3-pro-noir | Livan X3 Pro Noir 2026 — replaced the Ford Fiesta (Oct 2026) | 35€ |
 | 20 | renault-clio4-2016-b | Renault Clio 4 2016 | 25€ |
 | 21 | seat-leon-2021 | Seat Leon 1.0 TSI 2021 — new photos, 50€ → 45€ (Oct 2026) | 45€ |
 | 22 | geely-coolray | Geely Coolray 2026 | 55€ |

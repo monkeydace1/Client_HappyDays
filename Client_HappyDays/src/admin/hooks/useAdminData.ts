@@ -105,7 +105,7 @@ const SAMPLE_VEHICLES: AdminVehicle[] = [
   { id: 8, name: 'Clio 4 Limited 2019', brand: 'Renault', model: 'Clio 4 Limited', year: 2019, category: 'Citadine', transmission: 'Manuelle', fuel: 'Diesel', seats: 5, pricePerDay: 32, image: '/vehicles/renault-clio4-limited/main.jpg', status: 'available' },
   { id: 9, name: 'Seat Ibiza Style 2018', brand: 'Seat', model: 'Ibiza Style', year: 2018, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 30, image: '/vehicles/seat-ibiza-style/main.jpg', status: 'available' },
   { id: 10, name: 'Fiat 500 Dolce Vita 2025', brand: 'Fiat', model: '500 Dolce Vita', year: 2025, category: 'Citadine', transmission: 'Manuelle', fuel: 'Hybride', seats: 4, pricePerDay: 30, image: '/vehicles/fiat-500-dolcevita/main.jpg', status: 'available' },
-  { id: 11, name: 'Livan X3 Pro Gris', brand: 'Livan', model: 'X3 Pro', year: 2025, category: 'SUV', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/livan-x3-pro-gris/main.jpg', status: 'available' },
+  { id: 11, name: 'Livan X3 Pro Gris', brand: 'Livan', model: 'X3 Pro', year: 2026, category: 'SUV', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/livan-x3-pro-gris/main.jpg', status: 'available' },
   // Économiques
   { id: 12, name: 'Renault Symbol 2018', brand: 'Renault', model: 'Symbol', year: 2018, category: 'Berline', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 26, image: '/vehicles/renault-symbol/main.jpg', status: 'available' },
   { id: 13, name: 'Seat Ibiza Sol 2017', brand: 'Seat', model: 'Ibiza Sol', year: 2017, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 27, image: '/vehicles/seat-ibiza-sol/main.jpg', status: 'available' },
@@ -115,7 +115,7 @@ const SAMPLE_VEHICLES: AdminVehicle[] = [
   { id: 17, name: 'Renault Clio 4 2013', brand: 'Renault', model: 'Clio 4', year: 2013, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 22, image: '/vehicles/renault-clio4-2013/main.jpg', status: 'maintenance' },
   // Budget
   { id: 18, name: 'Nissan Micra 2015', brand: 'Nissan', model: 'Micra', year: 2015, category: 'Mini', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 20, image: '/vehicles/nissan-micra/main.jpg', status: 'available' },
-  { id: 19, name: 'Livan X3 Pro Noir', brand: 'Livan', model: 'X3 Pro', year: 2025, category: 'SUV', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/livan-x3-pro-noir/main.jpg', status: 'available' },
+  { id: 19, name: 'Livan X3 Pro Noir', brand: 'Livan', model: 'X3 Pro', year: 2026, category: 'SUV', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 35, image: '/vehicles/livan-x3-pro-noir/main.jpg', status: 'available' },
   // New Vehicle
   { id: 20, name: 'Renault Clio 4', brand: 'Renault', model: 'Clio 4', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016-b/main.jpg', status: 'available' },
   { id: 21, name: 'Seat Leon 1.0 TSI 2021', brand: 'Seat', model: 'Leon 1.0 TSI', year: 2021, category: 'Compacte', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 45, image: '/vehicles/seat-leon-2021/main.jpg', status: 'available' },

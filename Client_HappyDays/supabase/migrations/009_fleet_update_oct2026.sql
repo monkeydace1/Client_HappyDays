@@ -21,7 +21,7 @@
 
 -- #11 Toyota Yaris → Livan X3 Pro Gris (same ID, admin numbering unchanged)
 UPDATE vehicles SET
-  name = 'Livan X3 Pro Gris', brand = 'Livan', model = 'X3 Pro', year = 2025,
+  name = 'Livan X3 Pro Gris', brand = 'Livan', model = 'X3 Pro', year = 2026,
   category = 'SUV', transmission = 'Automatique', fuel = 'Essence', seats = 5,
   price_per_day = 35,
   featured = false,
@@ -30,7 +30,7 @@ WHERE id = 11;
 
 -- #19 Ford Fiesta → Livan X3 Pro Noir
 UPDATE vehicles SET
-  name = 'Livan X3 Pro Noir', brand = 'Livan', model = 'X3 Pro', year = 2025,
+  name = 'Livan X3 Pro Noir', brand = 'Livan', model = 'X3 Pro', year = 2026,
   category = 'SUV', transmission = 'Automatique', fuel = 'Essence', seats = 5,
   price_per_day = 35,
   featured = false,

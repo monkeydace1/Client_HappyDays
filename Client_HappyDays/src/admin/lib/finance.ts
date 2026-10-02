@@ -203,9 +203,18 @@ export interface VehicleRevenue {
   rentalDays: number;
 }
 
+/**
+ * One row per vehicle, revenue desc. The whole fleet (except retired cars) is
+ * listed, so a car with no completed rental in the period shows at 0 instead
+ * of disappearing. Cars that only exist on old bookings are appended.
+ */
 export function groupByVehicle(list: AdminBooking[], vehicles: AdminVehicle[]): VehicleRevenue[] {
   const names = new Map(vehicles.map((v) => [v.id, v.name]));
   const rows = new Map<number, VehicleRevenue>();
+  for (const v of vehicles) {
+    if (v.status === 'retired') continue;
+    rows.set(v.id, { vehicleId: v.id, name: v.name, revenue: 0, count: 0, rentalDays: 0 });
+  }
   for (const b of list) {
     const vehicleId = b.assignedVehicleId ?? b.vehicleId;
     let row = rows.get(vehicleId);
@@ -223,7 +232,9 @@ export function groupByVehicle(list: AdminBooking[], vehicles: AdminVehicle[]): 
     row.count += 1;
     row.rentalDays += b.rentalDays || 0;
   }
-  return [...rows.values()].sort((a, b) => b.revenue - a.revenue);
+  return [...rows.values()].sort(
+    (a, b) => b.revenue - a.revenue || b.count - a.count || a.name.localeCompare(b.name, 'fr')
+  );
 }
 
 export interface SourceRevenue {

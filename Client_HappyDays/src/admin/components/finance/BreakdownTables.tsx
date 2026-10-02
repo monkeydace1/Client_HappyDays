@@ -28,7 +28,7 @@ export function BreakdownTables({ byVehicle, bySource }: BreakdownTablesProps) {
           <Car className="w-4 h-4 text-gray-500" /> Par véhicule
         </h2>
         {byVehicle.length === 0 ? (
-          <p className="text-sm text-gray-500 py-4 text-center">Aucune réservation terminée</p>
+          <p className="text-sm text-gray-500 py-4 text-center">Aucun véhicule</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -42,16 +42,16 @@ export function BreakdownTables({ byVehicle, bySource }: BreakdownTablesProps) {
               </thead>
               <tbody>
                 {byVehicle.map((v) => (
-                  <tr key={v.vehicleId} className="border-t border-gray-100">
+                  <tr key={v.vehicleId} className={`border-t border-gray-100 ${v.count === 0 ? 'text-gray-400' : ''}`}>
                     <td className="py-2 pr-2">
-                      <p className="text-gray-900 truncate max-w-[180px] md:max-w-none">{v.name}</p>
+                      <p className={`truncate max-w-[180px] md:max-w-none ${v.count === 0 ? '' : 'text-gray-900'}`}>{v.name}</p>
                       <div className="mt-1 w-32">
                         <ShareBar ratio={maxVehicle ? v.revenue / maxVehicle : 0} />
                       </div>
                     </td>
-                    <td className="py-2 text-right tabular-nums text-gray-700 align-top">{v.count}</td>
-                    <td className="py-2 text-right tabular-nums text-gray-700 align-top">{v.rentalDays}</td>
-                    <td className="py-2 text-right tabular-nums font-semibold text-gray-900 align-top">
+                    <td className="py-2 text-right tabular-nums align-top">{v.count}</td>
+                    <td className="py-2 text-right tabular-nums align-top">{v.rentalDays}</td>
+                    <td className={`py-2 text-right tabular-nums align-top ${v.count === 0 ? '' : 'font-semibold text-gray-900'}`}>
                       {formatEuro(v.revenue)}
                     </td>
                   </tr>

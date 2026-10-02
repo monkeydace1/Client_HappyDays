@@ -160,7 +160,7 @@ Root causes, by impact:
 **Implemented (2026-10-01)**
 - Photos processed with Pillow (4:3 crop, ≤ 1200×900, q82, EXIF stripped) into new folders `seat-leon-2021/`, `seat-arona/`, `geely-coolray/`, `livan-x3-pro-gris/`, `livan-x3-pro-noir/`; old folders `seat-leon/`, `seat-arona-2019/`, `toyota-yaris/`, `ford-fiesta/` removed. Portrait phone photos (Livans) were band-cropped around the car. Note: the client chose a **rear** view as `main.jpg` for the Livan noir.
 - `vehicleData.ts`: #11 Livan X3 Pro Gris, #19 Livan X3 Pro Noir, #16 new folder, #21 45 € + new folder, #22 Geely Coolray 2026. Models identified from the photos (Coolray badge/grille, "X3 PRO" badge; Coolray plate `… 126 31` → 2026). All three: SUV, automatique, essence, 5 places, not featured on home.
-- Prices confirmed by the client (2026-10-01 evening): **Livan 35 €** (both), **Coolray 55 €** — applied 2026-10-02 to `vehicleData.ts` and the `vehicles` table; the first deploy ran ~1 h with 38 / 38 / 50 € placeholders. Years 2025 for the Livans are assumed.
+- Prices confirmed by the client (2026-10-01 evening): **Livan 35 €** (both), **Coolray 55 €** — applied 2026-10-02 to `vehicleData.ts` and the `vehicles` table; the first deploy ran ~1 h with 38 / 38 / 50 € placeholders. Years: client confirmed 2026-10-02 that both Livans are **2026** (code + DB updated; the Coolray was already 2026).
 - Admin fallback data (`useAdminData.ts` SAMPLE_VEHICLES), `public/vehicles/README.md`, `CLAUDE.md`, `src/data/CLAUDE.md` updated (the doc wrongly said the admin auto-syncs from `vehicleData.ts`).
 - DB side in [009_fleet_update_oct2026.sql](Client_HappyDays/supabase/migrations/009_fleet_update_oct2026.sql), in two parts. **Part A applied 2026-10-01** (names, specs, prices, #22 inserted) so the admin shows the new fleet; **Part B on deploy day** (status `available` for #11/#19 + image paths) — doing it earlier would un-hide the old Yaris / Fiesta on the live site, which still runs the old bundle. Until then the two Livans are hidden on the local site too ("Pause" in the admin).
 - The admin now prefers the bundled photo for a known vehicle ID (`mapVehicleFromDb`), so local / preview / prod each show their own files regardless of the DB `image` path (which only matters for vehicles created from the admin). Live-admin side effect until deploy: the #22 thumbnail is missing (its folder isn't deployed yet).
@@ -276,6 +276,11 @@ User decision 2026-10-01: not for now.
 **Verified 2026-10-01:** `tsc -b` clean, `vite build` OK (recharts only in `AdminFinancePage-*.js`); the TS functions run on the live rows give exactly the SQL figures (Sept 2026: 57 completed, 283 days; 2026: 433 completed) and the same per-source / per-vehicle splits.
 
 **⚠ Data issue found while verifying (needs a decision):** 12 walk-in bookings created since 2026-09-06 (`HD-2026-09-0360`, `-4744`, `-3469`, `-0311`, `-8414`, `-9404`, `-0098`, `-2207`, `-7194`, `-1785`, `-9865`, `-3610`) have `price_per_day` 5 000–8 500 and totals 6 000–119 000: these are **dinar amounts typed into the euro field**. 8 of them are Terminée, so September currently shows ~172 k€ instead of a few k€. Options: (a) the agency corrects the rows in the admin (rate in €), (b) a currency choice (€/DA) in the admin + conversion, (c) leave as is. Not changed by this item.
+
+**Follow-up (user feedback 2026-10-02):**
+- "Par véhicule" now lists the **whole fleet** (retired cars excluded) with 0 € for cars without a finished rental in the period, muted, instead of only the cars that earned something — the Seat Leon had 13 Terminée rentals May–August and one still En cours in September, so it vanished on "Ce mois" / "Mois dernier".
+- The page follows the realtime channels (`admin_bookings` + `vehicles`): a rental marked Terminée on another device reloads the figures within ~0.5 s. It also reloads on every visit and with the refresh button.
+- Livan X3 Pro #11 / #19 year → **2026** (code, sample data, migration 009, live DB; the Coolray was already 2026).
 
 **Status:** pushed to `main` 2026-10-02 for the client to review (user decision: skip local test this time). Dinar-amount rows above still to be decided.
 
