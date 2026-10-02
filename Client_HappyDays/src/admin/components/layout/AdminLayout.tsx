@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LogOut, Car, RefreshCw } from 'lucide-react';
+import { LogOut, Car, RefreshCw, TrendingUp } from 'lucide-react';
 import { useAdminStore } from '../../store/adminStore';
+import { useAdminGuard } from '../../hooks/useAdminGuard';
 import { AdminHeader } from './AdminHeader';
 import { AdminTabs } from './AdminTabs';
 import type { DashboardKPIs } from '../../types/admin';
@@ -16,23 +16,10 @@ interface AdminLayoutProps {
 
 export function AdminLayout({ children, kpis, onRefresh, isRefreshing }: AdminLayoutProps) {
   const navigate = useNavigate();
-  const { isAuthenticated, pinVerified, activeTab, setActiveTab, logout } = useAdminStore();
+  const { activeTab, setActiveTab } = useAdminStore();
+  const { ready, logout: handleLogout } = useAdminGuard();
 
-  // Route guard
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate('/admin/login');
-    } else if (!pinVerified) {
-      navigate('/admin/pin');
-    }
-  }, [isAuthenticated, pinVerified, navigate]);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/admin/login');
-  };
-
-  if (!isAuthenticated || !pinVerified) {
+  if (!ready) {
     return null;
   }
 
@@ -47,6 +34,14 @@ export function AdminLayout({ children, kpis, onRefresh, isRefreshing }: AdminLa
             <span className="text-xs bg-white/20 px-2 py-0.5 rounded-full">Admin</span>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/admin/finance')}
+              className="p-2 hover:bg-white/10 rounded-lg transition-colors touch-manipulation flex items-center gap-1.5"
+              title="Finance"
+            >
+              <TrendingUp className="w-5 h-5" />
+              <span className="hidden sm:inline text-sm font-medium">Finance</span>
+            </button>
             {onRefresh && (
               <button
                 onClick={onRefresh}

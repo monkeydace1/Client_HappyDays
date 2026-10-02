@@ -246,6 +246,41 @@ User decision 2026-10-01: not for now.
 
 ---
 
+## 13. [ ] Finance dashboard — `/admin/finance`
+
+**Request (client, 2026-10-01):** a separate dashboard to see visually how much money was made over a period, how many reservations were completed, and which clients paid what; clients tracked by phone number.
+
+**Decisions (user, 2026-10-01):**
+
+| Question | Decision |
+|---|---|
+| What counts as money made | Only status `completed` ("Terminée", blue). Deposits never counted. |
+| Where it lives | `/admin/finance`, same login + PIN, own layout; "Finance" button in the dashboard top bar (not a 4th tab). |
+| Period attribution | `departure_date`. |
+| Periods | Ce mois / Mois dernier / Cette année / Personnalisé (2 dates); bar chart per month, per week when the range ≤ 45 days. |
+| Chart lib | `recharts` (only in the lazy finance chunk, 379 KB; public bundle unchanged). |
+| Breakdowns | Per vehicle, per source (Site web / Sur place / Téléphone). |
+| Clients | Table grouped by normalised phone (name, phone, nb, total payé, dernière location) with search; click → modal with the client's full history (all statuses, out-of-period rows muted). |
+
+**Files:**
+- [AdminFinancePage.tsx](Client_HappyDays/src/admin/pages/AdminFinancePage.tsx) — page, period state, own top bar (← Tableau de bord, refresh, logout).
+- [finance.ts](Client_HappyDays/src/admin/lib/finance.ts) — pure functions: `normalizePhone`, `clientKey`, `resolvePeriod`, `filterCompletedInPeriod`, `summarize`, `bucketRevenue`, `groupByVehicle`, `groupBySource`, `groupByClient`, `formatEuro`.
+- [bookingStatus.ts](Client_HappyDays/src/admin/lib/bookingStatus.ts) — shared status/source labels (the 3 older `statusConfig` copies are untouched).
+- [useFinanceData.ts](Client_HappyDays/src/admin/hooks/useFinanceData.ts) — reads `admin_bookings` + `vehicles` directly, **no sample-data fallback** (unlike `useAdminData`).
+- [useAdminGuard.ts](Client_HappyDays/src/admin/hooks/useAdminGuard.ts) — the login/PIN redirect, extracted from `AdminLayout` and shared.
+- `src/admin/components/finance/` — `PeriodSelector`, `FinanceSummaryCards`, `RevenueChart`, `BreakdownTables`, `ClientsTable`, `ClientBookingsModal`.
+- `App.tsx` (route), `AdminLayout.tsx` (Finance button + guard hook).
+
+**Phone grouping:** digits only, `+`/`00` prefix dropped, `213…` folded to `0…` → "+213 559…", "00213559…" and "0559…" are one client; "+33 7…" and "0033 7…" too. Walk-ins without a usable phone ("+213", "08", empty) are grouped by name.
+
+**Verified 2026-10-01:** `tsc -b` clean, `vite build` OK (recharts only in `AdminFinancePage-*.js`); the TS functions run on the live rows give exactly the SQL figures (Sept 2026: 57 completed, 283 days; 2026: 433 completed) and the same per-source / per-vehicle splits.
+
+**⚠ Data issue found while verifying (needs a decision):** 12 walk-in bookings created since 2026-09-06 (`HD-2026-09-0360`, `-4744`, `-3469`, `-0311`, `-8414`, `-9404`, `-0098`, `-2207`, `-7194`, `-1785`, `-9865`, `-3610`) have `price_per_day` 5 000–8 500 and totals 6 000–119 000: these are **dinar amounts typed into the euro field**. 8 of them are Terminée, so September currently shows ~172 k€ instead of a few k€. Options: (a) the agency corrects the rows in the admin (rate in €), (b) a currency choice (€/DA) in the admin + conversion, (c) leave as is. Not changed by this item.
+
+**Status:** pushed to `main` 2026-10-02 for the client to review (user decision: skip local test this time). Dinar-amount rows above still to be decided.
+
+---
+
 ## Deploy-day checklist (items 6–11) — done 2026-10-01 evening EDT (2026-10-02 ~01:20 UTC)
 
 1. [x] Prices: first deploy went out with placeholders (38 / 38 / 50 €) on the user's go; confirmed values **Livan 35 €, Coolray 55 €** applied 2026-10-02 (code + DB, second deploy).

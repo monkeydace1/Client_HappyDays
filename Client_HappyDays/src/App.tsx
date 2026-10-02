@@ -30,6 +30,9 @@ const AdminPinPage = lazy(() =>
 const AdminDashboardPage = lazy(() =>
   import('./admin/pages/AdminDashboardPage').then((m) => ({ default: m.AdminDashboardPage }))
 );
+const AdminFinancePage = lazy(() =>
+  import('./admin/pages/AdminFinancePage').then((m) => ({ default: m.AdminFinancePage }))
+);
 
 function AdminChunkFallback() {
   return (
@@ -94,6 +97,7 @@ function AppRoutes() {
             <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route path="/admin/pin" element={<AdminPinPage />} />
             <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+            <Route path="/admin/finance" element={<AdminFinancePage />} />
           </Routes>
         </Suspense>
       </AdminLayout>
