@@ -11,8 +11,9 @@
 --   PART B — run on DEPLOY DAY together with the new frontend: make #11 / #19 available and
 --            point the image column at the new folders.
 --
--- TODO before PART B: confirm the three prices marked "to confirm" (38 / 38 / 50 €) and
--- keep them identical to src/data/vehicleData.ts.
+-- Prices confirmed by the client on 2026-10-01 (Livan 35 €, Coolray 55 €) and applied to the
+-- live table on 2026-10-02; the first deploy ran ~1 h with 38 / 38 / 50 € placeholders.
+-- Keep them identical to src/data/vehicleData.ts.
 
 -- ============================================
 -- PART A (applied 2026-10-01)
@@ -22,7 +23,7 @@
 UPDATE vehicles SET
   name = 'Livan X3 Pro Gris', brand = 'Livan', model = 'X3 Pro', year = 2025,
   category = 'SUV', transmission = 'Automatique', fuel = 'Essence', seats = 5,
-  price_per_day = 38,                                   -- to confirm
+  price_per_day = 35,
   featured = false,
   notes = 'Remplace la Toyota Yaris (octobre 2026)'
 WHERE id = 11;
@@ -31,7 +32,7 @@ WHERE id = 11;
 UPDATE vehicles SET
   name = 'Livan X3 Pro Noir', brand = 'Livan', model = 'X3 Pro', year = 2025,
   category = 'SUV', transmission = 'Automatique', fuel = 'Essence', seats = 5,
-  price_per_day = 38,                                   -- to confirm
+  price_per_day = 35,
   featured = false,
   notes = 'Remplace la Ford Fiesta (octobre 2026)'
 WHERE id = 19;
@@ -42,7 +43,7 @@ UPDATE vehicles SET price_per_day = 45 WHERE id = 21;
 -- #22 Geely Coolray (new)
 INSERT INTO vehicles (id, name, brand, model, year, category, transmission, fuel, seats, price_per_day, image, status, featured, notes)
 VALUES (22, 'Geely Coolray', 'Geely', 'Coolray', 2026, 'SUV', 'Automatique', 'Essence', 5,
-        50,                                             -- to confirm
+        55,
         '/vehicles/geely-coolray/main.jpg', 'available', false, 'Ajouté en octobre 2026')
 ON CONFLICT (id) DO UPDATE SET
   name = EXCLUDED.name, brand = EXCLUDED.brand, model = EXCLUDED.model, year = EXCLUDED.year,

@@ -165,7 +165,7 @@ Root causes, by impact:
 - DB side in [009_fleet_update_oct2026.sql](Client_HappyDays/supabase/migrations/009_fleet_update_oct2026.sql), in two parts. **Part A applied 2026-10-01** (names, specs, prices, #22 inserted) so the admin shows the new fleet; **Part B on deploy day** (status `available` for #11/#19 + image paths) — doing it earlier would un-hide the old Yaris / Fiesta on the live site, which still runs the old bundle. Until then the two Livans are hidden on the local site too ("Pause" in the admin).
 - The admin now prefers the bundled photo for a known vehicle ID (`mapVehicleFromDb`), so local / preview / prod each show their own files regardless of the DB `image` path (which only matters for vehicles created from the admin). Live-admin side effect until deploy: the #22 thumbnail is missing (its folder isn't deployed yet).
 
-**Status:** live since 2026-10-02 01:21 UTC (verified locally by the user). Prices 38 / 38 / 50 € went live as placeholders — adjust in `vehicleData.ts` **and** the `vehicles` table if the client gives other numbers.
+**Status:** live since 2026-10-02 01:21 UTC; confirmed prices (Livan 35 €, Coolray 55 €) deployed 2026-10-02.
 
 ---
 
@@ -248,7 +248,7 @@ User decision 2026-10-01: not for now.
 
 ## Deploy-day checklist (items 6–11) — done 2026-10-01 evening EDT (2026-10-02 ~01:20 UTC)
 
-1. [x] Prices: pushed with the placeholders (Livan 38 €, Livan 38 €, Coolray 50 €) on the user's go — adjust later if the client gives other numbers.
+1. [x] Prices: first deploy went out with placeholders (38 / 38 / 50 €) on the user's go; confirmed values **Livan 35 €, Coolray 55 €** applied 2026-10-02 (code + DB, second deploy).
 2. [x] `008` **BACKFILL** re-run (idempotent): 605 bookings, 0 without `price_per_day`, 4 created since the migration.
 3. [x] `009` **Part B** applied (the user had already switched #11/#19 to Actif in the admin; image paths updated).
 4. [x] `main` fast-forwarded `89d82d2` → `42e50a2` and pushed (feature branch pushed too). Vercel built **and promoted on its own** this time. Verified on production: bundle `index-D4worbL5.js` contains "Même lieu que le départ", `livan-x3-pro-gris`, `geely-coolray`, the fee notice and `seat-leon-2021`; admin chunk `AdminDashboardPage-BtgYOUXz.js` contains "Ajouter un supplément"; `/vehicles/geely-coolray/main.jpg` and `/vehicles/livan-x3-pro-noir/main.jpg` → 200; `/`, `/booking`, `/fleet`, `/admin/login` → 200.

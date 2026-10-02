@@ -191,7 +191,7 @@ export const vehicles: Vehicle[] = [
         transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
-        pricePerDay: 38, // TODO: confirm with the client
+        pricePerDay: 35,
         featured: false,
         features: ['Boîte automatique', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation', 'Feux LED']
     },
@@ -324,7 +324,7 @@ export const vehicles: Vehicle[] = [
         transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
-        pricePerDay: 38, // TODO: confirm with the client
+        pricePerDay: 35,
         featured: false,
         features: ['Boîte automatique', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation', 'Feux LED']
     },
@@ -376,7 +376,7 @@ export const vehicles: Vehicle[] = [
         transmission: 'Automatique',
         fuel: 'Essence',
         seats: 5,
-        pricePerDay: 50, // TODO: confirm with the client
+        pricePerDay: 55,
         featured: false,
         features: ['Boîte automatique', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation auto', 'Feux LED', '1.5L Turbo']
     }
