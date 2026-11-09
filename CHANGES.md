@@ -286,7 +286,7 @@ User decision 2026-10-01: not for now.
 
 ---
 
-## 14. [ ] New vehicle #23: Geely Coolray Manuelle 2026 — 36 €/day
+## 14. [x] New vehicle #23: Geely Coolray Manuelle 2026 — 36 €/day
 
 **Request (user, 2026-11-08):** add a new car (a second Coolray, not a replacement): Geely Coolray, manual, 2026, 36 €/day, 3 photos.
 
@@ -300,7 +300,7 @@ User decision 2026-10-01: not for now.
 - [vehicleData.ts](Client_HappyDays/src/data/vehicleData.ts) (#23), [useAdminData.ts](Client_HappyDays/src/admin/hooks/useAdminData.ts) (sample data), vehicles README, CLAUDE.md counts.
 - [010_add_geely_coolray_manuelle.sql](Client_HappyDays/supabase/migrations/010_add_geely_coolray_manuelle.sql) — `vehicles` row 23. **Run on deploy day**, right after the new frontend is live (the live bundle doesn't know ID 23). Checked 2026-11-08: ID 23 free, sequence at 22.
 
-**Status:** code + photos done (2026-11-08), `tsc -b` clean; next: local test → commit → push on the user's go → run 010.
+**Status:** live since 2026-11-08 (user decision: skip local test, push directly). `npm run build` OK → commit `3484ee1` pushed to `main` + feature branch; Vercel built and promoted on its own (production bundle `index-s1RT3IK3.js` contains `geely-coolray-manuelle`, the 3 photos → 200 `image/jpeg`); then **010 applied to the live DB** (row 23 available, sequence at 23) → admin grid, QuickAdd and finance "Par véhicule" list it.
 
 ---
 
