@@ -6,6 +6,7 @@ export interface AdminVehicle extends Vehicle {
   status: 'available' | 'maintenance' | 'retired';
   licensePlate?: string;
   notes?: string;
+  createdAt?: string; // vehicles.created_at — used by the finance page as "in the fleet since"
 }
 
 // Booking status for admin dashboard

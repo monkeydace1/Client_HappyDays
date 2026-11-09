@@ -10,15 +10,18 @@ admin/
 │   ├── AdminLoginPage.tsx    → Email/password login
 │   ├── AdminPinPage.tsx      → PIN verification
 │   ├── AdminDashboardPage.tsx→ Main dashboard
-│   └── AdminFinancePage.tsx  → /admin/finance: revenue by period, vehicles, sources, clients
+│   └── AdminFinancePage.tsx  → /admin/finance: "Vue d'ensemble" (revenue by period, vehicles, sources, clients)
+│                               and ?vue=vehicules "Comparer des véhicules" (stats for the cars the agency picks)
 ├── components/
 │   ├── calendar/             → Gantt chart, booking modals
 │   ├── vehicles/             → VehicleGrid management
 │   ├── reservations/         → Reservation list
-│   ├── finance/              → Period selector, summary cards, recharts bar chart, client table/modal
+│   ├── finance/              → Period selector, summary cards, recharts bar chart, client table/modal;
+│   │                           VehicleComparisonView (picker, stacked chart per car, comparison table, rentals list)
 │   └── layout/               → AdminTabs, sidebar
 ├── lib/
-│   ├── finance.ts            → Pure finance maths (completed bookings only, by departure date; phone grouping)
+│   ├── finance.ts            → Pure finance maths (completed bookings only, by departure date; phone grouping;
+│   │                           per-car comparison; REPLACED_VEHICLES splits reused IDs #11/#19 before 2026-10-01)
 │   └── bookingStatus.ts      → Shared status/source labels
 ├── data/
 │   └── adminVehicleData.ts   → Auto-synced from vehicleData.ts
@@ -29,6 +32,7 @@ admin/
 ├── hooks/
 │   ├── useAdminData.ts       → Data fetching with real-time (falls back to sample data when empty!)
 │   ├── useFinanceData.ts     → Real rows only, for the finance page
+│   ├── useVehicleSelection.ts→ Cars picked on the finance comparison view (localStorage, stable colour slots)
 │   └── useAdminGuard.ts      → Login + PIN redirect shared by every admin page
 └── types/
     └── admin.ts              → TypeScript definitions

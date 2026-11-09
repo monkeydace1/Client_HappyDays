@@ -304,6 +304,30 @@ User decision 2026-10-01: not for now.
 
 ---
 
+## 15. [x] Finance: compare selected vehicles — `/admin/finance?vue=vehicules`
+
+**Request (client, 2026-11-08):** select some cars and see the stats for those cars; can be a separate view.
+
+**Decisions (made autonomously, user said "I trust you"):**
+
+| Question | Decision |
+|---|---|
+| Where | Same page, 2nd tab "Comparer des véhicules" (phone: "Véhicules") next to "Vue d'ensemble"; the period selector is shared; the tab is in the URL (`?vue=vehicules`) so reload / back keep it. |
+| Picking cars | Chips for the whole fleet with their n° (two cars are called "Renault Clio 4": n°17 / n°20), quick picks "Toute la flotte" + per category, "Effacer". Selection remembered **on the device** (localStorage). A row of the overview "Par véhicule" table opens the view with that car. |
+| Figures | Same rules as the rest of the page (Terminée only, by departure date): CA, réservations, panier moyen, jours; share of the period's CA; per-car table with **€/jour** (CA ÷ jours) and **Occupation** (jours loués ÷ days of the period the car was in the fleet up to today, capped at 100 %; in the fleet since `vehicles.created_at` or its first rental); list of the rentals. |
+| Chart | Stacked bars per month/week, one colour per car up to 8 cars (validated colour-blind-safe order; a car keeps its colour while selected); above 8, the selection's total. |
+| Reused IDs | **#11 / #19 were the Toyota Yaris / Ford Fiesta until 2026-09-30** (6 + 8 completed rentals, Dec 2025 → May 2026). Bookings before 2026-10-01 on those IDs now count for "Toyota Yaris (ancien n°11)" / "Ford Fiesta (ancien n°19)", listed under "Anciens véhicules", so the Livan figures only cover the Livan. Applies to the overview "Par véhicule" too (`REPLACED_VEHICLES` in `finance.ts`). |
+
+**Files:** `finance.ts` (`financeVehicleId`, `buildFinanceFleet`, `compareVehicles`, `bucketRevenueByVehicle`, `activeDaysInPeriod`; `groupByVehicle` now takes the finance fleet), `useVehicleSelection.ts`, `components/finance/` (`VehicleComparisonView`, `VehiclePicker`, `VehicleRevenueChart`, `VehicleComparisonTable`, `VehicleBookingsList`, `vehicleColors.ts`), `BreakdownTables.tsx` (n° + clickable rows), `AdminFinancePage.tsx` (tabs), `AdminVehicle.createdAt` mapped from the DB.
+
+**Verified 2026-11-08:** `tsc -b` + eslint clean. The TS functions run on the live rows give exactly the SQL figures (Oct 2026: Livan Gris 4 rés. / 23 j / 1 003 €, Seat Leon 7 / 18 / 811 €, Livan Noir 3 / 20 / 679 €, Coolray 3 / 10 / 550 €; 2026: Yaris 1 213 €, Fiesta 1 300 €, Livan Gris 1 108 €, fleet 121 615 €), per-car rows add up to the period total, chart segments add up to each bar. Headless Chrome on a local dev server: both views render, tooltip lists each car, selection survives a reload, no horizontal scroll at 390 px, no console errors.
+
+**Note:** `.env.local` (local only, not in git) has a literal `\n` at the end of the Supabase URL and key, so it is rejected; `.env` is correct. Production uses the Vercel settings and is unaffected.
+
+**Status:** pushed to `main` 2026-11-08 (user decision: push without local test).
+
+---
+
 ## Deploy-day checklist (items 6–11) — done 2026-10-01 evening EDT (2026-10-02 ~01:20 UTC)
 
 1. [x] Prices: first deploy went out with placeholders (38 / 38 / 50 €) on the user's go; confirmed values **Livan 35 €, Coolray 55 €** applied 2026-10-02 (code + DB, second deploy).

@@ -1,11 +1,14 @@
-import { Car, Globe } from 'lucide-react';
+import { Car, Globe, ChevronRight } from 'lucide-react';
 import type { VehicleRevenue, SourceRevenue } from '../../lib/finance';
 import { formatEuro } from '../../lib/finance';
 import { SOURCE_LABELS } from '../../lib/bookingStatus';
+import { VehicleNumber } from './VehiclePicker';
 
 interface BreakdownTablesProps {
   byVehicle: VehicleRevenue[];
   bySource: SourceRevenue[];
+  /** Row click → the car's figures in the "Comparer des véhicules" view */
+  onSelectVehicle?: (vehicleId: number) => void;
 }
 
 function ShareBar({ ratio }: { ratio: number }) {
@@ -17,7 +20,7 @@ function ShareBar({ ratio }: { ratio: number }) {
   );
 }
 
-export function BreakdownTables({ byVehicle, bySource }: BreakdownTablesProps) {
+export function BreakdownTables({ byVehicle, bySource, onSelectVehicle }: BreakdownTablesProps) {
   const maxVehicle = byVehicle[0]?.revenue || 0;
 
   return (
@@ -38,13 +41,23 @@ export function BreakdownTables({ byVehicle, bySource }: BreakdownTablesProps) {
                   <th className="text-right font-medium pb-2">Rés.</th>
                   <th className="text-right font-medium pb-2">Jours</th>
                   <th className="text-right font-medium pb-2">CA</th>
+                  {onSelectVehicle && <th className="pb-2" aria-hidden="true" />}
                 </tr>
               </thead>
               <tbody>
                 {byVehicle.map((v) => (
-                  <tr key={v.vehicleId} className={`border-t border-gray-100 ${v.count === 0 ? 'text-gray-400' : ''}`}>
+                  <tr
+                    key={v.vehicleId}
+                    onClick={onSelectVehicle ? () => onSelectVehicle(v.vehicleId) : undefined}
+                    title={onSelectVehicle ? 'Voir les chiffres de ce véhicule' : undefined}
+                    className={`border-t border-gray-100 ${v.count === 0 ? 'text-gray-400' : ''}
+                      ${onSelectVehicle ? 'cursor-pointer hover:bg-gray-50 group' : ''}`}
+                  >
                     <td className="py-2 pr-2">
-                      <p className={`truncate max-w-[180px] md:max-w-none ${v.count === 0 ? '' : 'text-gray-900'}`}>{v.name}</p>
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className={`truncate max-w-[160px] md:max-w-none ${v.count === 0 ? '' : 'text-gray-900'}`}>{v.name}</span>
+                        <VehicleNumber number={v.number} former={v.former} />
+                      </div>
                       <div className="mt-1 w-32">
                         <ShareBar ratio={maxVehicle ? v.revenue / maxVehicle : 0} />
                       </div>
@@ -54,6 +67,11 @@ export function BreakdownTables({ byVehicle, bySource }: BreakdownTablesProps) {
                     <td className={`py-2 text-right tabular-nums align-top ${v.count === 0 ? '' : 'font-semibold text-gray-900'}`}>
                       {formatEuro(v.revenue)}
                     </td>
+                    {onSelectVehicle && (
+                      <td className="py-2 pl-1 align-top w-5">
+                        <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-gray-500" />
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>

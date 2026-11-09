@@ -427,6 +427,7 @@ function mapVehicleFromDb(row: Record<string, unknown>): AdminVehicle {
     status: row.status as AdminVehicle['status'],
     licensePlate: row.license_plate as string | undefined,
     notes: row.notes as string | undefined,
+    createdAt: (row.created_at as string | null) ?? undefined,
   };
 }
 

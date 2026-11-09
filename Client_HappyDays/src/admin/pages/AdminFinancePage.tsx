@@ -1,14 +1,16 @@
 import { useMemo, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, LogOut, RefreshCw, TrendingUp, Loader2, AlertTriangle } from 'lucide-react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, LogOut, RefreshCw, TrendingUp, Loader2, AlertTriangle, LayoutDashboard, Car } from 'lucide-react';
 import { useAdminGuard } from '../hooks/useAdminGuard';
 import { useFinanceData } from '../hooks/useFinanceData';
+import { useVehicleSelection } from '../hooks/useVehicleSelection';
 import {
   resolvePeriod,
   filterCompletedInPeriod,
   summarize,
   bucketRevenue,
   bucketGranularity,
+  buildFinanceFleet,
   groupByVehicle,
   groupBySource,
   groupByClient,
@@ -22,11 +24,28 @@ import { RevenueChart } from '../components/finance/RevenueChart';
 import { BreakdownTables } from '../components/finance/BreakdownTables';
 import { ClientsTable } from '../components/finance/ClientsTable';
 import { ClientBookingsModal } from '../components/finance/ClientBookingsModal';
+import { VehicleComparisonView } from '../components/finance/VehicleComparisonView';
+
+type FinanceView = 'overview' | 'vehicles';
+
+const VIEW_PARAM = 'vue';
+const VEHICLES_VIEW_VALUE = 'vehicules';
 
 export function AdminFinancePage() {
   const navigate = useNavigate();
   const { ready, logout } = useAdminGuard();
   const { bookings, vehicles, isLoading, isRefreshing, error, refresh } = useFinanceData();
+  const selection = useVehicleSelection();
+
+  // The view lives in the URL (/admin/finance?vue=vehicules) so reload and the back button keep it
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view: FinanceView = searchParams.get(VIEW_PARAM) === VEHICLES_VIEW_VALUE ? 'vehicles' : 'overview';
+  const setView = useCallback(
+    (next: FinanceView) => {
+      setSearchParams(next === 'vehicles' ? { [VIEW_PARAM]: VEHICLES_VIEW_VALUE } : {});
+    },
+    [setSearchParams]
+  );
 
   const [preset, setPreset] = useState<PeriodPreset>('thisMonth');
   const [custom, setCustom] = useState<Period>(() => resolvePeriod('thisMonth'));
@@ -38,9 +57,21 @@ export function AdminFinancePage() {
   const summary = useMemo(() => summarize(completed), [completed]);
   const buckets = useMemo(() => bucketRevenue(completed, period), [completed, period]);
   const granularity = useMemo(() => bucketGranularity(period), [period]);
-  const byVehicle = useMemo(() => groupByVehicle(completed, vehicles), [completed, vehicles]);
+  const fleet = useMemo(() => buildFinanceFleet(vehicles, bookings), [vehicles, bookings]);
+  const byVehicle = useMemo(() => groupByVehicle(completed, fleet), [completed, fleet]);
   const bySource = useMemo(() => groupBySource(completed), [completed]);
   const clients = useMemo(() => groupByClient(bookings, period), [bookings, period]);
+
+  // "Par véhicule" row → the comparison view with that car
+  const { select } = selection;
+  const openVehicle = useCallback(
+    (vehicleId: number) => {
+      select([vehicleId]);
+      setView('vehicles');
+      window.scrollTo({ top: 0 });
+    },
+    [select, setView]
+  );
 
   const handlePresetChange = useCallback(
     (next: PeriodPreset) => {
@@ -93,6 +124,29 @@ export function AdminFinancePage() {
       </header>
 
       <main className="max-w-6xl mx-auto p-3 md:p-6 space-y-3 md:space-y-4">
+        <div className="bg-white rounded-xl border border-gray-200 p-1 grid grid-cols-2 gap-1" role="tablist">
+          {(
+            [
+              { id: 'overview', label: "Vue d'ensemble", short: "Vue d'ensemble", icon: <LayoutDashboard className="w-4 h-4" /> },
+              { id: 'vehicles', label: 'Comparer des véhicules', short: 'Véhicules', icon: <Car className="w-4 h-4" /> },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              role="tab"
+              aria-selected={view === tab.id}
+              onClick={() => setView(tab.id)}
+              className={`flex items-center justify-center gap-2 py-2 px-2 rounded-lg text-sm font-medium transition-colors touch-manipulation
+                ${view === tab.id ? 'bg-primary text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            >
+              {tab.icon}
+              <span className="truncate sm:hidden">{tab.short}</span>
+              <span className="truncate hidden sm:inline">{tab.label}</span>
+            </button>
+          ))}
+        </div>
+
         <PeriodSelector
           preset={preset}
           custom={custom}
@@ -124,10 +178,26 @@ export function AdminFinancePage() {
               Seules les réservations <span className="font-medium text-blue-600">Terminées</span> sont
               comptées, à la date de départ.
             </p>
-            <FinanceSummaryCards summary={summary} />
-            <RevenueChart data={buckets} granularity={granularity} />
-            <BreakdownTables byVehicle={byVehicle} bySource={bySource} />
-            <ClientsTable clients={clients} onSelect={setSelectedClient} />
+            {view === 'vehicles' ? (
+              <VehicleComparisonView
+                completed={completed}
+                fleet={fleet}
+                period={period}
+                granularity={granularity}
+                selectedIds={selection.selectedIds}
+                slots={selection.slots}
+                onToggle={selection.toggle}
+                onSelect={selection.select}
+                onClear={selection.clear}
+              />
+            ) : (
+              <>
+                <FinanceSummaryCards summary={summary} />
+                <RevenueChart data={buckets} granularity={granularity} />
+                <BreakdownTables byVehicle={byVehicle} bySource={bySource} onSelectVehicle={openVehicle} />
+                <ClientsTable clients={clients} onSelect={setSelectedClient} />
+              </>
+            )}
           </>
         )}
       </main>
