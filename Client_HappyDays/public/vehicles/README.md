@@ -19,7 +19,7 @@ Each vehicle has a folder with `main.jpg` (card on the site, thumbnail in the ad
 
 Both must be updated together when a vehicle is added, replaced or re-priced.
 
-## Fleet (22 vehicles)
+## Fleet (23 vehicles)
 
 | ID | Folder | Car | Price |
 |----|--------|-----|-------|
@@ -44,6 +44,7 @@ Both must be updated together when a vehicle is added, replaced or re-priced.
 | 19 | livan-x3-pro-noir | Livan X3 Pro Noir 2026 — replaced the Ford Fiesta (Oct 2026) | 35€ |
 | 20 | renault-clio4-2016-b | Renault Clio 4 2016 | 25€ |
 | 21 | seat-leon-2021 | Seat Leon 1.0 TSI 2021 — new photos, 50€ → 45€ (Oct 2026) | 45€ |
-| 22 | geely-coolray | Geely Coolray 2026 | 55€ |
+| 22 | geely-coolray | Geely Coolray 2026 (automatique) | 55€ |
+| 23 | geely-coolray-manuelle | Geely Coolray Manuelle 2026 — added Nov 2026 | 36€ |
 
 `renault-clio4-2016/` is no longer referenced (kept for history).

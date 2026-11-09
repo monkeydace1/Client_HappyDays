@@ -286,6 +286,24 @@ User decision 2026-10-01: not for now.
 
 ---
 
+## 14. [ ] New vehicle #23: Geely Coolray Manuelle 2026 — 36 €/day
+
+**Request (user, 2026-11-08):** add a new car (a second Coolray, not a replacement): Geely Coolray, manual, 2026, 36 €/day, 3 photos.
+
+**Decisions:**
+- ID **23**, name **"Geely Coolray Manuelle"** so it is told apart from #22 (automatic, 55 €, unchanged) in the admin dropdowns — same idea as Livan Gris / Noir.
+- SUV, Manuelle, Essence, 5 seats, not featured. Features copied from #22 with "Boîte manuelle"; "Climatisation auto" confirmed by the user.
+- 36 € puts it in the "Premium (36€+)" filter on the fleet page, like the Arona.
+
+**Files:**
+- `public/vehicles/geely-coolray-manuelle/` — `main.jpg` (front ¾), `1.jpg` (rear ¾), `2.jpg` (interior); the user's photos were already 1080×810 (4:3), re-encoded q4 without metadata → 80–117 kB.
+- [vehicleData.ts](Client_HappyDays/src/data/vehicleData.ts) (#23), [useAdminData.ts](Client_HappyDays/src/admin/hooks/useAdminData.ts) (sample data), vehicles README, CLAUDE.md counts.
+- [010_add_geely_coolray_manuelle.sql](Client_HappyDays/supabase/migrations/010_add_geely_coolray_manuelle.sql) — `vehicles` row 23. **Run on deploy day**, right after the new frontend is live (the live bundle doesn't know ID 23). Checked 2026-11-08: ID 23 free, sequence at 22.
+
+**Status:** code + photos done (2026-11-08), `tsc -b` clean; next: local test → commit → push on the user's go → run 010.
+
+---
+
 ## Deploy-day checklist (items 6–11) — done 2026-10-01 evening EDT (2026-10-02 ~01:20 UTC)
 
 1. [x] Prices: first deploy went out with placeholders (38 / 38 / 50 €) on the user's go; confirmed values **Livan 35 €, Coolray 55 €** applied 2026-10-02 (code + DB, second deploy).

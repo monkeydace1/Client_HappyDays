@@ -9,7 +9,7 @@ hand (pattern: `supabase/migrations/009_fleet_update_oct2026.sql`).
 ### Vehicle Object Structure
 ```typescript
 {
-  id: number,              // Unique ID (1-22)
+  id: number,              // Unique ID (1-23)
   name: string,            // Display name
   brand: string,           // Manufacturer
   model: string,           // Model name

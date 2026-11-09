@@ -68,7 +68,7 @@ useAdminData hook → adminService.ts → Supabase (with real-time subscriptions
 ### Key Files
 | File | Purpose |
 |------|---------|
-| `src/data/vehicleData.ts` | All vehicle definitions (22 vehicles) |
+| `src/data/vehicleData.ts` | All vehicle definitions (23 vehicles) |
 | `src/admin/data/adminVehicleData.ts` | Admin vehicle data (auto-synced from vehicleData) |
 | `public/vehicles/` | Vehicle images (see README.md inside) |
 
@@ -87,7 +87,7 @@ useAdminData hook → adminService.ts → Supabase (with real-time subscriptions
 3. Never overwrite a photo under the same path: browsers and the CDN may keep serving the old
    file (`npx vercel --prod --force` is no longer usable from this PC, see CHANGES.md #5)
 
-### Current Fleet: 22 vehicles (IDs 1–22)
+### Current Fleet: 23 vehicles (IDs 1–23)
 See `public/vehicles/README.md` for complete list with folder paths and prices.
 
 ## Conventions

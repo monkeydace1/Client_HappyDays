@@ -379,6 +379,24 @@ export const vehicles: Vehicle[] = [
         pricePerDay: 55,
         featured: false,
         features: ['Boîte automatique', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation auto', 'Feux LED', '1.5L Turbo']
+    },
+
+    // === SUV MANUELLE 2026 (added Nov 2026, separate car from #22) ===
+    {
+        id: 23,
+        name: 'Geely Coolray Manuelle',
+        brand: 'Geely',
+        model: 'Coolray',
+        year: 2026,
+        category: 'SUV',
+        image: getVehicleImage('geely-coolray-manuelle'),
+        images: getVehicleImages('geely-coolray-manuelle', 2),
+        transmission: 'Manuelle',
+        fuel: 'Essence',
+        seats: 5,
+        pricePerDay: 36,
+        featured: false,
+        features: ['Boîte manuelle', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation auto', 'Feux LED', '1.5L Turbo']
     }
 ];
 

@@ -120,6 +120,7 @@ const SAMPLE_VEHICLES: AdminVehicle[] = [
   { id: 20, name: 'Renault Clio 4', brand: 'Renault', model: 'Clio 4', year: 2016, category: 'Citadine', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 25, image: '/vehicles/renault-clio4-2016-b/main.jpg', status: 'available' },
   { id: 21, name: 'Seat Leon 1.0 TSI 2021', brand: 'Seat', model: 'Leon 1.0 TSI', year: 2021, category: 'Compacte', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 45, image: '/vehicles/seat-leon-2021/main.jpg', status: 'available' },
   { id: 22, name: 'Geely Coolray', brand: 'Geely', model: 'Coolray', year: 2026, category: 'SUV', transmission: 'Automatique', fuel: 'Essence', seats: 5, pricePerDay: 55, image: '/vehicles/geely-coolray/main.jpg', status: 'available' },
+  { id: 23, name: 'Geely Coolray Manuelle', brand: 'Geely', model: 'Coolray', year: 2026, category: 'SUV', transmission: 'Manuelle', fuel: 'Essence', seats: 5, pricePerDay: 36, image: '/vehicles/geely-coolray-manuelle/main.jpg', status: 'available' },
 ];
 
 // Generate sample bookings based on current date
