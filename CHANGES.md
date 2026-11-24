@@ -328,7 +328,7 @@ User decision 2026-10-01: not for now.
 
 ---
 
-## 16. [ ] New vehicle #24: MG5 2026 manuelle — 35 €/day
+## 16. [x] New vehicle #24: MG5 2026 manuelle — 35 €/day
 
 **Request (user, 2026-11-23):** add a new car to the site, the admin and the CRM: MG5 2026, manual, petrol, sedan, n° 24, 35 €/day, 1 photo.
 
@@ -343,7 +343,7 @@ User decision 2026-10-01: not for now.
 - [vehicleData.ts](Client_HappyDays/src/data/vehicleData.ts) (#24), [useAdminData.ts](Client_HappyDays/src/admin/hooks/useAdminData.ts) (sample data), vehicles README, CLAUDE.md counts.
 - [011_add_mg5.sql](Client_HappyDays/supabase/migrations/011_add_mg5.sql) — `vehicles` row 24. **Run on deploy day**, right after the new frontend is live (the live bundle doesn't know ID 24). Checked 2026-11-23: ID 24 free, no booking on 24, sequence at 23.
 
-**Status:** code + photo done (2026-11-23); next: local test → commit → push on the user's go → run 011.
+**Status:** live since 2026-11-23. `npm run build` OK, card checked on a local `vite preview` (headless Chrome) → commit `77ae4c6` pushed to `main` + feature branch on the user's go; Vercel built and promoted on its own (~40 s; production bundle `index-BAEpSMW1.js` contains `mg5-2026`, photo → 200 `image/jpeg`); then **011 applied to the live DB** (row 24 available, 24 vehicles, sequence at 24) → admin grid, QuickAdd and finance list it.
 
 ---
 
