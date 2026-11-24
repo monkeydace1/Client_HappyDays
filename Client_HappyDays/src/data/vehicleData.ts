@@ -397,6 +397,24 @@ export const vehicles: Vehicle[] = [
         pricePerDay: 36,
         featured: false,
         features: ['Boîte manuelle', 'CarPlay', 'Caméra de recul', 'Écran tactile', 'Climatisation auto', 'Feux LED', '1.5L Turbo']
+    },
+
+    // === BERLINE 2026 (added Nov 2026) ===
+    {
+        id: 24,
+        name: 'MG5',
+        brand: 'MG',
+        model: 'MG5',
+        year: 2026,
+        category: 'Berline',
+        image: getVehicleImage('mg5-2026'),
+        images: getVehicleImages('mg5-2026', 0),
+        transmission: 'Manuelle',
+        fuel: 'Essence',
+        seats: 5,
+        pricePerDay: 35,
+        featured: false,
+        features: ['Boîte manuelle', 'Écran tactile', 'Climatisation', '1.5L', 'Spacieux']
     }
 ];
 

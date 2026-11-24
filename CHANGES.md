@@ -328,6 +328,25 @@ User decision 2026-10-01: not for now.
 
 ---
 
+## 16. [ ] New vehicle #24: MG5 2026 manuelle — 35 €/day
+
+**Request (user, 2026-11-23):** add a new car to the site, the admin and the CRM: MG5 2026, manual, petrol, sedan, n° 24, 35 €/day, 1 photo.
+
+**Decisions:**
+- ID **24**, name **"MG5"** (brand MG, model MG5), Berline, Manuelle, Essence, 5 seats, not featured.
+- 35 € puts it in the "Standard (26-35€)" filter on the fleet page.
+- Features kept to what is sure: Boîte manuelle, Écran tactile, Climatisation, 1.5L, Spacieux. CarPlay / caméra de recul / clim auto left out until the user confirms the trim.
+- "CRM" = the admin (planning, QuickAdd, réservations, finance): they read the `vehicles` table, hence migration 011. The Google Sheets sync copies the vehicle from each booking, nothing to change there.
+
+**Files:**
+- `public/vehicles/mg5-2026/main.jpg` (front ¾, night photo) — the user's photo was already 1080×810 (4:3), re-encoded q4 without metadata → 114 kB. Only one photo, so `getVehicleImages('mg5-2026', 0)` (no gallery, like the Peugeot 208); `1.jpg`, `2.jpg` can be added later in the same folder.
+- [vehicleData.ts](Client_HappyDays/src/data/vehicleData.ts) (#24), [useAdminData.ts](Client_HappyDays/src/admin/hooks/useAdminData.ts) (sample data), vehicles README, CLAUDE.md counts.
+- [011_add_mg5.sql](Client_HappyDays/supabase/migrations/011_add_mg5.sql) — `vehicles` row 24. **Run on deploy day**, right after the new frontend is live (the live bundle doesn't know ID 24). Checked 2026-11-23: ID 24 free, no booking on 24, sequence at 23.
+
+**Status:** code + photo done (2026-11-23); next: local test → commit → push on the user's go → run 011.
+
+---
+
 ## Deploy-day checklist (items 6–11) — done 2026-10-01 evening EDT (2026-10-02 ~01:20 UTC)
 
 1. [x] Prices: first deploy went out with placeholders (38 / 38 / 50 €) on the user's go; confirmed values **Livan 35 €, Coolray 55 €** applied 2026-10-02 (code + DB, second deploy).
